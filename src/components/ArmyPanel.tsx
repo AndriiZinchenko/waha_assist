@@ -1,0 +1,109 @@
+import { useState, type CSSProperties } from "react";
+import type { ArmyEntry } from "../lib/armies";
+import { computeVisiblePoints, visibleUnits } from "../lib/armyPoints";
+import { applyLeaderWeaponBonuses } from "../lib/leaderEffects";
+import { getDetachmentData } from "../data/detachments";
+import { DetachmentModal } from "./DetachmentModal";
+import { PanelHeader } from "./PanelHeader";
+import { UnitList } from "./UnitList";
+
+export type Side = "a" | "b";
+
+interface ArmyPanelProps {
+  side: Side;
+  army: ArmyEntry;
+  selectedUnitId: string | null;
+  onSelectUnit: (unitId: string | null) => void;
+  counts: Record<string, number>;
+  onCountChange: (key: string, next: number) => void;
+  /** Hidden below 900px when this side isn't the active portrait tab; always visible ≥900px. */
+  hidden: boolean;
+  /** leaderUnitId -> the unit id it's attached to, for nesting a leader under its unit in the list. */
+  leaderAssignments: Record<string, string>;
+  /** unitId -> true when excluded from this army's list and points total. */
+  hiddenUnitIds: Record<string, boolean>;
+  /** The detachment in play: the configured choice, else the roster's own. */
+  detachment: string | null;
+  /** Voice mode on — show each unit's list number. */
+  showNumbers?: boolean;
+}
+
+const ACCENT: Record<Side, string> = {
+  a: "var(--side-a)",
+  b: "var(--side-b)",
+};
+
+const ACCENT_HEADING: Record<Side, string> = {
+  a: "var(--side-a-heading)",
+  b: "var(--side-b-heading)",
+};
+
+const ACCENT_WASH: Record<Side, string> = {
+  a: "var(--side-a-wash)",
+  b: "var(--side-b-wash)",
+};
+
+export function ArmyPanel({
+  side,
+  army,
+  selectedUnitId,
+  onSelectUnit,
+  counts,
+  onCountChange,
+  hidden,
+  leaderAssignments,
+  hiddenUnitIds,
+  detachment,
+  showNumbers = false,
+}: ArmyPanelProps) {
+  const [detachmentOpen, setDetachmentOpen] = useState(false);
+  const detachmentData = getDetachmentData(detachment);
+
+  const style = {
+    "--accent": ACCENT[side],
+    "--accent-heading": ACCENT_HEADING[side],
+    "--accent-wash": ACCENT_WASH[side],
+    borderRight: side === "a" ? "1px solid var(--rule)" : undefined,
+  } as CSSProperties;
+
+  const visible = visibleUnits(army.parsed.units, hiddenUnitIds);
+  const hasHiddenUnits = visible.length < army.parsed.units.length;
+  const points = hasHiddenUnits
+    ? computeVisiblePoints(army.parsed.units, hiddenUnitIds)
+    : army.parsed.pointsTotal;
+  // Leader-attachment weapon bonuses (e.g. Castellan Crowe's +1 Attacks to
+  // Purifying Flame) resolved against the visible list, so a hidden leader
+  // doesn't still buff a unit that's effectively not in the game.
+  const units = applyLeaderWeaponBonuses(visible, leaderAssignments);
+
+  return (
+    <section
+      className={`${hidden ? "hidden min-[900px]:flex" : "flex"} flex-col flex-1 min-w-0 h-full overflow-hidden`}
+      style={style}
+    >
+      <PanelHeader
+        army={army.parsed}
+        points={points}
+        detachment={detachment}
+        detachmentData={detachmentData}
+        onOpenDetachment={() => setDetachmentOpen(true)}
+      />
+      <UnitList
+        units={units}
+        leaderAssignments={leaderAssignments}
+        selectedUnitId={selectedUnitId}
+        onSelectUnit={onSelectUnit}
+        counts={counts}
+        onCountChange={onCountChange}
+        detachmentData={detachmentData}
+        showNumbers={showNumbers}
+      />
+      {detachmentOpen && detachmentData && (
+        <DetachmentModal
+          data={detachmentData}
+          onClose={() => setDetachmentOpen(false)}
+        />
+      )}
+    </section>
+  );
+}

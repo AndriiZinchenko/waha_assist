@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: oklch(0.23 0.006 260); }
+    a { color: oklch(0.75 0.09 190); text-decoration: none; }
+    a:hover { color: oklch(0.82 0.1 190); }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: oklch(0.38 0.01 260); border-radius: 4px; }
+    * { box-sizing: border-box; }
+    button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+    select { font-family: inherit; }
+    button:disabled { cursor: not-allowed; }
+  </style>
+</helmet>
+<div style="min-height:100vh; max-width:1440px; margin:0 auto; background:oklch(0.23 0.006 260); font-family:'IBM Plex Sans',sans-serif; color:oklch(0.92 0.004 260); display:flex; flex-direction:column;">
+
+  <header style="display:flex; align-items:center; justify-content:space-between; padding:16px 28px; border-bottom:1px solid oklch(0.36 0.008 260); background:oklch(0.19 0.006 260); flex-wrap:wrap; gap:14px;">
+    <div style="display:flex; align-items:baseline; gap:10px;">
+      <span style="font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:22px; letter-spacing:0.02em; color:oklch(0.96 0.004 260);">WAHA</span>
+      <span style="font-size:12px; color:oklch(0.55 0.01 260); letter-spacing:0.08em; text-transform:uppercase;">40k battle assist</span>
+    </div>
+    <nav style="display:flex; gap:4px; background:oklch(0.17 0.006 260); border-radius:8px; padding:4px;">
+      <button style="{{ armiesTabStyle }}" onClick="{{ goArmies }}">Armies</button>
+      <button style="{{ compareTabStyle }}" onClick="{{ goCompare }}">Compare</button>
+    </nav>
+  </header>
+
+  <main style="flex:1; display:flex; flex-direction:column;">
+
+    <sc-if value="{{ isArmies }}" hint-placeholder-val="{{ true }}">
+      <section style="max-width:920px; margin:0 auto; width:100%; padding:28px 24px 60px; display:flex; flex-direction:column; gap:6px;">
+        <div style="font-size:13px; color:oklch(0.6 0.01 260); margin-bottom:14px;">Pick an army for Side A, then an army for Side B.</div>
+        <sc-for list="{{ armies }}" as="army" hint-placeholder-count="3">
+          <div style="{{ army.rowStyle }}" onClick="{{ army.pick }}">
+            <div style="{{ army.sideBarStyle }}"></div>
+            <div style="flex:1; padding:20px 22px; min-height:52px; display:flex; justify-content:space-between; align-items:center; gap:12px; min-width:0;">
+              <div style="min-width:0;">
+                <div style="font-family:'Chakra Petch',sans-serif; font-size:19px; font-weight:600; color:oklch(0.95 0.004 260);">{{ army.faction }} <span style="color:oklch(0.6 0.01 260); font-weight:500;">— {{ army.detachment }}</span></div>
+                <div style="font-size:13px; color:oklch(0.56 0.01 260); margin-top:3px;">{{ army.label }}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+                <sc-if value="{{ army.badge }}" hint-placeholder-val="{{ false }}">
+                  <span style="{{ army.badgeStyle }}">{{ army.badge }}</span>
+                </sc-if>
+                <span style="font-family:'IBM Plex Mono',monospace; font-size:15px; color:oklch(0.8 0.006 260);">{{ army.points }}pts</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+
+        <button style="{{ startBtnStyle }}" disabled="{{ startDisabled }}" onClick="{{ startCompare }}">Start Comparison</button>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isCompare }}" hint-placeholder-val="{{ false }}">
+      <section style="flex:1; display:flex; flex-direction:column;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; flex:1; min-height:0;">
+
+          <div style="border-right:1px solid oklch(0.36 0.008 260); display:flex; flex-direction:column; min-height:0;">
+            <div style="padding:16px 20px; border-bottom:1px solid oklch(0.33 0.008 260); display:flex; justify-content:space-between; align-items:baseline; background:oklch(0.22 0.02 200 / 0.5);">
+              <div>
+                <div style="font-family:'Chakra Petch',sans-serif; font-size:19px; font-weight:600; color:oklch(0.85 0.08 190);">{{ armyA.faction }}</div>
+                <div style="font-size:11.5px; color:oklch(0.58 0.01 260); text-transform:uppercase; letter-spacing:0.04em;">{{ armyA.detachment }}</div>
+              </div>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:15px; color:oklch(0.88 0.006 260);">{{ armyA.points }}pts</span>
+            </div>
+            <div style="overflow-y:auto; flex:1;">
+              <sc-for list="{{ armyA.units }}" as="unit" hint-placeholder-count="5">
+                <div style="border-bottom:1px solid oklch(0.32 0.008 260);">
+                  <div style="{{ unit.rowStyle }}" onClick="{{ unit.toggle }}">
+                    <span style="{{ unit.chevronStyle }}">›</span>
+                    <span style="flex:1; font-size:15px; color:oklch(0.9 0.004 260);">{{ unit.name }}<sc-if value="{{ unit.warlord }}" hint-placeholder-val="{{ false }}"> ★</sc-if></span>
+                    <span style="font-family:'IBM Plex Mono',monospace; font-size:13.5px; color:oklch(0.58 0.01 260);">{{ unit.alive }}/{{ unit.count }}</span>
+                  </div>
+                  <sc-if value="{{ unit.isOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin:0 16px 16px 16px; padding:18px; border-radius:10px; background:oklch(0.2 0.02 190 / 0.5); border:1px solid oklch(0.4 0.07 190 / 0.4); border-left:3px solid oklch(0.55 0.1 190); display:flex; flex-direction:column; gap:14px;">
+                      <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:7px;">
+                        <sc-for list="{{ unit.stats }}" as="stat" hint-placeholder-count="6">
+                          <div style="background:oklch(0.17 0.006 260); border-radius:7px; padding:10px 4px; text-align:center;">
+                            <div style="font-family:'IBM Plex Mono',monospace; font-size:17px; color:oklch(0.94 0.004 260);">{{ stat.val }}</div>
+                            <div style="font-size:10px; color:oklch(0.52 0.01 260); text-transform:uppercase; margin-top:3px;">{{ stat.label }}</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div>
+                        <div style="font-size:10.5px; color:oklch(0.65 0.09 190); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; margin-bottom:8px;">Models</div>
+                        <sc-for list="{{ unit.loadouts }}" as="lo" hint-placeholder-count="1">
+                          <div style="border-top:1px solid oklch(0.33 0.01 260); padding:8px 0;">
+                            <div style="display:flex; align-items:center; gap:8px; cursor:pointer;" onClick="{{ lo.toggle }}">
+                              <span style="{{ lo.chevronStyle }}">›</span>
+                              <span style="font-size:13px; color:oklch(0.85 0.004 260); flex:1;">{{ lo.name }}</span>
+                              <button style="{{ unit.stepStyle }}" onClick="{{ lo.dec }}">−</button>
+                              <span style="font-family:'IBM Plex Mono',monospace; font-size:14px; width:22px; text-align:center; color:oklch(0.92 0.004 260);">{{ lo.count }}</span>
+                              <button style="{{ unit.stepStyle }}" onClick="{{ lo.inc }}">+</button>
+                              <span style="font-size:11.5px; color:oklch(0.52 0.01 260);">of {{ lo.max }}</span>
+                            </div>
+                            <sc-if value="{{ lo.open }}" hint-placeholder-val="{{ false }}">
+                              <div style="margin:10px 0 2px 22px; background:oklch(0.17 0.006 260); border-radius:8px; padding:10px 12px;">
+                                <div style="display:grid; grid-template-columns:44px 1.6fr 0.8fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr; gap:6px; font-size:10px; color:oklch(0.5 0.01 260); text-transform:uppercase; padding-bottom:6px;">
+                                  <div>Ct</div><div>Weapon</div><div>Range</div><div>A</div><div>Skill</div><div>S</div><div>AP</div><div>D</div>
+                                </div>
+                                <sc-for list="{{ lo.groups }}" as="grp" hint-placeholder-count="1">
+                                  <div style="font-size:11px; color:oklch(0.55 0.01 260); padding:6px 0 2px;">{{ grp.label }}</div>
+                                  <sc-for list="{{ grp.guns }}" as="gun" hint-placeholder-count="1">
+                                    <div style="padding:4px 0 8px; border-bottom:1px solid oklch(0.27 0.006 260);">
+                                      <div style="display:grid; grid-template-columns:44px 1.6fr 0.8fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr; gap:6px; align-items:center; font-size:13px;">
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.75 0.006 260);">{{ gun.ct }}×</div>
+                                        <div style="color:oklch(0.88 0.004 260);">{{ gun.name }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.65 0.006 260);">{{ gun.range }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.a }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.skill }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.s }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.ap }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.d }}</div>
+                                      </div>
+                                      <sc-if value="{{ gun.keywordsText }}" hint-placeholder-val="{{ false }}">
+                                        <div style="font-size:11px; color:oklch(0.48 0.008 260); margin-top:3px;">{{ gun.keywordsText }}</div>
+                                      </sc-if>
+                                    </div>
+                                  </sc-for>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="font-size:13px; color:oklch(0.65 0.008 260); line-height:1.6; border-top:1px solid oklch(0.37 0.01 260); padding-top:12px;">{{ unit.info }}</div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; min-height:0;">
+            <div style="padding:16px 20px; border-bottom:1px solid oklch(0.33 0.008 260); display:flex; justify-content:space-between; align-items:baseline; background:oklch(0.24 0.07 30 / 0.35);">
+              <div>
+                <div style="font-family:'Chakra Petch',sans-serif; font-size:19px; font-weight:600; color:oklch(0.8 0.1 30);">{{ armyB.faction }}</div>
+                <div style="font-size:11.5px; color:oklch(0.58 0.01 260); text-transform:uppercase; letter-spacing:0.04em;">{{ armyB.detachment }}</div>
+              </div>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:15px; color:oklch(0.88 0.006 260);">{{ armyB.points }}pts</span>
+            </div>
+            <div style="overflow-y:auto; flex:1;">
+              <sc-for list="{{ armyB.units }}" as="unit" hint-placeholder-count="5">
+                <div style="border-bottom:1px solid oklch(0.32 0.008 260);">
+                  <div style="{{ unit.rowStyle }}" onClick="{{ unit.toggle }}">
+                    <span style="{{ unit.chevronStyle }}">›</span>
+                    <span style="flex:1; font-size:15px; color:oklch(0.9 0.004 260);">{{ unit.name }}<sc-if value="{{ unit.warlord }}" hint-placeholder-val="{{ false }}"> ★</sc-if></span>
+                    <span style="font-family:'IBM Plex Mono',monospace; font-size:13.5px; color:oklch(0.58 0.01 260);">{{ unit.alive }}/{{ unit.count }}</span>
+                  </div>
+                  <sc-if value="{{ unit.isOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin:0 16px 16px 16px; padding:18px; border-radius:10px; background:oklch(0.22 0.06 30 / 0.4); border:1px solid oklch(0.42 0.09 30 / 0.4); border-left:3px solid oklch(0.55 0.1 30); display:flex; flex-direction:column; gap:14px;">
+                      <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:7px;">
+                        <sc-for list="{{ unit.stats }}" as="stat" hint-placeholder-count="6">
+                          <div style="background:oklch(0.17 0.006 260); border-radius:7px; padding:10px 4px; text-align:center;">
+                            <div style="font-family:'IBM Plex Mono',monospace; font-size:17px; color:oklch(0.94 0.004 260);">{{ stat.val }}</div>
+                            <div style="font-size:10px; color:oklch(0.52 0.01 260); text-transform:uppercase; margin-top:3px;">{{ stat.label }}</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div>
+                        <div style="font-size:10.5px; color:oklch(0.7 0.09 30); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; margin-bottom:8px;">Models</div>
+                        <sc-for list="{{ unit.loadouts }}" as="lo" hint-placeholder-count="1">
+                          <div style="border-top:1px solid oklch(0.33 0.01 260); padding:8px 0;">
+                            <div style="display:flex; align-items:center; gap:8px; cursor:pointer;" onClick="{{ lo.toggle }}">
+                              <span style="{{ lo.chevronStyle }}">›</span>
+                              <span style="font-size:13px; color:oklch(0.85 0.004 260); flex:1;">{{ lo.name }}</span>
+                              <button style="{{ unit.stepStyle }}" onClick="{{ lo.dec }}">−</button>
+                              <span style="font-family:'IBM Plex Mono',monospace; font-size:14px; width:22px; text-align:center; color:oklch(0.92 0.004 260);">{{ lo.count }}</span>
+                              <button style="{{ unit.stepStyle }}" onClick="{{ lo.inc }}">+</button>
+                              <span style="font-size:11.5px; color:oklch(0.52 0.01 260);">of {{ lo.max }}</span>
+                            </div>
+                            <sc-if value="{{ lo.open }}" hint-placeholder-val="{{ false }}">
+                              <div style="margin:10px 0 2px 22px; background:oklch(0.17 0.006 260); border-radius:8px; padding:10px 12px;">
+                                <div style="display:grid; grid-template-columns:44px 1.6fr 0.8fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr; gap:6px; font-size:10px; color:oklch(0.5 0.01 260); text-transform:uppercase; padding-bottom:6px;">
+                                  <div>Ct</div><div>Weapon</div><div>Range</div><div>A</div><div>Skill</div><div>S</div><div>AP</div><div>D</div>
+                                </div>
+                                <sc-for list="{{ lo.groups }}" as="grp" hint-placeholder-count="1">
+                                  <div style="font-size:11px; color:oklch(0.55 0.01 260); padding:6px 0 2px;">{{ grp.label }}</div>
+                                  <sc-for list="{{ grp.guns }}" as="gun" hint-placeholder-count="1">
+                                    <div style="padding:4px 0 8px; border-bottom:1px solid oklch(0.27 0.006 260);">
+                                      <div style="display:grid; grid-template-columns:44px 1.6fr 0.8fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr; gap:6px; align-items:center; font-size:13px;">
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.75 0.006 260);">{{ gun.ct }}×</div>
+                                        <div style="color:oklch(0.88 0.004 260);">{{ gun.name }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.65 0.006 260);">{{ gun.range }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.a }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.skill }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.s }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.ap }}</div>
+                                        <div style="font-family:'IBM Plex Mono',monospace; color:oklch(0.85 0.004 260);">{{ gun.d }}</div>
+                                      </div>
+                                      <sc-if value="{{ gun.keywordsText }}" hint-placeholder-val="{{ false }}">
+                                        <div style="font-size:11px; color:oklch(0.48 0.008 260); margin-top:3px;">{{ gun.keywordsText }}</div>
+                                      </sc-if>
+                                    </div>
+                                  </sc-for>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="font-size:13px; color:oklch(0.65 0.008 260); line-height:1.6; border-top:1px solid oklch(0.37 0.01 260); padding-top:12px;">{{ unit.info }}</div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="border-top:1px solid oklch(0.36 0.008 260); background:oklch(0.17 0.006 260); padding:16px 24px; display:flex; flex-direction:column; gap:14px; max-height:46vh; overflow-y:auto;">
+          <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <div style="display:flex; background:oklch(0.25 0.006 260); border-radius:7px; padding:3px;">
+              <button style="{{ rangedModeStyle }}" onClick="{{ setModeRanged }}">Ranged</button>
+              <button style="{{ meleeModeStyle }}" onClick="{{ setModeMelee }}">Melee</button>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:oklch(0.65 0.01 260);">Hit
+              <button style="{{ stepBtnStyle }}" onClick="{{ decHit }}">−</button>
+              <span style="font-family:'IBM Plex Mono',monospace; width:22px; text-align:center; font-size:14px; color:oklch(0.9 0.004 260);">{{ calc.hitMod }}</span>
+              <button style="{{ stepBtnStyle }}" onClick="{{ incHit }}">+</button>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:oklch(0.65 0.01 260);">Wound
+              <button style="{{ stepBtnStyle }}" onClick="{{ decWound }}">−</button>
+              <span style="font-family:'IBM Plex Mono',monospace; width:22px; text-align:center; font-size:14px; color:oklch(0.9 0.004 260);">{{ calc.woundMod }}</span>
+              <button style="{{ stepBtnStyle }}" onClick="{{ incWound }}">+</button>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:oklch(0.65 0.01 260);">Invuln
+              <button style="{{ stepBtnStyle }}" onClick="{{ decInv }}">−</button>
+              <span style="font-family:'IBM Plex Mono',monospace; width:44px; text-align:center; font-size:13px; color:oklch(0.9 0.004 260);">{{ invLabel }}</span>
+              <button style="{{ stepBtnStyle }}" onClick="{{ incInv }}">+</button>
+            </label>
+            <button style="{{ apChipStyle }}" onClick="{{ toggleAp }}">AP worsened by 1</button>
+            <button style="{{ halfRangeChipStyle }}" onClick="{{ toggleHalfRange }}">Half range</button>
+            <button style="{{ clearBtnStyle }}" onClick="{{ resetCalc }}">Clear</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+            <sc-for list="{{ calcGroups }}" as="grp" hint-placeholder-count="2">
+              <div>
+                <div style="font-size:12.5px; margin-bottom:10px;"><span style="{{ grp.atkColorStyle }}">{{ grp.atkName }}</span><span style="color:oklch(0.5 0.01 260);"> → </span><span style="{{ grp.defColorStyle }}">{{ grp.defName }}</span></div>
+                <sc-for list="{{ grp.rows }}" as="row" hint-placeholder-count="1">
+                  <div style="margin-bottom:14px;">
+                    <div style="font-size:13px; color:oklch(0.86 0.004 260); margin-bottom:5px;"><span style="font-family:'IBM Plex Mono',monospace;">{{ row.countLabel }}×</span> {{ row.name }}</div>
+                    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:oklch(0.32 0.008 260); border-radius:6px; overflow:hidden;">
+                      <div style="background:oklch(0.25 0.006 260); padding:5px 8px; font-size:10px; color:oklch(0.55 0.01 260); text-transform:uppercase;">Atk</div>
+                      <div style="background:oklch(0.25 0.006 260); padding:5px 8px; font-size:10px; color:oklch(0.55 0.01 260); text-transform:uppercase;">Hit</div>
+                      <div style="background:oklch(0.25 0.006 260); padding:5px 8px; font-size:10px; color:oklch(0.55 0.01 260); text-transform:uppercase;">Wound</div>
+                      <div style="background:oklch(0.25 0.006 260); padding:5px 8px; font-size:10px; color:oklch(0.55 0.01 260); text-transform:uppercase;">Save</div>
+                      <div style="background:oklch(0.25 0.006 260); padding:5px 8px; font-size:10px; color:oklch(0.55 0.01 260); text-transform:uppercase;">Dmg</div>
+                      <div style="background:oklch(0.13 0.006 260); padding:7px 8px; font-family:'IBM Plex Mono',monospace; font-size:13.5px; color:oklch(0.92 0.004 260);">{{ row.atk }}</div>
+                      <div style="background:oklch(0.13 0.006 260); padding:7px 8px; font-family:'IBM Plex Mono',monospace; font-size:13.5px; color:oklch(0.92 0.004 260);">{{ row.hit }}+</div>
+                      <div style="background:oklch(0.13 0.006 260); padding:7px 8px; font-family:'IBM Plex Mono',monospace; font-size:13.5px; color:oklch(0.92 0.004 260);">{{ row.wound }}+</div>
+                      <div style="background:oklch(0.13 0.006 260); padding:7px 8px; font-family:'IBM Plex Mono',monospace; font-size:13.5px; color:oklch(0.92 0.004 260);">{{ row.save }}</div>
+                      <div style="background:oklch(0.13 0.006 260); padding:7px 8px; font-family:'IBM Plex Mono',monospace; font-size:13.5px; color:oklch(0.75 0.12 90); font-weight:600;">{{ row.expectedDamage }}</div>
+                    </div>
+                    <div style="font-size:11.5px; color:oklch(0.5 0.008 260); margin-top:5px; line-height:1.5;">Save {{ row.baseSave }}+ / AP{{ row.ap }}<sc-for list="{{ row.keywords }}" as="kw" hint-placeholder-count="0"> · {{ kw }}</sc-for><sc-for list="{{ row.notes }}" as="note" hint-placeholder-count="0"> · <span style="{{ note.style }}">{{ note.text }}</span></sc-for></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const ARMIES = [
+  { id:'custodes', faction:'Adeptus Custodes', detachment:"Shield Host", label:"Custody's 1995", points:1990,
+    units:[
+      { id:'trajann', name:'Trajann Valoris', warlord:true, count:1, alive:1, infantry:false,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'6'},{label:'Sv',val:'2+'},{label:'W',val:'6'},{label:'Ld',val:'6+'},{label:'Invuln',val:'4++'}],
+        loadouts:[ { id:'main', name:'Vaultsword + Misericordia', count:1, max:1, guns:[
+          { name:'Vaultsword', mode:'Melee', range:'Melee', a:4, skill:'2+', s:7, ap:-2, d:2, keywords:['Precision'] },
+          { name:'Misericordia', mode:'Melee', range:'Melee', a:3, skill:'2+', s:5, ap:-3, d:2, keywords:['Devastating Wounds'] },
+        ] } ],
+        info:'Leader. Once per battle this unit may declare a charge in a turn it Advanced.' },
+      { id:'blade1', name:'Blade Champion', warlord:false, count:1, alive:1, infantry:false,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'6'},{label:'Sv',val:'2+'},{label:'W',val:'6'},{label:'Ld',val:'6+'},{label:'Invuln',val:'4++'}],
+        loadouts:[ { id:'main', name:'Vaultswords', count:1, max:1, guns:[
+          { name:'Vaultswords - Behemor', mode:'Melee', range:'Melee', a:7, skill:'2+', s:7, ap:-2, d:2, keywords:['Precision'] },
+          { name:'Vaultswords - Hurricanis', mode:'Melee', range:'Melee', a:9, skill:'2+', s:5, ap:-1, d:1, keywords:['Sustained Hits 1'] },
+        ] } ],
+        info:'Can be attached to Custodian Guard or Custodian Wardens.' },
+      { id:'custguard1', name:'Custodian Guard', warlord:false, count:5, alive:5, infantry:true,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'6'},{label:'Sv',val:'2+'},{label:'W',val:'3'},{label:'Ld',val:'6+'},{label:'Invuln',val:'4++'}],
+        loadouts:[ { id:'main', name:'Guardian Spear', count:5, max:5, guns:[
+          { name:'Guardian Spear', mode:'Melee', range:'Melee', a:2, skill:'2+', s:7, ap:-1, d:2, keywords:['Assault'] },
+        ] } ],
+        info:'Elite bodyguard squad, Objective Secured within 6" of home.' },
+      { id:'custguard2', name:'Custodian Guard', warlord:false, count:5, alive:5, infantry:true,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'6'},{label:'Sv',val:'2+'},{label:'W',val:'3'},{label:'Ld',val:'6+'},{label:'Invuln',val:'4++'}],
+        loadouts:[ { id:'main', name:'Guardian Spear', count:5, max:5, guns:[
+          { name:'Guardian Spear', mode:'Melee', range:'Melee', a:2, skill:'2+', s:7, ap:-1, d:2, keywords:['Assault'] },
+        ] } ],
+        info:'Elite bodyguard squad, Objective Secured within 6" of home.' },
+      { id:'wardens', name:'Custodian Wardens', warlord:false, count:5, alive:5, infantry:true,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'6'},{label:'Sv',val:'2+'},{label:'W',val:'3'},{label:'Ld',val:'6+'},{label:'Invuln',val:'4++'}],
+        loadouts:[ { id:'main', name:'Guardian Halberd', count:5, max:5, guns:[
+          { name:'Guardian Halberd', mode:'Melee', range:'Melee', a:3, skill:'2+', s:8, ap:-2, d:2, keywords:['Anti-Vehicle 4+'] },
+        ] } ],
+        info:'Deploys near the Warlord, excels against high-toughness targets.' },
+    ] },
+  { id:'chaos', faction:'Chaos Space Marines', detachment:'Pactbound Zealots', label:'Chaos 2015', points:1790,
+    units:[
+      { id:'abaddon', name:'Abaddon the Despoiler', warlord:true, count:1, alive:1, infantry:false,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'6'},{label:'Sv',val:'2+'},{label:'W',val:'7'},{label:'Ld',val:'6+'},{label:'Invuln',val:'4++'}],
+        loadouts:[ { id:'main', name:"Drach'nyen + Talon of Horus", count:1, max:1, guns:[
+          { name:"Drach'nyen", mode:'Melee', range:'Melee', a:6, skill:'2+', s:8, ap:-3, d:3, keywords:['Precision','Lethal Hits'] },
+          { name:'Talon of Horus', mode:'Ranged', range:'12"', a:4, skill:'2+', s:5, ap:-2, d:2, keywords:[] },
+        ] } ],
+        info:'Warlord. Re-rolls Hit rolls of 1 for friendly Chaos Space Marines units within 6".' },
+      { id:'lorddisc', name:'Lord Discordant on Helstalker', warlord:false, count:1, alive:1, infantry:false,
+        stats:[{label:'M',val:'12"'},{label:'T',val:'10'},{label:'Sv',val:'3+'},{label:'W',val:'12'},{label:'Ld',val:'6+'},{label:'Invuln',val:'-'}],
+        loadouts:[ { id:'main', name:'Ravager Autocannon + Baleful Talons', count:1, max:1, guns:[
+          { name:'Ravager Autocannon', mode:'Ranged', range:'36"', a:6, skill:'3+', s:9, ap:-1, d:3, keywords:['Anti-Infantry 4+'], antiInfantry:4 },
+          { name:'Baleful Talons', mode:'Melee', range:'Melee', a:8, skill:'3+', s:8, ap:-2, d:2, keywords:[] },
+        ] } ],
+        info:'Emanations of Change aura debuffs enemy units within 6".' },
+      { id:'legion1', name:'Legionaries', warlord:false, count:5, alive:5, infantry:true, conditionalInvuln:5,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'4'},{label:'Sv',val:'3+'},{label:'W',val:'2'},{label:'Ld',val:'6+'},{label:'Invuln',val:'-'}],
+        loadouts:[ { id:'main', name:'Bolt Rifle', count:5, max:5, guns:[
+          { name:'Bolt Rifle', mode:'Ranged', range:'24"', a:2, skill:'3+', s:4, ap:0, d:1, keywords:['Rapid Fire 1'] },
+        ] } ],
+        info:'Battleline troops, can be equipped with special weapons. Within 6" of an Icon Bearer, gains a conditional 5+ invulnerable save.' },
+      { id:'termsquad', name:'Chaos Terminator Squad', warlord:false, count:5, alive:5, infantry:true,
+        stats:[{label:'M',val:'5"'},{label:'T',val:'5'},{label:'Sv',val:'2+'},{label:'W',val:'3'},{label:'Ld',val:'6+'},{label:'Invuln',val:'4++'}],
+        loadouts:[ { id:'main', name:'Combi-bolter + Power Fist', count:5, max:5, guns:[
+          { name:'Combi-bolter', mode:'Ranged', range:'24"', a:2, skill:'3+', s:4, ap:0, d:1, keywords:['Rapid Fire 2'] },
+          { name:'Power Fist', mode:'Melee', range:'Melee', a:1, skill:'3+', s:8, ap:-2, d:2, keywords:[] },
+        ] } ],
+        info:'Deep strike capable, deadly in close combat.' },
+      { id:'havocs', name:'Havocs', warlord:false, count:5, alive:5, infantry:true,
+        stats:[{label:'M',val:'6"'},{label:'T',val:'4'},{label:'Sv',val:'3+'},{label:'W',val:'2'},{label:'Ld',val:'6+'},{label:'Invuln',val:'-'}],
+        loadouts:[ { id:'main', name:'Autocannon', count:5, max:5, guns:[
+          { name:'Autocannon', mode:'Ranged', range:'48"', a:2, skill:'3+', s:9, ap:-1, d:3, keywords:['Heavy'] },
+        ] } ],
+        info:'Heavy weapons support squad, best kept stationary.' },
+    ] },
+];
+
+const INV_STEPS = [null, 6, 5, 4, 3, 2];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'armies',
+    sideAId: 'custodes',
+    sideBId: 'chaos',
+    openA: null,
+    openB: null,
+    loadoutOpen: {},
+    loadoutCount: {},
+    calc: { mode:'ranged', hitMod:0, woundMod:0, apWorsened:false, halfRange:false, invulnOverride:null },
+  };
+
+  findArmy(id) { return ARMIES.find(a => a.id === id); }
+  pickArmy(id) {
+    this.setState(s => {
+      if (s.sideAId === id) return { sideAId: null };
+      if (s.sideBId === id) return { sideBId: null };
+      if (!s.sideAId) return { sideAId: id };
+      if (!s.sideBId) return { sideBId: id };
+      return { sideBId: id };
+    });
+  }
+  toggleUnit(side, id) {
+    this.setState(s => {
+      const key = side === 'A' ? 'openA' : 'openB';
+      return { [key]: s[key] === id ? null : id };
+    });
+  }
+  toggleLoadout(key) { this.setState(s => ({ loadoutOpen: { ...s.loadoutOpen, [key]: !s.loadoutOpen[key] } })); }
+  adjustLoadoutCount(key, delta, max) {
+    this.setState(s => {
+      const cur = s.loadoutCount[key] ?? max;
+      return { loadoutCount: { ...s.loadoutCount, [key]: Math.max(0, Math.min(max, cur + delta)) } };
+    });
+  }
+  cycleInv(delta) {
+    this.setState(s => {
+      const idx = INV_STEPS.indexOf(s.calc.invulnOverride);
+      const next = Math.max(0, Math.min(INV_STEPS.length - 1, idx + delta));
+      return { calc: { ...s.calc, invulnOverride: INV_STEPS[next] } };
+    });
+  }
+
+  buildUnitList(side, units) {
+    const openId = side === 'A' ? this.state.openA : this.state.openB;
+    const accentColor = side === 'A' ? 'oklch(0.55 0.1 190)' : 'oklch(0.55 0.1 30)';
+    const stepStyle = { border:'none', outline:'none', fontFamily:'inherit', cursor:'pointer', width:'26px', height:'26px', borderRadius:'5px', background:'oklch(0.27 0.006 260)', color:'oklch(0.78 0.006 260)', fontSize:'13px', lineHeight:1 };
+    return units.map(u => {
+      const open = openId === u.id;
+      const loadouts = u.loadouts.map(lo => {
+        const loKey = side + '_' + u.id + '_' + lo.id;
+        const count = this.state.loadoutCount[loKey] ?? lo.count;
+        const loOpen = !!this.state.loadoutOpen[loKey];
+        const ranged = lo.guns.filter(g => g.mode === 'Ranged').map(g => ({ ...g, ct: count, keywordsText: g.keywords.join(', ') }));
+        const melee = lo.guns.filter(g => g.mode === 'Melee').map(g => ({ ...g, ct: count, keywordsText: g.keywords.join(', ') }));
+        const groups = [];
+        if (ranged.length) groups.push({ label: 'Ranged', guns: ranged });
+        if (melee.length) groups.push({ label: 'Melee', guns: melee });
+        return { ...lo, count, open: loOpen, groups,
+          toggle: () => this.toggleLoadout(loKey),
+          dec: () => this.adjustLoadoutCount(loKey, -1, lo.max),
+          inc: () => this.adjustLoadoutCount(loKey, 1, lo.max),
+          chevronStyle: { display:'inline-block', fontSize:'11px', color: loOpen ? accentColor : 'oklch(0.55 0.01 260)', transform: loOpen ? 'rotate(90deg)' : 'none', transition:'transform .15s' },
+        };
+      });
+      return { ...u, loadouts, isOpen: open,
+        toggle: () => this.toggleUnit(side, u.id),
+        stepStyle,
+        rowStyle: { display:'flex', alignItems:'center', gap:'10px', padding:'14px 16px', minHeight:'48px', cursor:'pointer', background: open ? 'oklch(0.3 0.012 260)' : 'transparent' },
+        chevronStyle: { display:'inline-block', fontSize:'13px', color: open ? accentColor : 'oklch(0.55 0.01 260)', transform: open ? 'rotate(90deg)' : 'none', transition:'transform .15s' },
+      };
+    });
+  }
+
+  computeSave(ap, defender) {
+    const s = this.state.calc;
+    let sv = parseInt(defender.stats.find(x => x.label === 'Sv').val) + Math.abs(ap) + (s.apWorsened ? 1 : 0);
+    const staticInv = defender.stats.find(x => x.label === 'Invuln').val;
+    const staticInvNum = staticInv && staticInv !== '-' ? parseInt(staticInv) : null;
+    let effInv = s.invulnOverride ?? staticInvNum;
+    if (effInv && (sv > effInv || sv > 6)) sv = effInv;
+    return Math.min(Math.max(sv, 2), 7);
+  }
+
+  buildRow(count, gun, defenderUnit) {
+    const s = this.state.calc;
+    const hit = Math.max(2, Math.min(6, parseInt(gun.skill) - s.hitMod + (s.halfRange ? -1 : 0)));
+    let wound = Math.max(2, Math.min(6, 4 - s.woundMod));
+    const notes = [];
+    if (gun.antiInfantry && defenderUnit.infantry) {
+      wound = Math.min(wound, gun.antiInfantry);
+      notes.push({ text: `Anti-Infantry ${gun.antiInfantry}+ applied`, style: { color: 'oklch(0.68 0.15 145)' } });
+    }
+    if (defenderUnit.conditionalInvuln) {
+      if (s.invulnOverride === defenderUnit.conditionalInvuln) {
+        notes.push({ text: `Conditional ${defenderUnit.conditionalInvuln}+ invuln applied`, style: { color: 'oklch(0.68 0.15 145)' } });
+      } else {
+        notes.push({ text: `Target has a conditional ${defenderUnit.conditionalInvuln}+ invuln, not applied — set Invuln override if it applies here`, style: { color: 'oklch(0.68 0.16 30)' } });
+      }
+    }
+    const save = this.computeSave(gun.ap, defenderUnit);
+    const pHit = (7 - hit) / 6, pWound = (7 - wound) / 6, pFailSave = (save - 1) / 6;
+    const atk = count * gun.a;
+    const expected = (atk * pHit * pWound * pFailSave * gun.d).toFixed(1);
+    return { countLabel: count, name: gun.name, atk, hit, wound, save: save > 6 ? '-' : save + '+',
+      baseSave: defenderUnit.stats.find(x => x.label === 'Sv').val.replace('+',''), ap: gun.ap, keywords: gun.keywords, notes, expectedDamage: expected };
+  }
+
+  flattenGuns(unit) {
+    const out = [];
+    unit.loadouts.forEach(lo => lo.groups.forEach(g => g.guns.forEach(gun => out.push({ count: gun.ct, gun }))));
+    return out;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const btnBase = { border:'none', outline:'none', fontFamily:'inherit', cursor:'pointer' };
+
+    const armiesTabStyle = { ...btnBase, borderRadius:'7px', padding:'11px 22px', fontSize:'14.5px', fontWeight:600, minHeight:'44px',
+      background: s.screen === 'armies' ? 'oklch(0.37 0.03 260)' : 'transparent', color: s.screen === 'armies' ? 'oklch(0.95 0.004 260)' : 'oklch(0.6 0.01 260)' };
+    const compareTabStyle = { ...btnBase, borderRadius:'7px', padding:'11px 22px', fontSize:'14.5px', fontWeight:600, minHeight:'44px',
+      background: s.screen === 'compare' ? 'oklch(0.37 0.03 260)' : 'transparent', color: s.screen === 'compare' ? 'oklch(0.95 0.004 260)' : 'oklch(0.6 0.01 260)' };
+
+    const armyA = this.findArmy(s.sideAId) || ARMIES[0];
+    const armyB = this.findArmy(s.sideBId) || ARMIES[1];
+    const bothPicked = !!s.sideAId && !!s.sideBId;
+    const startBtnStyle = { ...btnBase, width:'100%', padding:'16px', marginTop:'12px', minHeight:'52px', borderRadius:'9px', fontSize:'15px', fontWeight:600,
+      cursor: bothPicked ? 'pointer' : 'not-allowed', background: bothPicked ? 'oklch(0.44 0.11 190)' : 'oklch(0.28 0.006 260)', color: bothPicked ? 'oklch(0.98 0.004 260)' : 'oklch(0.45 0.008 260)' };
+
+    const armies = ARMIES.map(a => {
+      const isA = s.sideAId === a.id, isB = s.sideBId === a.id;
+      return { ...a,
+        pick: () => this.pickArmy(a.id),
+        rowStyle: { display:'flex', alignItems:'stretch', cursor:'pointer', background:'oklch(0.27 0.006 260)',
+          border: (isA||isB) ? '1px solid oklch(0.4 0.06 190 / 0.5)' : '1px solid oklch(0.33 0.008 260)', borderRadius:'8px', marginBottom:'8px', overflow:'hidden' },
+        sideBarStyle: { width:'4px', background: isA ? 'oklch(0.5 0.1 190)' : isB ? 'oklch(0.5 0.1 30)' : 'transparent' },
+        badge: isA ? 'A' : isB ? 'B' : null,
+        badgeStyle: { background: isA ? 'oklch(0.4 0.1 190)' : 'oklch(0.4 0.1 30)', color:'oklch(0.98 0.004 260)', fontSize:'11px', fontWeight:700, padding:'2px 7px', borderRadius:'4px' },
+      };
+    });
+
+    const rangedModeStyle = { ...btnBase, borderRadius:'6px', padding:'10px 20px', fontSize:'13.5px', fontWeight:600, minHeight:'40px',
+      background: s.calc.mode === 'ranged' ? 'oklch(0.4 0.03 260)' : 'transparent', color: s.calc.mode === 'ranged' ? 'oklch(0.95 0.004 260)' : 'oklch(0.55 0.01 260)' };
+    const meleeModeStyle = { ...btnBase, borderRadius:'6px', padding:'10px 20px', fontSize:'13.5px', fontWeight:600, minHeight:'40px',
+      background: s.calc.mode === 'melee' ? 'oklch(0.4 0.03 260)' : 'transparent', color: s.calc.mode === 'melee' ? 'oklch(0.95 0.004 260)' : 'oklch(0.55 0.01 260)' };
+    const stepBtnStyle = { ...btnBase, width:'36px', height:'36px', border:'1px solid oklch(0.4 0.01 260)', borderRadius:'6px', background:'oklch(0.25 0.006 260)', color:'oklch(0.8 0.006 260)', fontSize:'16px', lineHeight:1 };
+    const chip = active => ({ ...btnBase, border:'1px solid ' + (active ? 'oklch(0.5 0.1 190)' : 'oklch(0.38 0.01 260)'), borderRadius:'7px', padding:'10px 16px', fontSize:'13px', minHeight:'40px',
+      background: active ? 'oklch(0.26 0.045 190 / 0.4)' : 'oklch(0.25 0.006 260)', color: active ? 'oklch(0.85 0.06 190)' : 'oklch(0.62 0.01 260)' });
+    const clearBtnStyle = { ...btnBase, marginLeft:'auto', border:'1px solid oklch(0.38 0.01 260)', borderRadius:'7px', color:'oklch(0.6 0.01 260)', fontSize:'13px', padding:'10px 16px', minHeight:'40px', background:'none' };
+
+    const unitsA = this.buildUnitList('A', armyA.units);
+    const unitsB = this.buildUnitList('B', armyB.units);
+    const attackerA = unitsA.find(u => u.id === s.openA) || unitsA[0];
+    const defenderA = unitsB.find(u => u.id === s.openB) || unitsB[0];
+    const gunsA = this.flattenGuns(attackerA), gunsB = this.flattenGuns(defenderA);
+    const calcGroups = [
+      { atkName: attackerA.name, defName: defenderA.name, atkColorStyle: { color:'oklch(0.75 0.09 190)' }, defColorStyle: { color:'oklch(0.75 0.1 30)' },
+        rows: gunsA.map(x => this.buildRow(x.count, x.gun, defenderA)) },
+      { atkName: defenderA.name, defName: attackerA.name, atkColorStyle: { color:'oklch(0.75 0.1 30)' }, defColorStyle: { color:'oklch(0.75 0.09 190)' },
+        rows: gunsB.map(x => this.buildRow(x.count, x.gun, attackerA)) },
+    ];
+
+    const invLabel = s.calc.invulnOverride == null ? 'None' : s.calc.invulnOverride + '+';
+
+    return {
+      isArmies: s.screen === 'armies', isCompare: s.screen === 'compare',
+      armiesTabStyle, compareTabStyle, goArmies: () => this.setState({ screen: 'armies' }), goCompare: () => this.setState({ screen: 'compare' }),
+      armies, bothPicked, startDisabled: !bothPicked, startBtnStyle, startCompare: () => this.setState({ screen: 'compare' }),
+      armyA: { ...armyA, units: unitsA }, armyB: { ...armyB, units: unitsB },
+      calc: s.calc, invLabel,
+      rangedModeStyle, meleeModeStyle, setModeRanged: () => this.setState(st => ({ calc: { ...st.calc, mode:'ranged' } })), setModeMelee: () => this.setState(st => ({ calc: { ...st.calc, mode:'melee' } })),
+      stepBtnStyle,
+      incHit: () => this.setState(st => ({ calc: { ...st.calc, hitMod: Math.min(2, st.calc.hitMod + 1) } })),
+      decHit: () => this.setState(st => ({ calc: { ...st.calc, hitMod: Math.max(-2, st.calc.hitMod - 1) } })),
+      incWound: () => this.setState(st => ({ calc: { ...st.calc, woundMod: Math.min(2, st.calc.woundMod + 1) } })),
+      decWound: () => this.setState(st => ({ calc: { ...st.calc, woundMod: Math.max(-2, st.calc.woundMod - 1) } })),
+      incInv: () => this.cycleInv(1), decInv: () => this.cycleInv(-1),
+      apChipStyle: chip(s.calc.apWorsened), halfRangeChipStyle: chip(s.calc.halfRange),
+      toggleAp: () => this.setState(st => ({ calc: { ...st.calc, apWorsened: !st.calc.apWorsened } })),
+      toggleHalfRange: () => this.setState(st => ({ calc: { ...st.calc, halfRange: !st.calc.halfRange } })),
+      clearBtnStyle, resetCalc: () => this.setState({ calc: { mode:'ranged', hitMod:0, woundMod:0, apWorsened:false, halfRange:false, invulnOverride:null } }),
+      calcGroups,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+
+  --paper: oklch(0.23 0.006 260);
+  --panel: oklch(0.27 0.006 260);
+  --paper-sunk: oklch(0.32 0.02 260);
+  --inset: oklch(0.17 0.006 260);
+  --header-bg: oklch(0.19 0.006 260);
+  --rule: oklch(0.34 0.008 260);
+  --ink: oklch(0.92 0.004 260);
+  --ink-soft: oklch(0.58 0.01 260);
+
+  /* Interactive accent for open/expanded state. Each ArmyPanel overrides
+     this family with its own side colour; the root values are what the
+     combat calculator sees, since it sits outside both panels. */
+  --accent: oklch(0.72 0.12 265);
+  --accent-heading: oklch(0.86 0.08 265);
+  --accent-wash: oklch(0.24 0.04 265 / 0.5);
+
+  --side-a: oklch(0.55 0.1 190);
+  --side-a-heading: oklch(0.85 0.08 190);
+  --side-a-fill: oklch(0.44 0.11 190);
+  --side-a-wash: oklch(0.22 0.02 190 / 0.5);
+  --side-b: oklch(0.55 0.1 30);
+  --side-b-heading: oklch(0.8 0.1 30);
+  --side-b-wash: oklch(0.24 0.06 30 / 0.35);
+
+  /* Neutral metadata accent: readable but carrying none of the good/bad
+     meaning of --boost, --warn, --positive or --negative. */
+  --meta: oklch(0.7 0.07 230);
+
+  --warn: oklch(0.68 0.16 30);
+  --boost: oklch(0.75 0.12 90);
+  --positive: oklch(0.68 0.15 145);
+  --negative: oklch(0.68 0.16 30);
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-display: "Chakra Petch", "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  /* The outer page must never scroll or rubber-band — every scrollable
+     area in this app is a nested `overflow-y-auto` container instead.
+     On iOS Safari, letting the *document* itself bounce (even briefly,
+     even by a sub-pixel rounding gap) is what triggers WebKit's
+     fullscreen controller to silently exit requestFullscreen() — CSS
+     `overscroll-behavior` alone does not prevent that native gesture,
+     only `overflow: hidden` on the real scrolling root does. */
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.display {
+  font-family: var(--font-display);
+}
+
+.expand-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 150ms ease;
+}
+
+.expand-body[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+/* `clip` rather than `hidden`: a hidden-overflow box is still a scroll
+   container, so scrollIntoView (find-in-page, focusing a button inside a
+   collapsed section) could scroll it and leave the first line of the
+   collapsed content peeking out under the header. A clipped box cannot
+   scroll at all. Collapsed content is also made invisible once the
+   close animation has run, so find-in-page and keyboard focus skip it. */
+.expand-body > div {
+  overflow: clip;
+  min-height: 0;
+  transition: visibility 0s linear 150ms;
+}
+
+.expand-body:not([data-open="true"]) > div {
+  visibility: hidden;
+}
+
+.expand-body[data-open="true"] > div {
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expand-body,
+  .expand-body > div {
+    transition: none;
+  }
+}
+
+.voice-dot {
+  animation: voice-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes voice-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-dot {
+    animation: none;
+  }
+}

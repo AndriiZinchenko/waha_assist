@@ -1,0 +1,20 @@
+node_modules
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+
+.vscode/*
+!.vscode/extensions.json
+
+# New Recruit login session for scripts/sync-newrecruit.mjs
+.newrecruit-session.json
+
+# Synced army config written by the dev server
+/data/
+
+# Dev server logs
+*.log
+
+# Per-machine Claude Code settings
+.claude/settings.local.json
