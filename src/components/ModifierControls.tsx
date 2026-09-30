@@ -2,13 +2,9 @@ import type { DirectionModifiers } from "../lib/combat";
 import { useUi } from "../lib/uiStrings";
 import { Stepper } from "./Stepper";
 
-export type WeaponFilter = "ranged" | "melee";
-
 interface ModifierControlsProps {
   modifiers: DirectionModifiers;
   onChange: (next: DirectionModifiers) => void;
-  weaponFilter: WeaponFilter;
-  onWeaponFilterChange: (next: WeaponFilter) => void;
   /** Deselect both units so another pair can be compared. The calculator
    * itself stays open; the modifiers are not saved and reset with it. */
   onClose: () => void;
@@ -19,43 +15,6 @@ const MINUS = "−";
 function formatMod(mod: number): string {
   if (mod === 0) return "±0";
   return mod > 0 ? `+${mod}` : `${MINUS}${-mod}`;
-}
-
-function WeaponFilterSwitch({
-  value,
-  onChange,
-}: {
-  value: WeaponFilter;
-  onChange: (next: WeaponFilter) => void;
-}) {
-  const options: WeaponFilter[] = ["ranged", "melee"];
-  return (
-    <span
-      role="group"
-      aria-label="Weapon type"
-      className="flex h-[46px] rounded-[var(--r-control)] overflow-hidden shrink-0"
-      style={{ border: "1px solid var(--rule)" }}
-    >
-      {options.map((option, i) => {
-        const isActive = value === option;
-        return (
-          <button
-            key={option}
-            type="button"
-            aria-pressed={isActive}
-            onClick={() => onChange(option)}
-            className={`display w-[74px] text-[14px] font-extrabold uppercase tracking-[0.1em] ${isActive ? "selected" : ""}`}
-            style={{
-              color: isActive ? undefined : "var(--ink-2)",
-              borderLeft: i > 0 ? "1px solid var(--rule)" : undefined,
-            }}
-          >
-            {option}
-          </button>
-        );
-      })}
-    </span>
-  );
 }
 
 function CheckToggle({
@@ -100,8 +59,6 @@ function CheckToggle({
 export function ModifierControls({
   modifiers,
   onChange,
-  weaponFilter,
-  onWeaponFilterChange,
   onClose,
 }: ModifierControlsProps) {
   const ui = useUi();
@@ -109,7 +66,6 @@ export function ModifierControls({
 
   return (
     <div className="px-[12px] py-[10px] flex flex-wrap gap-[8px]">
-      <WeaponFilterSwitch value={weaponFilter} onChange={onWeaponFilterChange} />
       <Stepper
         caption="Hit"
         value={formatMod(modifiers.hitMod)}

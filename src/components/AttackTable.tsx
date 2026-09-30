@@ -5,7 +5,7 @@ import {
   leaderHitPenaltySources,
 } from "../lib/leaderEffects";
 import type { Side } from "./ArmyPanel";
-import type { WeaponFilter } from "./ModifierControls";
+import type { WeaponMode } from "../lib/route";
 import { AttackRow } from "./AttackRow";
 import { SideMark } from "./SideMark";
 
@@ -20,7 +20,7 @@ interface AttackTableProps {
   /** The attacker's side. */
   side: Side;
   modifiers: DirectionModifiers;
-  weaponFilter: WeaponFilter;
+  weaponFilter: WeaponMode;
 }
 
 const COLOR: Record<Side, string> = {

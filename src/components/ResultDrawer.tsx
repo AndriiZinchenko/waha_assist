@@ -2,7 +2,8 @@ import { useState, type ReactNode } from "react";
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import { emptyModifiers, type DirectionModifiers } from "../lib/combat";
 import { AttackTable } from "./AttackTable";
-import { ModifierControls, type WeaponFilter } from "./ModifierControls";
+import type { WeaponMode } from "../lib/route";
+import { ModifierControls } from "./ModifierControls";
 
 interface ResultDrawerProps {
   unitA: ParsedUnit | null;
@@ -11,11 +12,13 @@ interface ResultDrawerProps {
   unitsB: ParsedUnit[];
   leaderAssignments: Record<string, string>;
   counts: Record<string, number>;
+  /** Ranged or melee, chosen in the header for the phase being played. */
+  weapons: WeaponMode;
   onClose: () => void;
 }
 
 /**
- * Docked at the bottom of the battle area, never taller than 58% of it on
+ * Always docked at the bottom of the battle area, never taller than 58% of it on
  * phones and 46% on tablets, so the unit lists above stay usable. The
  * controls stick to the top of the drawer while the results scroll.
  */
@@ -44,6 +47,7 @@ export function ResultDrawer({
   unitsB,
   leaderAssignments,
   counts,
+  weapons,
   onClose,
 }: ResultDrawerProps) {
   if (!unitA || !unitB) {
@@ -65,6 +69,7 @@ export function ResultDrawer({
       unitsB={unitsB}
       leaderAssignments={leaderAssignments}
       counts={counts}
+      weapons={weapons}
       onClose={onClose}
     />
   );
@@ -77,6 +82,7 @@ interface CombatResultsProps {
   unitsB: ParsedUnit[];
   leaderAssignments: Record<string, string>;
   counts: Record<string, number>;
+  weapons: WeaponMode;
   onClose: () => void;
 }
 
@@ -87,10 +93,10 @@ function CombatResults({
   unitsB,
   leaderAssignments,
   counts,
+  weapons,
   onClose,
 }: CombatResultsProps) {
   const [modifiers, setModifiers] = useState<DirectionModifiers>(emptyModifiers());
-  const [weaponFilter, setWeaponFilter] = useState<WeaponFilter>("ranged");
 
   return (
     <Drawer>
@@ -101,8 +107,6 @@ function CombatResults({
         <ModifierControls
           modifiers={modifiers}
           onChange={setModifiers}
-          weaponFilter={weaponFilter}
-          onWeaponFilterChange={setWeaponFilter}
           onClose={onClose}
         />
       </div>
@@ -115,7 +119,7 @@ function CombatResults({
           leaderAssignments={leaderAssignments}
           side="a"
           modifiers={modifiers}
-          weaponFilter={weaponFilter}
+          weaponFilter={weapons}
         />
         <AttackTable
           attacker={unitB}
@@ -125,7 +129,7 @@ function CombatResults({
           leaderAssignments={leaderAssignments}
           side="b"
           modifiers={modifiers}
-          weaponFilter={weaponFilter}
+          weaponFilter={weapons}
         />
       </div>
     </Drawer>

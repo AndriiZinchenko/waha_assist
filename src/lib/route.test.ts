@@ -8,7 +8,7 @@ const base: RouteState = {
   b: null,
   ua: null,
   ub: null,
-  calc: false,
+  weapons: "ranged",
   side: "a",
 };
 
@@ -33,14 +33,14 @@ describe("parseRoute", () => {
   });
 
   it("reads a full battle route", () => {
-    expect(parseRoute("#/battle?a=Orks&b=Ultramar&ua=oll0fu&ub=x1&calc=1&side=b")).toEqual({
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&ua=oll0fu&ub=x1&w=melee&side=b")).toEqual({
       screen: "battle",
       configArmyId: null,
       a: "Orks",
       b: "Ultramar",
       ua: "oll0fu",
       ub: "x1",
-      calc: true,
+      weapons: "melee",
       side: "b",
     });
   });
@@ -56,6 +56,16 @@ describe("parseRoute", () => {
 
   it("ignores an invalid side value", () => {
     expect(parseRoute("#/battle?a=Orks&b=Ultramar&side=c").side).toBe("a");
+  });
+
+  it("defaults the weapon type to ranged, ignoring unknown values and the old calc flag", () => {
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&w=psychic").weapons).toBe("ranged");
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&calc=1")).toEqual({
+      ...base,
+      screen: "battle",
+      a: "Orks",
+      b: "Ultramar",
+    });
   });
 });
 
@@ -73,8 +83,8 @@ describe("formatRoute", () => {
 
   it("writes only the battle fields that are set", () => {
     expect(
-      formatRoute({ ...base, screen: "battle", a: "Orks", b: "Ultramar", ua: "oll0fu", calc: true }),
-    ).toBe("#/battle?a=Orks&b=Ultramar&ua=oll0fu&calc=1");
+      formatRoute({ ...base, screen: "battle", a: "Orks", b: "Ultramar", ua: "oll0fu", weapons: "melee" }),
+    ).toBe("#/battle?a=Orks&b=Ultramar&ua=oll0fu&w=melee");
     expect(formatRoute({ ...base, screen: "battle", a: "Orks", b: "Ultramar", side: "b" })).toBe(
       "#/battle?a=Orks&b=Ultramar&side=b",
     );
@@ -88,7 +98,7 @@ describe("formatRoute", () => {
       b: "Grey",
       ua: "abc",
       ub: null,
-      calc: true,
+      weapons: "melee",
       side: "b",
     };
     expect(parseRoute(formatRoute(route))).toEqual(route);

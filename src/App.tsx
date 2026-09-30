@@ -17,13 +17,14 @@ import { ArmyPanel, type Side } from "./components/ArmyPanel";
 import { ArmySetupScreen } from "./components/ArmySetupScreen";
 import { SyncConflictModal } from "./components/SyncConflictModal";
 import { SyncStatus } from "./components/SyncStatus";
-import { CombatToggle } from "./components/CombatToggle";
 import { HeaderOverflow } from "./components/HeaderOverflow";
 import { LangToggle } from "./components/LangToggle";
 import { ResultDrawer } from "./components/ResultDrawer";
 import { SideSwitcher } from "./components/SideSwitcher";
 import { VoiceCommander, type VoiceFeedback } from "./components/VoiceCommander";
 import { VoiceToggle } from "./components/VoiceToggle";
+import { WeaponModeToggle } from "./components/WeaponModeToggle";
+import type { WeaponMode } from "./lib/route";
 import { WakeLockToggle } from "./components/WakeLockToggle";
 
 // Storage holds the army-list-level state (model counts, leader
@@ -46,7 +47,6 @@ function App() {
   const armyA = armies.find((a) => a.id === route.a) ?? null;
   const armyB = armies.find((a) => a.id === route.b) ?? null;
   const selectedUnitId: Record<Side, string | null> = { a: route.ua, b: route.ub };
-  const combatEnabled = route.calc;
   const activeSide = route.side;
 
   // The units actually in play — hidden ones excluded, leader-attachment
@@ -78,9 +78,8 @@ function App() {
     );
   }
 
-  // Collapses both units so a different pair can be picked. The calculator
-  // stays open, and unmounting the results drops the modifiers with them:
-  // they were never saved anyway.
+  // Collapses both units so a different pair can be picked. Unmounting the
+  // results drops the modifiers with them: they were never saved anyway.
   function handleCloseUnits() {
     navigate({ ...route, ua: null, ub: null }, { replace: true });
   }
@@ -101,15 +100,14 @@ function App() {
     navigate({ ...route, side }, { replace: true });
   }
 
-  function handleToggleCombat() {
-    navigate({ ...route, calc: !route.calc }, { replace: true });
+  function handleSetWeapons(weapons: WeaponMode) {
+    navigate({ ...route, weapons }, { replace: true });
   }
 
   /**
    * "X against Y" heard: X counts down side A's list, Y side B's, both in
    * the on-screen order (numbers shown while voice mode is on). Selects
-   * both units and opens the calculator; the returned undo puts the
-   * previous selection and calculator state back.
+   * both units; the returned undo puts the previous selection back.
    */
   function handleVoiceSelect(
     command: Extract<VoiceCommand, { type: "select" }>,
@@ -125,7 +123,7 @@ function App() {
       return { kind: "error", text: missing };
     }
     const before = route;
-    navigate({ ...route, ua: attacker.id, ub: target.id, calc: true }, { replace: true });
+    navigate({ ...route, ua: attacker.id, ub: target.id }, { replace: true });
     return {
       kind: "ok",
       text: `${command.attacker} → ${command.target}: ${attacker.name} vs ${target.name}`,
@@ -259,7 +257,9 @@ function App() {
                 onToggle={() => setVoiceEnabled((v) => !v)}
               />
             )}
-            <CombatToggle enabled={combatEnabled} onToggle={handleToggleCombat} />
+            {showPanels && (
+              <WeaponModeToggle mode={route.weapons} onChange={handleSetWeapons} />
+            )}
             <span className="min-[900px]:hidden">
               <HeaderOverflow
                 lang={state.lang}
@@ -319,17 +319,16 @@ function App() {
                 showNumbers={voiceEnabled}
               />
             </div>
-            {combatEnabled && (
-              <ResultDrawer
-                unitA={unitA}
-                unitB={unitB}
-                unitsA={unitsA}
-                unitsB={unitsB}
-                leaderAssignments={state.leaderAssignments}
-                counts={state.modelCounts}
-                onClose={handleCloseUnits}
-              />
-            )}
+            <ResultDrawer
+              unitA={unitA}
+              unitB={unitB}
+              unitsA={unitsA}
+              unitsB={unitsB}
+              leaderAssignments={state.leaderAssignments}
+              counts={state.modelCounts}
+              weapons={route.weapons}
+              onClose={handleCloseUnits}
+            />
           </div>
         ) : configArmy ? (
           <ArmyConfigScreen
