@@ -50,7 +50,12 @@ itself, which is always cheaply re-derived from the `armies/` folder. See
 
 ## 3. Design tokens
 
-**Superseded by a full re-skin** — see `design_handoff_battle_assist/README.md`
+**Superseded again by the Dataslate re-skin** — the live tokens, type scale and
+component rules are in `docs/dataslate-migration.md` (§2–§5), with visual
+references in `design/dataslate/`. `src/index.css` is the source of truth. The
+text below describes the previous re-skin and is kept for history only.
+
+~~Superseded by a full re-skin~~ — see `design_handoff_battle_assist/README.md`
 for the source design spec (dark, tablet-first, OKLCH palette) and
 `design_handoff_battle_assist/Waha 40k Assist.dc.html` for the interactive
 reference this was built against. The values below are what actually shipped

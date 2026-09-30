@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>*{scrollbar-width:none}*::-webkit-scrollbar{display:none}body{margin:0;background:oklch(0.19 0 0)}a{color:oklch(0.98 0 0)}a:hover{color:oklch(0.84 0.15 150)}</style>
+</helmet>
+<div style="min-height:100vh;background:oklch(0.19 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;padding:72px 80px 140px;display:flex;flex-direction:column;gap:110px">
+
+<div style="display:flex;flex-direction:column;gap:14px;max-width:880px">
+  <div style="font:700 14px 'JetBrains Mono',monospace;letter-spacing:0.1em;color:oklch(0.78 0 0)">40K COMBAT ASSISTANT · REDESIGN · DIRECTION 01</div>
+  <div style="font:800 64px/0.95 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.01em;text-transform:uppercase">Dataslate</div>
+  <div style="font:400 19px/1.5 'Source Serif 4',serif;color:oklch(0.88 0 0);text-wrap:pretty">A field-manual reference: neutral graphite ground, white ink, codex serif for rules text and a condensed face that absorbs long Ukrainian strings. Side A is Crimson with a square mark and always sits left. Side B is Cyan with a diamond mark and always sits right. Every number is set in a monospace so columns align at arm’s length.</div>
+</div>
+
+<section data-screen-label="System" style="display:flex;flex-direction:column;gap:40px">
+  <div style="font:800 32px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.08em;border-bottom:1px solid oklch(0.44 0 0);padding-bottom:12px">SYSTEM</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px">
+    <sc-for list="{{ palette }}" as="g" hint-placeholder-count="4">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">{{ g.label }}</div>
+        <div style="display:flex;gap:10px">
+          <sc-for list="{{ g.items }}" as="c" hint-placeholder-count="4">
+            <div style="width:112px;display:flex;flex-direction:column;gap:6px">
+              <div style="height:72px;border-radius:4px;background:{{ c.v }};border:1px solid oklch(0.44 0 0);display:flex;align-items:flex-end;padding:8px;box-sizing:border-box;font:700 18px 'JetBrains Mono',monospace;color:{{ c.ink }}">{{ c.glyph }}</div>
+              <div style="font:600 15px 'Fira Sans Condensed',sans-serif">{{ c.n }}</div>
+              <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ c.code }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:56px;align-items:start">
+    <div style="display:flex;flex-direction:column">
+      <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-bottom:10px">TYPE SCALE</div>
+      <sc-for list="{{ typeRows }}" as="t" hint-placeholder-count="8">
+        <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:baseline;padding:12px 0;border-top:1px solid oklch(0.37 0 0)">
+          <div><div style="font:600 15px 'Fira Sans Condensed',sans-serif">{{ t.role }}</div><div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ t.spec }}</div></div>
+          <div style="font:{{ t.font }};letter-spacing:{{ t.ls }};text-transform:{{ t.tt }};font-variant-numeric:tabular-nums">{{ t.sample }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:32px">
+      <div>
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-bottom:12px">SPACING</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ spacing }}" as="s" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:14px"><span style="width:52px;font:500 13px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">{{ s.n }}</span><span style="height:14px;width:{{ s.w }};background:oklch(0.88 0 0)"></span><span style="font:400 13px 'Fira Sans Condensed',sans-serif;color:oklch(0.78 0 0)">{{ s.use }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-bottom:12px">RADIUS</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap">
+          <sc-for list="{{ radii }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span style="width:64px;height:48px;border:2px solid oklch(0.88 0 0);border-radius:{{ r.v }};clip-path:{{ r.clip }};background:oklch(0.335 0 0)"></span><span style="font:500 12px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">{{ r.n }}</span><span style="font:400 12px 'Fira Sans Condensed',sans-serif;color:oklch(0.78 0 0)">{{ r.use }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-bottom:12px">SIDE IDENTITY — COLOUR + SHAPE + POSITION</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="padding:14px;background:oklch(0.34 0.09 22);border-top:3px solid oklch(0.66 0.20 22);display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:8px"><span style="width:16px;height:16px;background:oklch(0.66 0.20 22)"></span><span style="font:800 16px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">SIDE A</span></div><span style="font:400 14px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Square mark. Left half of every switcher, left panel on tablet, first name in results.</span></div>
+          <div style="padding:14px;background:oklch(0.35 0.06 215);border-top:3px solid oklch(0.82 0.12 210);display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;background:oklch(0.82 0.12 210);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span><span style="font:800 16px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.82 0.12 210)">SIDE B</span></div><span style="font:400 14px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Diamond mark. Right half of every switcher, right panel on tablet.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-bottom:16px">COMPONENTS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+      <div style="width:390px;display:flex;flex-direction:column;gap:8px">
+        <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">List row — closed · open · leader + nested · casualties · allied</div>
+        <div style="background:oklch(0.255 0 0);border:1px solid oklch(0.37 0 0)">
+          <sc-for list="{{ compRows }}" as="u" hint-placeholder-count="5">
+            <div style="position:relative;display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px 0 {{ u.pl }};border-bottom:1px solid oklch(0.37 0 0);background:{{ u.bg }};box-shadow:{{ u.rail }}">
+              <span style="position:absolute;left:20px;top:0;height:50%;width:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+              <span style="position:absolute;left:20px;top:50%;width:11px;height:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+              <span style="width:12px;flex:none;font-size:12px;color:oklch(0.78 0 0)">{{ u.chev }}</span>
+              <span style="flex:1;min-width:0;font:{{ u.fw }} 17px/1.2 'Fira Sans Condensed',sans-serif">{{ u.name }}<span style="color:{{ u.sc }}">{{ u.star }}</span></span>
+              <span style="display:{{ u.allyD }};padding:4px 6px;border:1px solid oklch(0.55 0 0);border-radius:2px;font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0);flex:none">{{ u.ally }}</span>
+              <span style="flex:none;font:600 16px 'JetBrains Mono',monospace"><span style="color:{{ u.cfg }}">{{ u.live }}</span><span style="color:oklch(0.78 0 0)">/{{ u.total }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Stepper — default · at upper bound · at lower bound</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ steppers }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+                  <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:{{ s.mbg }};color:{{ s.mfg }}">−</span>
+                  <span style="width:40px;display:flex;align-items:center;justify-content:center;font:700 20px 'JetBrains Mono',monospace;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0)">{{ s.v }}</span>
+                  <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:{{ s.pbg }};color:{{ s.pfg }}">+</span>
+                </div>
+                <span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">of {{ s.of }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Segmented toggle · side picker</div>
+          <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;width:max-content">
+            <span style="width:80px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:oklch(0.98 0 0);color:oklch(0.255 0 0)">RANGED</span>
+            <span style="width:80px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0)">MELEE</span>
+          </div>
+          <div style="display:flex;gap:16px">
+            <div style="display:flex;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:oklch(0.66 0.20 22)"><span style="font:800 16px 'Fira Sans Extra Condensed',sans-serif;color:oklch(0.16 0.03 22)">A</span></span>
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0)"><span style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1.5px solid oklch(0.78 0 0);transform:rotate(45deg)"><span style="transform:rotate(-45deg);font:800 14px 'Fira Sans Extra Condensed',sans-serif;color:oklch(0.78 0 0)">B</span></span></span>
+            </div>
+            <div style="display:flex;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:1.5px solid oklch(0.78 0 0);font:800 14px 'Fira Sans Extra Condensed',sans-serif;color:oklch(0.78 0 0)">A</span></span>
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0);background:oklch(0.82 0.12 210)"><span style="font:800 16px 'Fira Sans Extra Condensed',sans-serif;color:oklch(0.16 0.03 215)">B</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:22px;width:330px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Chips — choice · keyword with rule · plain · open · boost</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid oklch(0.44 0 0);border-radius:4px;font:600 16px 'Fira Sans Condensed',sans-serif">Legionaries</span>
+            <span style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid oklch(0.98 0 0);background:oklch(0.98 0 0);color:oklch(0.255 0 0);border-radius:4px;font:600 16px 'Fira Sans Condensed',sans-serif">✓ Unattached</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:3px;font:500 15px 'Fira Sans Condensed',sans-serif;background:oklch(0.335 0 0);border:1px solid oklch(0.44 0 0);text-decoration:underline dotted;text-underline-offset:4px">Character</span>
+            <span style="display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:3px;font:500 15px 'Fira Sans Condensed',sans-serif;background:oklch(0.335 0 0)">Chaos</span>
+            <span style="display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:3px;font:500 15px 'Fira Sans Condensed',sans-serif;background:oklch(0.98 0 0);color:oklch(0.255 0 0);text-decoration:underline dotted;text-underline-offset:4px">Lance</span>
+            <span style="display:inline-flex;align-items:center;min-height:30px;padding:0 9px;border-radius:15px;font:600 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.06em;background:oklch(0.36 0.06 150);color:oklch(0.84 0.15 150)">▲ Might is Right</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Collapsible section header</div>
+          <div style="background:oklch(0.29 0 0);border:1px solid oklch(0.37 0 0)">
+            <div style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border-bottom:1px solid oklch(0.44 0 0)"><span style="font:800 15px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em">INFO</span><span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">2</span><span style="flex:1"></span><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:3px;font:500 18px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">+</span></div>
+            <div style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px"><span style="font:800 15px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em">STRATAGEMS</span><span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">4</span><span style="flex:1"></span><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:3px;font:500 18px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">−</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:22px;width:330px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Stat cell · invuln</div>
+          <div style="display:flex;background:oklch(0.29 0 0);border:1px solid oklch(0.37 0 0);width:max-content">
+            <div style="width:60px;display:flex;flex-direction:column;align-items:center;padding:12px 0 9px;border-right:1px solid oklch(0.37 0 0)"><span style="font:700 26px/1 'JetBrains Mono',monospace;letter-spacing:-0.03em">14"</span><span style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-top:7px">M</span></div>
+            <div style="width:60px;display:flex;flex-direction:column;align-items:center;padding:12px 0 9px;border-right:1px solid oklch(0.37 0 0)"><span style="font:700 26px/1 'JetBrains Mono',monospace">2+</span><span style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-top:7px">SV</span></div>
+            <div style="display:flex;align-items:baseline;gap:8px;padding:0 14px;align-self:center"><span style="font:700 20px 'JetBrains Mono',monospace">4++</span><span style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.88 0 0)">INVULN</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Result cell — neutral · boosted · penalised</div>
+          <div style="display:grid;grid-template-columns:repeat(3,64px);gap:3px">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:52px;border-radius:3px;background:oklch(0.335 0 0)"><span style="font:700 10px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">WOUND</span><span style="font:700 21px/1 'JetBrains Mono',monospace">5+</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:52px;border-radius:3px;background:oklch(0.36 0.06 150)"><span style="font:700 10px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.84 0.15 150)">HIT</span><span style="font:700 21px/1 'JetBrains Mono',monospace;color:oklch(0.84 0.15 150)">2+</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:52px;border-radius:3px;background:oklch(0.37 0.06 78)"><span style="font:700 10px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.83 0.14 78)">SAVE</span><span style="font:700 21px/1 'JetBrains Mono',monospace;color:oklch(0.83 0.14 78)">4+</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Note line — neutral · positive · negative</div>
+          <div style="display:flex;flex-direction:column;gap:4px;font:500 14px/1.3 'Fira Sans Condensed',sans-serif">
+            <div style="display:flex;gap:7px;color:oklch(0.88 0 0)"><span style="width:12px;font:700 13px 'JetBrains Mono',monospace;text-align:center">·</span>Save 3+ / AP−1</div>
+            <div style="display:flex;gap:7px;color:oklch(0.84 0.15 150)"><span style="width:12px;font:700 13px 'JetBrains Mono',monospace;text-align:center">+</span>Anti-Infantry 4+ applied</div>
+            <div style="display:flex;gap:7px;color:oklch(0.83 0.14 78)"><span style="width:12px;flex:none;font:700 13px 'JetBrains Mono',monospace;text-align:center">!</span>Target has a conditional 5+ invuln, not applied — set Invuln override if it applies here</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Phone" style="display:flex;flex-direction:column;gap:40px">
+  <div style="font:800 32px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.08em;border-bottom:1px solid oklch(0.44 0 0);padding-bottom:12px">PHONE · 390 × 844</div>
+  <div style="display:flex;flex-wrap:wrap;gap:64px 56px;align-items:flex-start">
+
+    <div id="1" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">1</span>Army list · A and B assigned</div>
+      <div data-screen-label="01 Army list" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" back="{{ false }}" sync="synced" hint-size="100%,52px"></dc-import>
+        <div style="flex:1;min-height:0;overflow:auto">
+          <div style="padding:16px 16px 10px;font:500 15px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Tap an army to configure it. Use A | B to assign it to a side.</div>
+          <sc-for list="{{ rosters }}" as="r" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:10px;min-height:76px;padding:8px 10px 8px 16px;border-top:1px solid oklch(0.37 0 0);background:{{ r.bg }};box-shadow:{{ r.rail }}">
+              <div style="flex:1;min-width:0">
+                <div style="font:700 18px/1.15 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.01em;text-wrap:pretty">{{ r.f }}</div>
+                <div style="font:500 14px/1.3 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);margin-top:3px">{{ r.d }}</div>
+                <div style="font:600 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0);margin-top:4px">{{ r.pts }}pts</div>
+              </div>
+              <div style="display:flex;flex:none;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+                <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:{{ r.aBg }}"><span style="width:24px;height:24px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1.5px solid {{ r.aBd }};font:800 15px 'Fira Sans Extra Condensed',sans-serif;color:{{ r.aFg }}">A</span></span>
+                <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0);background:{{ r.bBg }}"><span style="width:22px;height:22px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1.5px solid {{ r.bBd }};transform:rotate(45deg)"><span style="transform:rotate(-45deg);font:800 14px 'Fira Sans Extra Condensed',sans-serif;color:{{ r.bFg }}">B</span></span></span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex:none;padding:12px 16px 4px;border-top:1px solid oklch(0.44 0 0);background:oklch(0.29 0 0);display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;font:600 14px 'Fira Sans Condensed',sans-serif;min-width:0">
+            <span style="width:11px;height:11px;flex:none;background:oklch(0.66 0.20 22)"></span><span style="color:oklch(0.66 0.20 22);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chaos Space Marines</span>
+            <span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0);flex:none">vs</span>
+            <span style="width:13px;height:13px;flex:none;background:oklch(0.82 0.12 210);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span><span style="color:oklch(0.82 0.12 210);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Orks</span>
+          </div>
+          <div style="height:52px;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:800 19px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.16em;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">START BATTLE</div>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box;background:oklch(0.29 0 0)"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+    <div id="2a" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">2a</span>Configuration · Units · one expanded</div>
+      <div data-screen-label="02a Config Units" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="pending" hint-size="100%,52px"></dc-import>
+        <div style="flex:none;padding:12px 16px 12px;border-bottom:1px solid oklch(0.44 0 0);box-shadow:inset 0 3px 0 oklch(0.66 0.20 22)">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:oklch(0.66 0.20 22);flex:none"></span><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">SIDE A</span></div>
+          <div style="font:700 21px/1.15 'Fira Sans Extra Condensed',sans-serif;margin-top:4px">Chaos - Chaos Space Marines</div>
+          <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;margin-top:10px">
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:oklch(0.98 0 0);color:oklch(0.255 0 0)">UNITS</span>
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0);border-left:1px solid oklch(0.44 0 0)">LEADERS</span>
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0);border-left:1px solid oklch(0.44 0 0)">DETACHMENT</span>
+          </div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto">
+          <div style="padding:12px 16px 8px;font:500 15px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);text-wrap:pretty">Expand a unit for its full datasheet. Hide units to trim the list down to a smaller points limit.</div>
+          <div style="padding:4px 16px 14px">
+            <div style="display:flex;align-items:baseline;gap:4px;font-family:'JetBrains Mono',monospace"><span style="font:700 28px 'JetBrains Mono',monospace">1755</span><span style="font:500 18px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">/ 2000pts</span></div>
+            <div style="height:6px;background:oklch(0.335 0 0);margin-top:6px"><div style="width:87.75%;height:100%;background:oklch(0.88 0 0)"></div></div>
+          </div>
+          <sc-for list="{{ configUnits }}" as="u" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:10px;min-height:54px;padding:0 10px 0 14px;border-top:1px solid oklch(0.37 0 0);background:{{ u.bg }};box-shadow:{{ u.rail }}">
+              <span style="width:12px;flex:none;font-size:12px;color:oklch(0.78 0 0)">{{ u.chev }}</span>
+              <span style="flex:1;min-width:0;font:600 17px/1.2 'Fira Sans Condensed',sans-serif;color:{{ u.nfg }};text-decoration:{{ u.deco }}">{{ u.name }}<span style="color:oklch(0.66 0.20 22)">{{ u.star }}</span></span>
+              <span style="font:600 15px 'JetBrains Mono',monospace;color:{{ u.nfg }}">{{ u.pts }}</span>
+              <span style="flex:none;width:80px;height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:6px;border:1px {{ u.tBs }} {{ u.tBd }};border-radius:4px;font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:{{ u.tFg }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ u.tDot }}"></span>{{ u.tLabel }}</span>
+            </div>
+            <sc-if value="{{ u.open }}" hint-placeholder-val="{{ false }}">
+              <div style="box-shadow:inset 3px 0 0 oklch(0.66 0.20 22)">
+                <dc-import name="Datasheet" unit="lord" mode="config" hint-size="100%,700px"></dc-import>
+              </div>
+            </sc-if>
+          </sc-for>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+    <div id="2b" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">2b</span>Configuration · Leaders</div>
+      <div data-screen-label="02b Config Leaders" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" hint-size="100%,52px"></dc-import>
+        <div style="flex:none;padding:12px 16px 12px;border-bottom:1px solid oklch(0.44 0 0);box-shadow:inset 0 3px 0 oklch(0.66 0.20 22)">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:oklch(0.66 0.20 22);flex:none"></span><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">SIDE A</span></div>
+          <div style="font:700 21px/1.15 'Fira Sans Extra Condensed',sans-serif;margin-top:4px">Chaos - Chaos Space Marines</div>
+          <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;margin-top:10px">
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0)">UNITS</span>
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:oklch(0.98 0 0);color:oklch(0.255 0 0)">LEADERS</span>
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0);border-left:1px solid oklch(0.44 0 0)">DETACHMENT</span>
+          </div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto;padding-bottom:16px">
+          <div style="padding:12px 16px 12px;font:500 15px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Assign leaders to the units they attach to.</div>
+          <div style="display:flex;flex-direction:column;gap:10px;padding:0 10px">
+            <sc-for list="{{ leaders }}" as="l" hint-placeholder-count="4">
+              <div style="padding:12px 12px 12px;background:oklch(0.29 0 0);border:1px solid oklch(0.37 0 0);border-radius:4px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px"><span style="font:700 18px/1.15 'Fira Sans Extra Condensed',sans-serif">{{ l.name }}<span style="color:oklch(0.66 0.20 22)">{{ l.star }}</span></span><span style="font:500 13px 'Fira Sans Condensed',sans-serif;color:oklch(0.78 0 0);flex:none">{{ l.status }}</span></div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <sc-for list="{{ l.chips }}" as="c" hint-placeholder-count="3">
+                    <span style="display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 13px;box-sizing:border-box;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:4px;font:600 15px 'Fira Sans Condensed',sans-serif">{{ c.mark }}{{ c.n }}</span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+    <div id="2c" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">2c</span>Configuration · Detachment · one expanded</div>
+      <div data-screen-label="02c Config Detachment" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" hint-size="100%,52px"></dc-import>
+        <div style="flex:none;padding:12px 16px 12px;border-bottom:1px solid oklch(0.44 0 0);box-shadow:inset 0 3px 0 oklch(0.66 0.20 22)">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:oklch(0.66 0.20 22);flex:none"></span><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">SIDE A</span></div>
+          <div style="font:700 21px/1.15 'Fira Sans Extra Condensed',sans-serif;margin-top:4px">Chaos - Chaos Space Marines</div>
+          <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;margin-top:10px">
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0)">UNITS</span>
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0);border-left:1px solid oklch(0.44 0 0)">LEADERS</span>
+            <span style="flex:1;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:oklch(0.98 0 0);color:oklch(0.255 0 0)">DETACHMENT</span>
+          </div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto">
+          <div style="padding:12px 16px 10px;font:500 15px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);text-wrap:pretty">Expand a detachment for its rules and stratagems. Select one to play with it instead of the roster’s.</div>
+          <sc-for list="{{ detachments }}" as="d" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:10px;min-height:56px;padding:0 10px 0 14px;border-top:1px solid oklch(0.37 0 0);background:{{ d.bg }}">
+              <span style="width:12px;flex:none;font-size:12px;color:oklch(0.78 0 0)">{{ d.chev }}</span>
+              <div style="flex:1;min-width:0"><div style="font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ d.n }}</div><div style="display:{{ d.rosterD }};font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.78 0 0);margin-top:2px">ROSTER DETACHMENT</div></div>
+              <span style="flex:none;min-width:92px;height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid {{ d.sBd }};background:{{ d.sBg }};color:{{ d.sFg }};border-radius:4px;font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em">{{ d.sLabel }}</span>
+            </div>
+            <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
+              <div style="background:oklch(0.29 0 0);padding:4px 14px 14px 36px;border-top:1px solid oklch(0.37 0 0)">
+                <div style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin:10px 0 6px">DETACHMENT RULE</div>
+                <div style="font:600 17px 'Fira Sans Condensed',sans-serif;margin-bottom:4px">Sworn to the Dark</div>
+                <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty">Each time a <span style="font-variant-caps:all-small-caps;letter-spacing:0.04em;font-weight:600">HERETIC ASTARTES</span> unit from your army makes a Dark Pact, it can re-roll the Leadership test. If it passes, add 1 to the Wound roll for its attacks until the end of the phase.</div>
+                <div style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin:14px 0 6px">STRATAGEMS · 4</div>
+                <div style="display:flex;flex-direction:column;border-top:1px solid oklch(0.44 0 0)">
+                  <sc-for list="{{ detStrats }}" as="s" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:10px;min-height:48px;border-bottom:1px solid oklch(0.37 0 0)">
+                      <div style="flex:1;min-width:0"><div style="font:700 16px/1.15 'Fira Sans Extra Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.02em">{{ s.n }}</div><div style="font:500 13px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">{{ s.t }}</div></div>
+                      <span style="font:700 15px 'JetBrains Mono',monospace;padding:3px 7px;border:1px solid oklch(0.98 0 0);border-radius:3px">{{ s.cp }}<span style="font:700 10px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em">CP</span></span>
+                      <span style="font-size:12px;color:oklch(0.78 0 0)">▸</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </sc-for>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+    <div id="3" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">3</span>Battle · side A · nested leaders</div>
+      <div data-screen-label="03 Battle list" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" hint-size="100%,52px"></dc-import>
+        <div style="display:grid;grid-template-columns:1fr 1fr;height:56px;flex:none;border-bottom:1px solid oklch(0.44 0 0)">
+          <div style="display:flex;align-items:center;gap:8px;padding:0 12px;background:oklch(0.34 0.09 22);box-shadow:inset 0 -3px 0 oklch(0.66 0.20 22);min-width:0"><span style="width:13px;height:13px;flex:none;background:oklch(0.66 0.20 22)"></span><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">SIDE A</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chaos Space Marines</div></div></div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 12px;min-width:0;text-align:right"><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.82 0.12 210)">SIDE B</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Orks</div></div><span style="width:15px;height:15px;flex:none;background:oklch(0.82 0.12 210);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span></div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto">
+          <div style="padding:12px 14px 8px;border-bottom:1px solid oklch(0.44 0 0)">
+            <div style="font:700 21px/1.15 'Fira Sans Extra Condensed',sans-serif">Chaos - Chaos Space Marines</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+              <span style="display:flex;align-items:center;gap:6px;min-height:40px;font:600 15px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);text-decoration:underline dotted;text-underline-offset:4px">Pactbound Zealots ›</span>
+              <span style="font:600 16px 'JetBrains Mono',monospace">2000<span style="font-size:12px;color:oklch(0.78 0 0)">pts</span></span>
+            </div>
+          </div>
+          <sc-for list="{{ unitsA }}" as="u" hint-placeholder-count="10">
+            <div style="position:relative;display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px 0 {{ u.pl }};border-bottom:1px solid oklch(0.37 0 0);background:{{ u.bg }}">
+              <span style="position:absolute;left:20px;top:0;height:50%;width:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+              <span style="position:absolute;left:20px;top:50%;width:11px;height:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+              <span style="width:12px;flex:none;font-size:12px;color:oklch(0.78 0 0)">{{ u.chev }}</span>
+              <span style="flex:1;min-width:0;font:{{ u.fw }} 17px/1.2 'Fira Sans Condensed',sans-serif">{{ u.name }}<span style="color:oklch(0.66 0.20 22)">{{ u.star }}</span></span>
+              <span style="display:{{ u.allyD }};padding:4px 6px;border:1px solid oklch(0.55 0 0);border-radius:2px;font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0);flex:none">{{ u.ally }}</span>
+              <span style="flex:none;font:600 16px 'JetBrains Mono',monospace"><span style="color:{{ u.cfg }}">{{ u.live }}</span><span style="color:oklch(0.78 0 0)">/{{ u.total }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+    <div id="4" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">4</span>Battle · datasheet · loadout open</div>
+      <div data-screen-label="04 Battle datasheet" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" hint-size="100%,52px"></dc-import>
+        <div style="display:grid;grid-template-columns:1fr 1fr;height:56px;flex:none;border-bottom:1px solid oklch(0.44 0 0)">
+          <div style="display:flex;align-items:center;gap:8px;padding:0 12px;background:oklch(0.34 0.09 22);box-shadow:inset 0 -3px 0 oklch(0.66 0.20 22);min-width:0"><span style="width:13px;height:13px;flex:none;background:oklch(0.66 0.20 22)"></span><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">SIDE A</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chaos Space Marines</div></div></div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 12px;min-width:0;text-align:right"><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.82 0.12 210)">SIDE B</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Orks</div></div><span style="width:15px;height:15px;flex:none;background:oklch(0.82 0.12 210);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span></div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto">
+          <div style="display:flex;align-items:center;gap:10px;min-height:52px;padding:0 14px;background:oklch(0.335 0 0);box-shadow:inset 3px 0 0 oklch(0.66 0.20 22);position:sticky;top:0;z-index:1;border-bottom:1px solid oklch(0.44 0 0)">
+            <span style="width:12px;font-size:12px;color:oklch(0.88 0 0)">▾</span><span style="flex:1;font:700 18px/1.2 'Fira Sans Condensed',sans-serif">Lord Discordant on Helstalker</span><span style="font:600 16px 'JetBrains Mono',monospace">1<span style="color:oklch(0.78 0 0)">/1</span></span>
+          </div>
+          <div style="box-shadow:inset 3px 0 0 oklch(0.66 0.20 22)">
+            <dc-import name="Datasheet" unit="lord" mode="battle" loadout-open="{{ true }}" hint-size="100%,900px"></dc-import>
+          </div>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+    <div id="5" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">5</span>Battle · combat calculator docked</div>
+      <div data-screen-label="05 Calculator" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" calc-on="{{ true }}" hint-size="100%,52px"></dc-import>
+        <div style="display:grid;grid-template-columns:1fr 1fr;height:56px;flex:none;border-bottom:1px solid oklch(0.44 0 0)">
+          <div style="display:flex;align-items:center;gap:8px;padding:0 12px;background:oklch(0.34 0.09 22);box-shadow:inset 0 -3px 0 oklch(0.66 0.20 22);min-width:0"><span style="width:13px;height:13px;flex:none;background:oklch(0.66 0.20 22)"></span><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">SIDE A · 1 OPEN</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chaos Space Marines</div></div></div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 12px;min-width:0;text-align:right"><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.82 0.12 210)">SIDE B · 1 OPEN</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Orks</div></div><span style="width:15px;height:15px;flex:none;background:oklch(0.82 0.12 210);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span></div>
+        </div>
+        <div style="flex:1;min-height:0;position:relative">
+          <div style="position:absolute;inset:0;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;min-height:52px;padding:0 14px;background:oklch(0.335 0 0);box-shadow:inset 3px 0 0 oklch(0.66 0.20 22);border-bottom:1px solid oklch(0.44 0 0)">
+              <span style="width:12px;font-size:12px;color:oklch(0.88 0 0)">▾</span><span style="flex:1;font:700 18px/1.2 'Fira Sans Condensed',sans-serif">Lord Discordant on Helstalker</span><span style="font:600 16px 'JetBrains Mono',monospace">1<span style="color:oklch(0.78 0 0)">/1</span></span>
+            </div>
+            <div style="box-shadow:inset 3px 0 0 oklch(0.66 0.20 22)">
+              <dc-import name="Datasheet" unit="lord" mode="battle" loadout-open="{{ false }}" hint-size="100%,300px"></dc-import>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;height:520px">
+            <dc-import name="Calculator" layout="phone" hint-size="100%,520px" style="height:100%"></dc-import>
+          </div>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box;background:oklch(0.29 0 0)"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+    <div id="6" style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">6</span>Keyword rule inline · stratagems open</div>
+      <div data-screen-label="06 Stratagems" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" hint-size="100%,52px"></dc-import>
+        <div style="flex:1;min-height:0;overflow:auto">
+          <div style="display:flex;align-items:center;gap:10px;min-height:52px;padding:0 14px;background:oklch(0.335 0 0);box-shadow:inset 3px 0 0 oklch(0.66 0.20 22);position:sticky;top:0;z-index:1;border-bottom:1px solid oklch(0.44 0 0)">
+            <span style="width:12px;font-size:12px;color:oklch(0.88 0 0)">▾</span><span style="flex:1;font:700 18px/1.2 'Fira Sans Condensed',sans-serif">Lord Discordant on Helstalker</span><span style="font:600 16px 'JetBrains Mono',monospace">1<span style="color:oklch(0.78 0 0)">/1</span></span>
+          </div>
+          <div style="box-shadow:inset 3px 0 0 oklch(0.66 0.20 22)">
+            <dc-import name="Datasheet" unit="lord" mode="battle" loadout-open="{{ false }}" open-kw="Character" sections="strat" hint-size="100%,1200px"></dc-import>
+          </div>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section data-screen-label="Tablet" style="display:flex;flex-direction:column;gap:40px">
+  <div style="font:800 32px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.08em;border-bottom:1px solid oklch(0.44 0 0);padding-bottom:12px">TABLET · 1180 × 820 LANDSCAPE</div>
+  <div id="7" style="display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">7</span>Battle · both panels · calculator open</div>
+    <div data-screen-label="07 Tablet battle" style="width:1180px;height:820px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:28px;overflow:hidden;box-shadow:0 0 0 12px oklch(0.07 0 0),0 0 0 13px oklch(0.39 0 0)">
+      <div style="height:24px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font:600 13px 'Fira Sans Condensed',sans-serif"><span>9:41  Fri 25 Sep</span><span style="font:600 11px 'JetBrains Mono',monospace">100%</span></div>
+      <dc-import name="AppHeader" variant="tablet" sync="synced" calc-on="{{ true }}" hint-size="100%,52px"></dc-import>
+      <div style="flex:1;min-height:0;position:relative">
+        <div style="position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;background:oklch(0.17 0 0)">
+          <div style="display:flex;flex-direction:column;min-height:0;background:oklch(0.255 0 0)">
+            <div style="flex:none;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid oklch(0.44 0 0);box-shadow:inset 0 3px 0 oklch(0.66 0.20 22);background:oklch(0.34 0.09 22)">
+              <span style="width:16px;height:16px;flex:none;background:oklch(0.66 0.20 22)"></span>
+              <div style="flex:1;min-width:0"><div style="font:700 20px/1.15 'Fira Sans Extra Condensed',sans-serif">Chaos - Chaos Space Marines</div><div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);text-decoration:underline dotted;text-underline-offset:4px;margin-top:2px">Pactbound Zealots ›</div></div>
+              <span style="font:600 16px 'JetBrains Mono',monospace">2000<span style="font-size:12px;color:oklch(0.78 0 0)">pts</span></span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px;background:oklch(0.335 0 0);box-shadow:inset 3px 0 0 oklch(0.66 0.20 22);border-bottom:1px solid oklch(0.44 0 0)"><span style="width:12px;font-size:12px;color:oklch(0.88 0 0)">▾</span><span style="flex:1;font:700 18px/1.2 'Fira Sans Condensed',sans-serif">Lord Discordant on Helstalker</span><span style="font:600 16px 'JetBrains Mono',monospace">1<span style="color:oklch(0.78 0 0)">/1</span></span></div>
+              <div style="box-shadow:inset 3px 0 0 oklch(0.66 0.20 22)"><dc-import name="Datasheet" unit="lord" mode="battle" wide="{{ true }}" loadout-open="{{ true }}" hint-size="100%,600px"></dc-import></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;min-height:0;background:oklch(0.255 0 0)">
+            <div style="flex:none;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid oklch(0.44 0 0);box-shadow:inset 0 3px 0 oklch(0.82 0.12 210);background:oklch(0.35 0.06 215)">
+              <div style="flex:1;min-width:0"><div style="font:700 20px/1.15 'Fira Sans Extra Condensed',sans-serif">Xenos - Orks</div><div style="font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);text-decoration:underline dotted;text-underline-offset:4px;margin-top:2px">Blitz Brigade ›</div></div>
+              <span style="font:600 16px 'JetBrains Mono',monospace">2000<span style="font-size:12px;color:oklch(0.78 0 0)">pts</span></span>
+              <span style="width:18px;height:18px;flex:none;background:oklch(0.82 0.12 210);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden">
+              <sc-for list="{{ unitsB1 }}" as="u" hint-placeholder-count="4">
+                <div style="position:relative;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px 0 {{ u.pl }};border-bottom:1px solid oklch(0.37 0 0)">
+                  <span style="position:absolute;left:20px;top:0;height:50%;width:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+                  <span style="position:absolute;left:20px;top:50%;width:11px;height:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+                  <span style="width:12px;flex:none;font-size:12px;color:oklch(0.78 0 0)">{{ u.chev }}</span>
+                  <span style="flex:1;min-width:0;font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ u.name }}<span style="color:oklch(0.82 0.12 210)">{{ u.star }}</span></span>
+                  <span style="flex:none;font:600 16px 'JetBrains Mono',monospace"><span style="color:{{ u.cfg }}">{{ u.live }}</span><span style="color:oklch(0.78 0 0)">/{{ u.total }}</span></span>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px;background:oklch(0.335 0 0);box-shadow:inset -3px 0 0 oklch(0.82 0.12 210);border-bottom:1px solid oklch(0.44 0 0)"><span style="width:12px;font-size:12px;color:oklch(0.88 0 0)">▾</span><span style="flex:1;font:700 18px/1.2 'Fira Sans Condensed',sans-serif">Warboss in Mega Armour</span><span style="font:600 16px 'JetBrains Mono',monospace">1<span style="color:oklch(0.78 0 0)">/1</span></span></div>
+              <div style="box-shadow:inset -3px 0 0 oklch(0.82 0.12 210)"><dc-import name="Datasheet" unit="warboss" mode="battle" wide="{{ true }}" loadout-open="{{ true }}" hint-size="100%,600px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:350px">
+          <dc-import name="Calculator" layout="tablet" hint-size="100%,350px" style="height:100%"></dc-import>
+        </div>
+      </div>
+      <div style="height:20px;flex:none;display:flex;align-items:center;justify-content:center;background:oklch(0.29 0 0)"><span style="width:160px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="States" style="display:flex;flex-direction:column;gap:40px">
+  <div style="font:800 32px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.08em;border-bottom:1px solid oklch(0.44 0 0);padding-bottom:12px">STATES</div>
+  <div id="8" style="display:flex;flex-wrap:wrap;gap:48px 40px;align-items:flex-start">
+
+    <div style="width:360px;display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">SYNC STATUS — HEADER DOT</div>
+        <sc-for list="{{ syncStates }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:14px;padding:10px 12px;background:oklch(0.29 0 0);border:1px solid oklch(0.37 0 0);border-radius:4px">
+            <span style="width:14px;height:14px;flex:none;box-sizing:border-box;border-radius:{{ s.r }};background:{{ s.bg }};border:{{ s.bd }};clip-path:{{ s.clip }}"></span>
+            <div><div style="font:600 16px 'Fira Sans Condensed',sans-serif">{{ s.n }}</div><div style="font:400 13px/1.35 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">{{ s.d }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">VOICE BANNER</div>
+        <sc-for list="{{ voiceStates }}" as="v" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;background:{{ v.bg }};border:1px solid oklch(0.44 0 0);border-radius:4px;font:600 15px 'Fira Sans Condensed',sans-serif;color:{{ v.fg }}"><span style="width:10px;height:10px;border-radius:50%;flex:none;background:{{ v.fg }};box-shadow:{{ v.ring }}"></span>{{ v.t }}</div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="width:360px;display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">START — DISABLED · ENABLED</div>
+        <div style="display:flex;flex-direction:column;gap:6px;padding:12px;background:oklch(0.29 0 0);border:1px solid oklch(0.37 0 0)">
+          <div style="font:500 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Assign an army to <span style="color:oklch(0.82 0.12 210)">◆ B</span> to start.</div>
+          <div style="height:52px;display:flex;align-items:center;justify-content:center;background:oklch(0.335 0 0);color:oklch(0.55 0 0);font:800 19px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.16em;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">START BATTLE</div>
+        </div>
+        <div style="padding:12px;background:oklch(0.29 0 0);border:1px solid oklch(0.37 0 0)">
+          <div style="height:52px;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:800 19px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.16em;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)">START BATTLE</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">OVERFLOW MENU (PHONE)</div>
+        <div style="background:oklch(0.255 0 0);border:1px solid oklch(0.37 0 0)">
+          <dc-import name="AppHeader" sync="offline" more-on="{{ true }}" hint-size="100%,52px"></dc-import>
+          <div style="margin:6px 6px 10px auto;width:250px;background:oklch(0.335 0 0);border:1px solid oklch(0.44 0 0);border-radius:4px;box-shadow:0 12px 30px oklch(0.05 0 0 / 0.6)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;padding:0 12px;border-bottom:1px solid oklch(0.44 0 0)"><span style="font:600 16px 'Fira Sans Condensed',sans-serif">Language</span><div style="display:flex;height:40px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden"><span style="width:44px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;background:oklch(0.98 0 0);color:oklch(0.255 0 0)">EN</span><span style="width:44px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;color:oklch(0.88 0 0)">UA</span></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;padding:0 12px;border-bottom:1px solid oklch(0.44 0 0)"><span style="font:600 16px 'Fira Sans Condensed',sans-serif">Keep screen awake</span><span style="width:48px;height:28px;border-radius:14px;background:oklch(0.84 0.15 150);position:relative"><span style="position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;background:oklch(0.255 0 0)"></span></span></div>
+            <div style="display:flex;align-items:center;gap:10px;min-height:52px;padding:0 12px"><span style="width:12px;height:12px;box-sizing:border-box;border-radius:50%;border:2px dashed oklch(0.78 0 0)"></span><span style="font:500 14px/1.3 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Offline — changes are saved on this device</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:360px;display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">EMPTY — ARMY LIST</div>
+        <div style="padding:28px 20px;background:oklch(0.29 0 0);border:1px dashed oklch(0.44 0 0);display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+          <div style="font:700 20px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.04em">No rosters found yet</div>
+          <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.88 0 0)">Saved army rosters appear here. Once one is added, tap it to configure and assign it to a side.</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">EMPTY — LEADERS TAB</div>
+        <div style="padding:24px 20px;background:oklch(0.29 0 0);border:1px dashed oklch(0.44 0 0);font:500 16px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">No units in this army have a Leader ability.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 13px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">EMPTY — CALCULATOR</div>
+        <div style="height:220px"><dc-import name="Calculator" layout="phone" empty="{{ true }}" hint-size="100%,220px" style="height:100%"></dc-import></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">8a</span>Sync conflict dialog</div>
+      <div data-screen-label="08a Sync conflict" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="conflict" hint-size="100%,52px"></dc-import>
+        <div style="flex:1;opacity:0.35">
+          <sc-for list="{{ unitsAShort }}" as="u" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px 0 {{ u.pl }};border-bottom:1px solid oklch(0.37 0 0)"><span style="flex:1;font:600 17px 'Fira Sans Condensed',sans-serif">{{ u.name }}</span><span style="font:600 16px 'JetBrains Mono',monospace">{{ u.live }}/{{ u.total }}</span></div>
+          </sc-for>
+        </div>
+        <div style="position:absolute;inset:0;background:oklch(0.08 0 0 / 0.6);display:flex;align-items:center;padding:0 16px">
+          <div style="width:100%;background:oklch(0.29 0 0);border:1px solid oklch(0.44 0 0);border-top:3px solid oklch(0.83 0.14 78);border-radius:4px;padding:18px 16px 16px;box-shadow:0 20px 50px oklch(0.04 0 0 / 0.7)">
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:14px;height:14px;background:oklch(0.83 0.14 78);clip-path:polygon(50% 0,100% 100%,0 100%)"></span><span style="font:800 22px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.04em">SYNC CONFLICT</span></div>
+            <div style="font:400 16px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);margin-top:10px;text-wrap:pretty">This device and the server both changed leader assignments or hidden units for <span style="color:oklch(0.98 0 0);font-weight:600">Chaos - Chaos Space Marines</span> since the last sync. Choose which version to keep.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:oklch(0.44 0 0);margin-top:14px;border:1px solid oklch(0.44 0 0)">
+              <div style="background:oklch(0.335 0 0);padding:10px"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">THIS DEVICE</div><div style="font:500 14px/1.4 'Fira Sans Condensed',sans-serif;margin-top:4px">2 leader changes<br>Warpsmith hidden</div></div>
+              <div style="background:oklch(0.335 0 0);padding:10px"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">SERVER</div><div style="font:500 14px/1.4 'Fira Sans Condensed',sans-serif;margin-top:4px">1 leader change<br>All units visible</div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+              <div style="height:52px;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 17px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;border-radius:4px">KEEP THIS DEVICE’S VERSION</div>
+              <div style="height:52px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.88 0 0);font:700 17px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;border-radius:4px">USE THE SERVER’S VERSION</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">8b</span>Detachment sheet</div>
+      <div data-screen-label="08b Detachment sheet" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" hint-size="100%,52px"></dc-import>
+        <div style="position:absolute;inset:0;background:oklch(0.08 0 0 / 0.6)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;top:150px;background:oklch(0.29 0 0);border-top:3px solid oklch(0.66 0.20 22);border-radius:12px 12px 0 0;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:center;padding-top:8px"><span style="width:36px;height:4px;border-radius:2px;background:oklch(0.55 0 0)"></span></div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px 12px 16px;border-bottom:1px solid oklch(0.44 0 0)">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:7px"><span style="width:11px;height:11px;background:oklch(0.66 0.20 22)"></span><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">DETACHMENT · SIDE A</span></div>
+              <div style="font:800 26px/1.05 'Fira Sans Extra Condensed',sans-serif;text-transform:uppercase;margin-top:4px">Pactbound Zealots</div>
+              <div style="font:500 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);margin-top:3px">Chaos - Chaos Space Marines</div>
+            </div>
+            <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:4px;font:400 22px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">✕</span>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:0 0 20px">
+            <div style="padding:12px 16px 4px;font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">RULES</div>
+            <div style="padding:0 16px 12px"><div style="font:600 17px 'Fira Sans Condensed',sans-serif;margin-bottom:4px">Sworn to the Dark</div><div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty">Each time a <span style="font-variant-caps:all-small-caps;letter-spacing:0.04em;font-weight:600">HERETIC ASTARTES</span> unit from your army makes a Dark Pact, it can re-roll the Leadership test. If it passes, add 1 to the Wound roll for its attacks until the end of the phase.</div></div>
+            <div style="padding:8px 16px 8px;font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);border-top:1px solid oklch(0.44 0 0)">STRATAGEMS · 4</div>
+            <div style="margin:0 10px 10px;padding:11px 12px 12px;background:oklch(0.335 0 0);border:1px solid oklch(0.39 0 0);border-radius:4px">
+              <div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1"><div style="font:700 18px/1.15 'Fira Sans Extra Condensed',sans-serif;text-transform:uppercase">Profane Zeal</div><div style="font:600 13px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);margin-top:3px">Battle Tactic · Fight phase</div></div><span style="display:flex;align-items:baseline;gap:2px;padding:5px 8px;border:1px solid oklch(0.98 0 0);border-radius:3px"><span style="font:700 18px/1 'JetBrains Mono',monospace">1</span><span style="font:700 11px/1 'Fira Sans Extra Condensed',sans-serif">CP</span></span></div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:9px;font:400 15px/1.42 'Source Serif 4',serif;color:oklch(0.93 0 0)">
+                <div><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.98 0 0);margin-right:6px">WHEN:</span>Fight phase, just after a Heretic Astartes unit from your army is selected to fight.</div>
+                <div><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.98 0 0);margin-right:6px">TARGET:</span>That unit.</div>
+                <div><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.98 0 0);margin-right:6px">EFFECT:</span>Until the end of the phase, re-roll Hit rolls of 1 for attacks made by models in your unit.</div>
+              </div>
+            </div>
+            <sc-for list="{{ detStratsRest }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;min-height:52px;margin:0 10px 6px;padding:0 12px;background:oklch(0.335 0 0);border:1px solid oklch(0.39 0 0);border-radius:4px">
+                <div style="flex:1;min-width:0"><div style="font:700 16px/1.15 'Fira Sans Extra Condensed',sans-serif;text-transform:uppercase">{{ s.n }}</div><div style="font:500 13px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">{{ s.t }}</div></div>
+                <span style="font:700 15px 'JetBrains Mono',monospace;padding:3px 7px;border:1px solid oklch(0.98 0 0);border-radius:3px">{{ s.cp }}<span style="font:700 10px 'Fira Sans Extra Condensed',sans-serif">CP</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:10px;font:600 16px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:oklch(0.98 0 0);color:oklch(0.255 0 0);font:700 14px 'JetBrains Mono',monospace;border-radius:3px">8c</span>Voice mode · number badges · Ukrainian UI</div>
+      <div data-screen-label="08c Voice UA" style="width:390px;height:844px;flex:none;display:flex;flex-direction:column;background:oklch(0.255 0 0);color:oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;border-radius:48px;overflow:hidden;box-shadow:0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)">
+        <div style="height:47px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 36px;font:600 16px 'Fira Sans Condensed',sans-serif"><span>9:41</span><span style="width:122px;height:34px;border-radius:18px;background:#000"></span><span style="font:600 12px 'JetBrains Mono',monospace">100%</span></div>
+        <dc-import name="AppHeader" sync="synced" back-label="Армії" mic-on="{{ true }}" hint-size="100%,52px"></dc-import>
+        <div style="flex:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;background:oklch(0.335 0 0);border-bottom:1px solid oklch(0.44 0 0);font:600 15px 'Fira Sans Condensed',sans-serif"><span style="width:10px;height:10px;border-radius:50%;background:oklch(0.98 0 0);box-shadow:0 0 0 4px oklch(0.98 0 0 / 0.2)"></span>Слухаю — скажіть «3 проти 7»</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;height:56px;flex:none;border-bottom:1px solid oklch(0.44 0 0)">
+          <div style="display:flex;align-items:center;gap:8px;padding:0 12px;background:oklch(0.34 0.09 22);box-shadow:inset 0 -3px 0 oklch(0.66 0.20 22);min-width:0"><span style="width:13px;height:13px;flex:none;background:oklch(0.66 0.20 22)"></span><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.66 0.20 22)">СТОРОНА A</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chaos Space Marines</div></div></div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 12px;min-width:0;text-align:right"><div style="min-width:0"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.82 0.12 210)">СТОРОНА B</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Orks</div></div><span style="width:15px;height:15px;flex:none;background:oklch(0.82 0.12 210);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span></div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto">
+          <div style="padding:12px 14px 8px;border-bottom:1px solid oklch(0.44 0 0)">
+            <div style="font:700 21px/1.15 'Fira Sans Extra Condensed',sans-serif">Chaos - Chaos Space Marines</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px"><span style="min-height:40px;display:flex;align-items:center;font:600 15px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);text-decoration:underline dotted;text-underline-offset:4px">Pactbound Zealots ›</span><span style="font:600 16px 'JetBrains Mono',monospace">2000<span style="font-size:12px;color:oklch(0.78 0 0)">оч.</span></span></div>
+          </div>
+          <sc-for list="{{ unitsAVoice }}" as="u" hint-placeholder-count="10">
+            <div style="position:relative;display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px 0 {{ u.pl }};border-bottom:1px solid oklch(0.37 0 0)">
+              <span style="position:absolute;left:20px;top:0;height:50%;width:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+              <span style="position:absolute;left:20px;top:50%;width:11px;height:1.5px;background:oklch(0.55 0 0);display:{{ u.conn }}"></span>
+              <span style="width:12px;flex:none;font-size:12px;color:oklch(0.78 0 0)">▸</span>
+              <span style="min-width:30px;height:30px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1.5px solid oklch(0.66 0.20 22);border-radius:3px;font:700 15px 'JetBrains Mono',monospace;color:oklch(0.66 0.20 22);flex:none">{{ u.n }}</span>
+              <span style="flex:1;min-width:0;font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ u.name }}<span style="color:oklch(0.66 0.20 22)">{{ u.star }}</span></span>
+              <span style="flex:none;font:600 16px 'JetBrains Mono',monospace"><span style="color:{{ u.cfg }}">{{ u.live }}</span><span style="color:oklch(0.78 0 0)">/{{ u.total }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0)"></span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const C = {
+  bg0: 'oklch(0.255 0 0)', bg1: 'oklch(0.29 0 0)', bg2: 'oklch(0.335 0 0)', bg3: 'oklch(0.39 0 0)',
+  l1: 'oklch(0.37 0 0)', l2: 'oklch(0.44 0 0)', tx: 'oklch(0.98 0 0)', tx2: 'oklch(0.88 0 0)', tx3: 'oklch(0.78 0 0)', dis: 'oklch(0.55 0 0)',
+  a: 'oklch(0.66 0.20 22)', ad: 'oklch(0.34 0.09 22)', b: 'oklch(0.82 0.12 210)', bd: 'oklch(0.35 0.06 215)',
+  pos: 'oklch(0.84 0.15 150)', posd: 'oklch(0.36 0.06 150)', neg: 'oklch(0.83 0.14 78)', negd: 'oklch(0.37 0.06 78)'
+};
+const FEC = "'Fira Sans Extra Condensed',sans-serif", FC = "'Fira Sans Condensed',sans-serif", FM = "'JetBrains Mono',monospace", FS = "'Source Serif 4',serif";
+const UA = [
+  ['Lord Discordant on Helstalker', 1, 1], ['Warpsmith', 1, 1],
+  ['Master of Executions', 1, 1], ['Legionaries', 5, 5, 'n'], ['Master of Possession', 1, 1], ['Legionaries', 5, 5, 'n'],
+  ['Abaddon the Despoiler', 1, 1, 's'], ['Chaos Terminator Squad', 5, 5, 'n'], ['Havocs', 5, 5], ['Obliterators', 2, 2],
+  ['Traitor Guardsmen Squad', 8, 10], ['Forgefiend', 1, 1], ['Venomcrawler', 1, 1], ['Chaos Rhino', 1, 1], ['War Dog Brigand', 1, 1, 'ally']
+];
+const UB = [['Ghazghkull Thraka', 2, 2, 's'], ['Gretchin', 11, 11], ['Boss Snikrot', 1, 1], ['Kommandos', 10, 10, 'n']];
+const mkRow = ([name, live, total, f], i, open) => ({
+  n: i + 1, name, live, total, star: f === 's' ? ' ★' : '',
+  pl: f === 'n' ? '40px' : '14px', conn: f === 'n' ? 'block' : 'none',
+  ally: f === 'ally' ? 'CHAOS KNIGHTS' : '', allyD: f === 'ally' ? 'inline-block' : 'none',
+  cfg: live < total ? C.neg : C.tx, bg: open ? C.bg2 : 'transparent', chev: open ? '▾' : '▸', fw: open ? 700 : 600
+});
+const sw = (n, v, code, ink, glyph) => ({ n, v, code, ink: ink || C.tx, glyph: glyph || '' });
+class Component extends DCLogic {
+  renderVals() {
+    const rosters = [
+      ['Chaos - Chaos Space Marines', 'Pactbound Zealots · Chaos', 2000, 'A'],
+      ['Xenos - Orks', 'Blitz Brigade · Goff Boyz', 2000, 'B'],
+      ['Imperium - Adeptus Astartes - Ultramarines', 'Gladius Task Force · Ultras', 2000],
+      ['Chaos - Chaos Knights', 'Traitoris Lance · Big Dogs', 1000],
+      ['Xenos - Necrons', 'Awakened Dynasty · Szarekh', 1500]
+    ].map(([f, d, pts, s]) => ({
+      f, d, pts,
+      bg: s === 'A' ? C.ad : s === 'B' ? C.bd : 'transparent',
+      rail: s === 'A' ? `inset 4px 0 0 ${C.a}` : s === 'B' ? `inset -4px 0 0 ${C.b}` : 'none',
+      aBg: s === 'A' ? C.a : 'transparent', aBd: s === 'A' ? 'transparent' : C.tx3, aFg: s === 'A' ? 'oklch(0.16 0.03 22)' : C.tx3,
+      bBg: s === 'B' ? C.b : 'transparent', bBd: s === 'B' ? 'transparent' : C.tx3, bFg: s === 'B' ? 'oklch(0.16 0.03 215)' : C.tx3
+    }));
+    const cfg = [['Lord Discordant on Helstalker', 160, 1, 0, 1], ['Warpsmith', 70, 0], ['Master of Executions', 70, 1], ['Master of Possession', 60, 1], ['Abaddon the Despoiler', 270, 1, 1], ['Legionaries', 90, 1], ['Legionaries', 90, 1], ['Chaos Terminator Squad', 180, 1], ['Havocs', 125, 1], ['Obliterators', 160, 1]]
+      .map(([name, pts, vis, star, open]) => ({
+        name, pts, star: star ? ' ★' : '', open: !!open, chev: open ? '▾' : '▸',
+        bg: open ? C.bg2 : 'transparent', rail: open ? `inset 3px 0 0 ${C.a}` : 'none',
+        nfg: vis ? C.tx : C.tx3, deco: vis ? 'none' : 'line-through',
+        tLabel: vis ? 'VISIBLE' : 'HIDDEN', tBs: vis ? 'solid' : 'dashed', tBd: vis ? C.tx2 : C.dis, tFg: vis ? C.tx : C.tx3, tDot: vis ? C.pos : 'transparent'
+      }));
+    const chip = (n, sel) => ({ n, mark: sel ? '✓ ' : '', bg: sel ? C.tx : 'transparent', fg: sel ? C.bg0 : C.tx, bd: sel ? C.tx : C.l2 });
+    const leaders = [
+      { name: 'Abaddon the Despoiler', star: ' ★', status: 'Leading', chips: [chip('Chaos Terminator Squad', 1), chip('Unattached')] },
+      { name: 'Master of Executions', star: '', status: 'Leading', chips: [chip('Legionaries (1)', 1), chip('Legionaries (2)'), chip('Unattached')] },
+      { name: 'Master of Possession', star: '', status: 'Leading', chips: [chip('Legionaries (1)'), chip('Legionaries (2)', 1), chip('Unattached')] },
+      { name: 'Warpsmith', star: '', status: 'Unattached', chips: [chip('Legionaries (1)'), chip('Legionaries (2)'), chip('Havocs'), chip('Unattached', 1)] }
+    ];
+    const detachments = ['Pactbound Zealots', 'Veterans of the Long War', 'Deceptors', 'Renegade Raiders', 'Dread Talons', 'Fellhammer Siege-host', 'Chaos Cult', 'Soulforged Warpack']
+      .map((n, i) => ({
+        n, open: i === 0, chev: i === 0 ? '▾' : '▸', bg: i === 0 ? C.bg2 : 'transparent', rosterD: i === 0 ? 'block' : 'none',
+        sLabel: i === 0 ? '✓ SELECTED' : 'SELECT', sBg: i === 0 ? C.tx : 'transparent', sFg: i === 0 ? C.bg0 : C.tx, sBd: i === 0 ? C.tx : C.l2
+      }));
+    const detStrats = [['Profane Zeal', 'Battle Tactic · Fight phase', 1], ['Unholy Covenant', 'Strategic Ploy · Command phase', 1], ['Blasphemous Fervour', 'Battle Tactic · Shooting phase', 2], ['Oath of Ruin', 'Epic Deed · Charge phase', 1]].map(([n, t, cp]) => ({ n, t, cp }));
+    const unitsA = UA.map((u, i) => mkRow(u, i, false));
+    return {
+      palette: [
+        { label: 'SURFACES', items: [sw('Ground', C.bg0, C.bg0.slice(6, -1)), sw('Panel', C.bg1, C.bg1.slice(6, -1)), sw('Raised', C.bg2, C.bg2.slice(6, -1)), sw('Rule', C.l2, C.l2.slice(6, -1))] },
+        { label: 'INK', items: [sw('Ink', C.tx, C.tx.slice(6, -1), C.bg0, 'Aa'), sw('Ink 2', C.tx2, C.tx2.slice(6, -1), C.bg0, 'Aa'), sw('Caption', C.tx3, C.tx3.slice(6, -1), C.bg0, 'Aa'), sw('Disabled', C.dis, C.dis.slice(6, -1))] },
+        { label: 'SIDES', items: [sw('A · Crimson', C.a, C.a.slice(6, -1), 'oklch(0.16 0.03 22)', '■ A'), sw('A · Field', C.ad, C.ad.slice(6, -1), C.a, '■'), sw('B · Cyan', C.b, C.b.slice(6, -1), 'oklch(0.16 0.03 215)', '◆ B'), sw('B · Field', C.bd, C.bd.slice(6, -1), C.b, '◆')] },
+        { label: 'TONES', items: [sw('Positive / boosted', C.pos, C.pos.slice(6, -1), C.bg0, '▲ +'), sw('Pos field', C.posd, C.posd.slice(6, -1), C.pos, '2+'), sw('Negative / penalised (amber)', C.neg, C.neg.slice(6, -1), C.bg0, '▼ !'), sw('Neg field', C.negd, C.negd.slice(6, -1), C.neg, '4+')] }
+      ],
+      typeRows: [
+        { role: 'Display', spec: 'Fira Sans Extra Cond 800 · 26', font: `800 26px/1.1 ${FEC}`, ls: '0.01em', tt: 'uppercase', sample: 'Pactbound Zealots' },
+        { role: 'Title', spec: 'Fira Sans Extra Cond 700 · 21', font: `700 21px/1.15 ${FEC}`, ls: '0', tt: 'none', sample: 'Imperium - Adeptus Astartes - Ultramarines' },
+        { role: 'Unit / row', spec: 'Fira Sans Cond 600 · 17', font: `600 17px/1.2 ${FC}`, ls: '0', tt: 'none', sample: 'Лорд Дискордант на Хелсталкері · Lord Discordant on Helstalker' },
+        { role: 'Label', spec: 'Fira Sans Extra Cond 700 · 12 · +14%', font: `700 12px/1 ${FEC}`, ls: '0.14em', tt: 'uppercase', sample: 'Ranged · Keywords · Стратагеми' },
+        { role: 'Rules prose', spec: 'Source Serif 4 400 · 15 / 1.45', font: `400 15px/1.45 ${FS}`, ls: '0', tt: 'none', sample: 'Each time this model destroys an enemy vehicle model with a melee attack, it regains up to D3 lost wounds.' },
+        { role: 'Stat', spec: 'JetBrains Mono 700 · 26', font: `700 26px/1 ${FM}`, ls: '-0.03em', tt: 'none', sample: '14"  9  2+  10  6+  4' },
+        { role: 'Result', spec: 'JetBrains Mono 700 · 21', font: `700 21px/1 ${FM}`, ls: '-0.03em', tt: 'none', sample: 'D6+3  2+  5+  4++  1' },
+        { role: 'Data', spec: 'JetBrains Mono 600 · 16–18', font: `600 17px/1.2 ${FM}`, ls: '0', tt: 'none', sample: '12"  1  2+  4  0  1   ·  8/10  ·  1755 / 2000pts' }
+      ],
+      spacing: [['4', '4px', 'chip gaps, cell gaps'], ['8', '8px', 'control gaps'], ['12', '12px', 'card padding'], ['14', '14px', 'row inset'], ['16', '16px', 'screen margin'], ['24', '24px', 'section breaks']].map(([n, w, use]) => ({ n, w, use })),
+      radii: [
+        { n: '2', v: '2px', clip: 'none', use: 'tags' }, { n: '3', v: '3px', clip: 'none', use: 'chips, cells' },
+        { n: '4', v: '4px', clip: 'none', use: 'controls' }, { n: 'chamfer 10', v: '0', clip: 'polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)', use: 'primary action' }
+      ],
+      compRows: [
+        { ...mkRow(['Havocs', 5, 5], 0, false), rail: 'none', sc: C.a },
+        { ...mkRow(['Lord Discordant on Helstalker', 1, 1], 0, true), rail: `inset 3px 0 0 ${C.a}`, sc: C.a },
+        { ...mkRow(['Warboss in Mega Armour', 1, 1], 0, false), rail: 'none', sc: C.b },
+        { ...mkRow(['Meganobz', 5, 5, 'n'], 0, false), rail: 'none', sc: C.b },
+        { ...mkRow(['Traitor Guardsmen Squad', 8, 10], 0, false), rail: 'none', sc: C.a },
+        { ...mkRow(['War Dog Brigand', 1, 1, 'ally'], 0, false), rail: 'none', sc: C.a }
+      ],
+      steppers: [[3, 5], [5, 5], [0, 5]].map(([v, of]) => ({
+        v, of, mbg: v === 0 ? 'oklch(0.275 0 0)' : C.bg2, mfg: v === 0 ? C.dis : C.tx,
+        pbg: v === of ? 'oklch(0.275 0 0)' : C.bg2, pfg: v === of ? C.dis : C.tx
+      })),
+      rosters, configUnits: cfg, leaders, detachments, detStrats, detStratsRest: detStrats.slice(1),
+      unitsA,
+      unitsAShort: unitsA.slice(0, 11),
+      unitsAVoice: unitsA,
+      unitsB1: UB.map((u, i) => mkRow(u, i, false)),
+      syncStates: [
+        { n: 'Synced', d: 'Leaders and hidden units match the server.', r: '50%', bg: C.pos, bd: 'none', clip: 'none' },
+        { n: 'Changes pending', d: 'Saved here, sending to the server.', r: '50%', bg: `linear-gradient(90deg, ${C.tx} 50%, transparent 50%)`, bd: `2px solid ${C.tx}`, clip: 'none' },
+        { n: 'Server unreachable', d: 'Changes stay on this device until it reconnects.', r: '50%', bg: 'transparent', bd: `2px dashed ${C.tx3}`, clip: 'none' },
+        { n: 'Conflict', d: 'Both changed. Tap to choose a version.', r: '0', bg: C.neg, bd: 'none', clip: 'polygon(50% 0,100% 100%,0 100%)' }
+      ],
+      voiceStates: [
+        { t: 'Listening — say “3 against 7”', bg: C.bg2, fg: C.tx, ring: '0 0 0 4px oklch(0.98 0 0 / 0.2)' },
+        { t: 'Undone', bg: C.posd, fg: C.pos, ring: 'none' },
+        { t: 'Nothing to undo', bg: C.bg2, fg: C.tx2, ring: 'none' },
+        { t: 'Didn’t catch that — try “3 against 7”', bg: C.negd, fg: C.neg, ring: 'none' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

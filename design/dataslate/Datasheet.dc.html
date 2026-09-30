@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>*{scrollbar-width:none}*::-webkit-scrollbar{display:none}body{margin:0;background:oklch(0.255 0 0)}a{color:oklch(0.98 0 0)}a:hover{color:oklch(0.84 0.15 150)}</style>
+</helmet>
+<div style="background:oklch(0.29 0 0);font-family:'Fira Sans Condensed',sans-serif;color:oklch(0.98 0 0)">
+  <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-bottom:1px solid oklch(0.37 0 0)">
+    <sc-for list="{{ stats }}" as="s" hint-placeholder-count="6">
+      <div style="display:flex;flex-direction:column;align-items:center;padding:12px 0 9px;border-right:1px solid oklch(0.37 0 0)">
+        <span style="font:700 26px/1 'JetBrains Mono',monospace;letter-spacing:-0.03em">{{ s.v }}</span>
+        <span style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-top:7px">{{ s.k }}</span>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ hasInv }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:baseline;gap:10px;padding:9px 14px;border-bottom:1px solid oklch(0.37 0 0)">
+      <span style="font:700 20px/1 'JetBrains Mono',monospace">{{ inv }}</span>
+      <span style="font:700 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.88 0 0)">INVULN</span>
+      <span style="font-size:13px;color:oklch(0.78 0 0)">{{ invNote }}</span>
+    </div>
+  </sc-if>
+
+  <div style="padding:10px 14px 12px;border-bottom:1px solid oklch(0.37 0 0)">
+    <div style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-bottom:8px">KEYWORDS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <sc-for list="{{ keywords }}" as="k" hint-placeholder-count="5">
+        <span style="display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:3px;font:500 15px/1 'Fira Sans Condensed',sans-serif;background:{{ k.bg }};color:{{ k.fg }};text-decoration:{{ k.deco }};text-decoration-style:dotted;text-underline-offset:4px;border:1px solid {{ k.bd }}">{{ k.n }}</span>
+      </sc-for>
+      <span style="display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:3px;font:600 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;color:oklch(0.88 0 0);border:1px dashed oklch(0.44 0 0)">{{ faction }}</span>
+    </div>
+    <sc-if value="{{ kwOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:8px;padding:10px 12px;border:1px solid oklch(0.44 0 0);border-radius:4px;background:oklch(0.335 0 0)">
+        <div style="font:700 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;margin-bottom:6px">{{ kwOpenName }}</div>
+        <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty">{{ kwOpenRule }}</div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ isBattle }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:10px 14px 4px;font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">MODELS</div>
+    <sc-for list="{{ loadouts }}" as="l" hint-placeholder-count="1">
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 10px 6px 14px;min-height:56px;background:{{ l.bg }}">
+        <span style="width:14px;font-size:13px;color:oklch(0.88 0 0)">{{ l.chev }}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font:600 17px/1.15 'Fira Sans Condensed',sans-serif">{{ l.name }}</div>
+          <div style="font-size:13px;line-height:1.3;color:oklch(0.78 0 0);margin-top:2px">{{ l.gear }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:stretch;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+            <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;color:{{ l.minusFg }};background:oklch(0.335 0 0)">−</span>
+            <span style="width:38px;display:flex;align-items:center;justify-content:center;font:700 20px 'JetBrains Mono',monospace;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0)">{{ l.count }}</span>
+            <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;color:{{ l.plusFg }};background:oklch(0.335 0 0)">+</span>
+          </div>
+          <span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0);width:34px">of {{ l.of }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </sc-if>
+
+  <sc-if value="{{ showWeapons }}" hint-placeholder-val="{{ true }}">
+    <div style="background:{{ weaponsBg }}">
+      <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+        <sc-if value="{{ narrow }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:12px 14px 6px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+              <span style="font:800 15px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em">{{ g.label }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));font:700 11px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.78 0 0);padding-bottom:6px;border-bottom:1px solid oklch(0.44 0 0)">
+              <span>RNG</span><span>A</span><span>{{ g.skill }}</span><span>S</span><span>AP</span><span>D</span>
+            </div>
+          </div>
+          <sc-for list="{{ g.weapons }}" as="w" hint-placeholder-count="2">
+            <div style="padding:8px 14px 10px;border-bottom:1px solid oklch(0.37 0 0)">
+              <div style="display:flex;align-items:baseline;gap:8px">
+                <span style="font:500 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ w.c }}×</span>
+                <span style="font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ w.n }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin-top:5px">
+                <sc-for list="{{ w.cells }}" as="c" hint-placeholder-count="6">
+                  <span style="font:600 18px/1.2 'JetBrains Mono',monospace;color:{{ c.fg }};text-decoration:{{ c.deco }};text-decoration-thickness:2px;text-underline-offset:4px">{{ c.v }}</span>
+                </sc-for>
+              </div>
+              <sc-if value="{{ w.hasKw }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px">
+                  <sc-for list="{{ w.kws }}" as="k" hint-placeholder-count="1">
+                    <span style="display:inline-flex;align-items:center;min-height:30px;padding:0 9px;border-radius:3px;font:600 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.08em;background:{{ k.bg }};color:{{ k.fg }};text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px">{{ k.n }}</span>
+                  </sc-for>
+                  <sc-for list="{{ w.boosts }}" as="b" hint-placeholder-count="0">
+                    <span style="display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 9px;border-radius:15px;font:600 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.06em;background:oklch(0.36 0.06 150);color:oklch(0.84 0.15 150)">▲ {{ b }}</span>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ w.kwOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:8px;padding:10px 12px;border:1px solid oklch(0.44 0 0);border-radius:4px;background:oklch(0.335 0 0);font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty">{{ w.kwOpenRule }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </sc-if>
+        <sc-if value="{{ wide }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) repeat(6,54px);align-items:baseline;padding:12px 14px 6px;border-bottom:1px solid oklch(0.44 0 0);font:700 11px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.78 0 0)">
+            <span style="font:800 15px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.98 0 0)">{{ g.label }}</span><span>RNG</span><span>A</span><span>{{ g.skill }}</span><span>S</span><span>AP</span><span>D</span>
+          </div>
+          <sc-for list="{{ g.weapons }}" as="w" hint-placeholder-count="2">
+            <div style="padding:7px 14px 8px;border-bottom:1px solid oklch(0.37 0 0)">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) repeat(6,54px);align-items:baseline">
+                <div style="display:flex;align-items:baseline;gap:7px;min-width:0">
+                  <span style="font:500 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ w.c }}×</span>
+                  <span style="font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ w.n }}</span>
+                </div>
+                <sc-for list="{{ w.cells }}" as="c" hint-placeholder-count="6">
+                  <span style="font:600 17px/1.2 'JetBrains Mono',monospace;color:{{ c.fg }};text-decoration:{{ c.deco }};text-decoration-thickness:2px;text-underline-offset:4px">{{ c.v }}</span>
+                </sc-for>
+              </div>
+              <sc-if value="{{ w.hasKw }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;padding-left:25px">
+                  <sc-for list="{{ w.kws }}" as="k" hint-placeholder-count="1">
+                    <span style="display:inline-flex;align-items:center;min-height:28px;padding:0 9px;border-radius:3px;font:600 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.08em;background:{{ k.bg }};color:{{ k.fg }};text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px">{{ k.n }}</span>
+                  </sc-for>
+                  <sc-for list="{{ w.boosts }}" as="b" hint-placeholder-count="0">
+                    <span style="display:inline-flex;align-items:center;min-height:28px;padding:0 9px;border-radius:14px;font:600 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.06em;background:oklch(0.36 0.06 150);color:oklch(0.84 0.15 150)">▲ {{ b }}</span>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </sc-if>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="3">
+    <div style="border-top:1px solid oklch(0.44 0 0)">
+      <div style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px">
+        <span style="font:800 15px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em">{{ sec.label }}</span>
+        <span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ sec.count }}</span>
+        <span style="flex:1"></span>
+        <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:3px;font:500 18px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">{{ sec.sign }}</span>
+      </div>
+      <sc-if value="{{ sec.isInfo }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ abilities }}" as="ab" hint-placeholder-count="2">
+          <div style="padding:2px 14px 14px">
+            <div style="font:600 17px/1.2 'Fira Sans Condensed',sans-serif;margin-bottom:4px">{{ ab.n }}</div>
+            <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty"><sc-for list="{{ ab.segs }}" as="sg" hint-placeholder-count="1"><span style="font-variant-caps:{{ sg.caps }};letter-spacing:{{ sg.ls }};font-weight:{{ sg.fw }}">{{ sg.t }}</span></sc-for></div>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ sec.isRules }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ rules }}" as="ru" hint-placeholder-count="2">
+          <div style="padding:2px 14px 14px">
+            <div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px"><span style="font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ ru.n }}</span><span style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.78 0 0)">{{ ru.src }}</span></div>
+            <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty">{{ ru.t }}</div>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ sec.isStrat }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ stratGroups }}" as="sgp" hint-placeholder-count="2">
+          <div style="padding:4px 14px 6px;font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">{{ sgp.label }}</div>
+          <sc-for list="{{ sgp.items }}" as="st" hint-placeholder-count="2">
+            <div style="margin:0 10px 10px;padding:11px 12px 12px;background:oklch(0.335 0 0);border:1px solid oklch(0.39 0 0);border-radius:4px">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <div style="flex:1;min-width:0">
+                  <div style="font:700 18px/1.15 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.02em;text-transform:uppercase">{{ st.n }}</div>
+                  <div style="font:600 13px/1.3 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);margin-top:3px">{{ st.type }} · {{ st.phase }}</div>
+                </div>
+                <span style="flex:none;display:flex;align-items:baseline;gap:2px;padding:5px 8px;border:1px solid oklch(0.98 0 0);border-radius:3px"><span style="font:700 18px/1 'JetBrains Mono',monospace">{{ st.cp }}</span><span style="font:700 11px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em">CP</span></span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:9px">
+                <sc-for list="{{ st.parts }}" as="p" hint-placeholder-count="3">
+                  <div style="font:400 15px/1.42 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty"><span style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.98 0 0);margin-right:6px">{{ p.k }}:</span>{{ p.t }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </sc-for>
+      </sc-if>
+    </div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:900},&quot;unit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;lord&quot;,&quot;warboss&quot;],&quot;default&quot;:&quot;lord&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;battle&quot;,&quot;config&quot;],&quot;default&quot;:&quot;battle&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;wide&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;loadoutOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;openKw&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;openWkw&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sections&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const T = {
+  tx: 'oklch(0.98 0 0)', tx2: 'oklch(0.88 0 0)', tx3: 'oklch(0.78 0 0)', dis: 'oklch(0.55 0 0)',
+  bg2: 'oklch(0.335 0 0)', bg3: 'oklch(0.39 0 0)', line: 'oklch(0.44 0 0)',
+  pos: 'oklch(0.84 0.15 150)', neg: 'oklch(0.83 0.14 78)'
+};
+const KW = {
+  'Character': 'Characters can join a Bodyguard unit as its Leader. While attached, attacks cannot be allocated to the Character until every Bodyguard model is destroyed, unless the attack has Precision.',
+  'Pistol': 'Can be fired while the bearer is within Engagement Range, but only at a unit it is engaged with. A non-Monster, non-Vehicle model that shoots a Pistol cannot shoot other weapons that phase.',
+  'Ignores Cover': 'The target does not receive the Benefit of Cover against attacks made with this weapon.',
+  'Torrent': 'Attacks made with this weapon hit automatically. No Hit roll is made.',
+  'Melta 2': 'If the target is within half this weapon’s range, add 2 to the Damage of each attack.',
+  'Extra Attacks': 'The bearer attacks with this weapon in addition to its other melee weapon. Its Attacks cannot be changed by other rules.',
+  'Lance': 'If the bearer made a Charge move this turn, add 1 to the Wound roll for attacks made with this weapon.',
+  'Rapid Fire 2': 'If the target is within half this weapon’s range, add 2 to its Attacks.'
+};
+const txt = s => s.split(/(\*[^*]+\*)/).filter(Boolean).map(p => p[0] === '*'
+  ? { t: p.slice(1, -1), caps: 'all-small-caps', ls: '0.04em', fw: 600 }
+  : { t: p, caps: 'normal', ls: 'normal', fw: 400 });
+const UNITS = {
+  lord: {
+    stats: [['M', '14"'], ['T', '9'], ['SV', '2+'], ['W', '10'], ['LD', '6+'], ['OC', '4']],
+    inv: '4++', invNote: '',
+    keywords: ['Mounted', 'Character', 'Chaos', 'Daemon', 'Lord Discordant'], faction: 'HERETIC ASTARTES',
+    loadouts: [{ name: 'Lord Discordant', gear: 'Bolt pistol, baleflamer, magma cutter, bladed limbs, impaler chainglaive', count: 1, of: 1 }],
+    ranged: [
+      { c: 1, n: 'Bolt pistol', v: ['12"', '1', '2+', '4', '0', '1'], kw: ['Pistol'] },
+      { c: 1, n: 'Baleflamer', v: ['12"', 'D6+3', '—', '6', '−1', '2'], kw: ['Ignores Cover', 'Torrent'] },
+      { c: 1, n: 'Magma cutter', v: ['6"', '2', '3+', '9', '−4', '6'], kw: ['Melta 2'] }
+    ],
+    melee: [
+      { c: 1, n: 'Bladed limbs', v: ['—', '4', '3+', '6', '−1', '2'], kw: ['Extra Attacks'] },
+      { c: 1, n: 'Impaler chainglaive', v: ['—', '5', '2+', '8', '−3', '3'], kw: ['Lance'] }
+    ],
+    abilities: [
+      { n: 'Corrupt Machine Spirits', t: 'At the start of your opponent’s Shooting phase, select one enemy *VEHICLE* unit within 12" of this model. Until the end of the phase, subtract 1 from Hit rolls made by that unit.' },
+      { n: 'Spirit Thief', t: 'Each time this model destroys an enemy *VEHICLE* model with a melee attack, it regains up to D3 lost wounds. Friendly *HERETIC ASTARTES VEHICLE* units within 6" also regain 1 lost wound.' }
+    ],
+    rules: [
+      { n: 'Dark Pacts', src: 'FACTION', t: 'When this unit is selected to shoot or fight, it can make a Dark Pact: choose Lethal Hits or Sustained Hits 1 for its attacks, then take a Leadership test. If failed, the unit suffers D3 mortal wounds.' },
+      { n: 'Deadly Demise D3', src: 'CORE', t: 'When this model is destroyed, roll one D6. On a 6, each unit within 6" suffers D3 mortal wounds.' }
+    ],
+    strats: {
+      det: [
+        { n: 'Profane Zeal', cp: 1, type: 'Battle Tactic', phase: 'Fight phase', parts: [['WHEN', 'Fight phase, just after a Heretic Astartes unit from your army is selected to fight.'], ['TARGET', 'That unit.'], ['EFFECT', 'Until the end of the phase, each time a model in your unit makes an attack, re-roll a Hit roll of 1.']] },
+        { n: 'Unholy Covenant', cp: 1, type: 'Strategic Ploy', phase: 'Command phase', parts: [['WHEN', 'Your Command phase.'], ['TARGET', 'One Heretic Astartes Character from your army.'], ['EFFECT', 'Until the start of your next Command phase, Dark Pacts made by that unit automatically pass their Leadership test.'], ['RESTRICTIONS', 'Once per battle round.']] }
+      ],
+      core: [
+        { n: 'Command Re-roll', cp: 1, type: 'Core – Battle Tactic', phase: 'Any phase', parts: [['WHEN', 'Just after you make a Hit, Wound, Damage or saving roll, or an Advance or Charge roll.'], ['TARGET', 'The unit that rolled.'], ['EFFECT', 'Re-roll that roll.']] },
+        { n: 'Counter-offensive', cp: 2, type: 'Core – Strategic Ploy', phase: 'Fight phase', parts: [['WHEN', 'Just after an enemy unit has fought.'], ['TARGET', 'One of your units within Engagement Range that has not fought this phase.'], ['EFFECT', 'Your unit fights next.']] }
+      ]
+    }
+  },
+  warboss: {
+    stats: [['M', '5"'], ['T', '6'], ['SV', '2+'], ['W', '7'], ['LD', '6+'], ['OC', '1']],
+    inv: '5++', invNote: 'vs ranged attacks only · conditional',
+    keywords: ['Infantry', 'Character', 'Mega Armour', 'Warboss'], faction: 'ORKS',
+    loadouts: [{ name: 'Warboss in Mega Armour', gear: 'Kustom shoota, power klaw', count: 1, of: 1 }],
+    ranged: [{ c: 1, n: 'Kustom shoota', v: ['18"', '4', '5+', '4', '0', '1'], kw: ['Rapid Fire 2'] }],
+    melee: [{ c: 1, n: 'Power klaw', v: ['—', '4', '2+', '10', '−2', '2'], boost: { 2: true }, boosts: ['Might is Right'], kw: [] }],
+    abilities: [
+      { n: 'Might is Right', t: 'While this model is leading a unit, add 1 to the Hit roll for melee attacks made by models in that unit.' },
+      { n: 'Da Biggest and da Best', t: 'Once per battle, at the start of the Fight phase, add 4 to the Attacks of this model’s melee weapons until the end of the phase.' }
+    ],
+    rules: [
+      { n: 'Waaagh!', src: 'FACTION', t: 'Once per battle, at the start of your Command phase, call a Waaagh! Until your next Command phase, *ORKS* units can charge after Advancing and gain a 5+ invulnerable save.' },
+      { n: 'Leader', src: 'CORE', t: 'This model can be attached to a Meganobz unit before the battle.' }
+    ],
+    strats: {
+      det: [{ n: 'Full Throttle', cp: 1, type: 'Strategic Ploy', phase: 'Movement phase', parts: [['WHEN', 'Your Movement phase.'], ['TARGET', 'One Orks unit that has not moved.'], ['EFFECT', 'Add 2" to Advance moves made by that unit this phase.']] }],
+      core: [{ n: 'Command Re-roll', cp: 1, type: 'Core – Battle Tactic', phase: 'Any phase', parts: [['WHEN', 'Just after you make a roll.'], ['TARGET', 'The unit that rolled.'], ['EFFECT', 'Re-roll that roll.']] }]
+    }
+  }
+};
+class Component extends DCLogic {
+  renderVals() {
+    const u = UNITS[this.props.unit] || UNITS.lord;
+    const battle = (this.props.mode ?? 'battle') === 'battle';
+    const wide = !!this.props.wide;
+    const lo = this.props.loadoutOpen ?? true;
+    const openKw = this.props.openKw || '';
+    const openWkw = this.props.openWkw || '';
+    const open = (this.props.sections || '').split(',');
+    const keywords = u.keywords.map(n => {
+      const has = !!KW[n], isO = n === openKw;
+      return { n, bg: isO ? T.tx : T.bg2, fg: isO ? 'oklch(0.255 0 0)' : T.tx, deco: has ? 'underline' : 'none', bd: isO ? T.tx : (has ? T.line : 'transparent') };
+    });
+    const mkW = w => ({
+      c: w.c, n: w.n,
+      cells: w.v.map((v, i) => ({ v, fg: w.boost && w.boost[i] ? T.pos : T.tx, deco: w.boost && w.boost[i] ? 'underline' : 'none' })),
+      kws: w.kw.map(n => ({ n, bg: n === openWkw ? T.tx : T.bg3, fg: n === openWkw ? 'oklch(0.255 0 0)' : T.tx })),
+      boosts: w.boosts || [], hasKw: w.kw.length > 0 || !!(w.boosts && w.boosts.length),
+      kwOpen: w.kw.includes(openWkw), kwOpenRule: KW[openWkw] || ''
+    });
+    const sec = [
+      { label: 'INFO', count: u.abilities.length, k: 'info' },
+      { label: 'RULES', count: u.rules.length, k: 'rules' },
+      { label: 'STRATAGEMS', count: u.strats.det.length + u.strats.core.length, k: 'strat' }
+    ].map(s => { const o = open.includes(s.k); return { ...s, sign: o ? '−' : '+', isInfo: o && s.k === 'info', isRules: o && s.k === 'rules', isStrat: o && s.k === 'strat' }; });
+    return {
+      stats: u.stats.map(([k, v]) => ({ k, v })),
+      hasInv: !!u.inv, inv: u.inv, invNote: u.invNote,
+      keywords, faction: u.faction,
+      kwOpen: !!KW[openKw] && u.keywords.includes(openKw), kwOpenName: openKw.toUpperCase(), kwOpenRule: KW[openKw] || '',
+      isBattle: battle,
+      loadouts: u.loadouts.map(l => ({ ...l, chev: lo ? '▾' : '▸', bg: lo ? T.bg2 : 'transparent', minusFg: T.tx, plusFg: l.count >= l.of ? T.dis : T.tx })),
+      showWeapons: !battle || lo, weaponsBg: battle ? T.bg2 : 'transparent',
+      narrow: !wide, wide,
+      groups: [
+        { label: 'RANGED', skill: 'BS', weapons: u.ranged.map(mkW) },
+        { label: 'MELEE', skill: 'WS', weapons: u.melee.map(mkW) }
+      ],
+      sections: sec,
+      abilities: u.abilities.map(a => ({ n: a.n, segs: txt(a.t) })),
+      rules: u.rules.map(r => ({ ...r, t: r.t.replace(/\*/g, '') })),
+      stratGroups: [
+        { label: 'DETACHMENT', items: u.strats.det.map(s => ({ ...s, parts: s.parts.map(([k, t]) => ({ k, t })) })) },
+        { label: 'CORE', items: u.strats.core.map(s => ({ ...s, parts: s.parts.map(([k, t]) => ({ k, t })) })) }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

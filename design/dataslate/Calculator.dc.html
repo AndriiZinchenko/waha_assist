@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{scrollbar-width:none}*::-webkit-scrollbar{display:none}body{margin:0;background:oklch(0.255 0 0)}a{color:oklch(0.98 0 0)}a:hover{color:oklch(0.84 0.15 150)}</style>
+</helmet>
+<div style="height:100%;display:flex;flex-direction:column;background:oklch(0.29 0 0);border-top:2px solid oklch(0.98 0 0);font-family:'Fira Sans Condensed',sans-serif;color:oklch(0.98 0 0);box-shadow:0 -12px 30px oklch(0.08 0 0 / 0.7)">
+  <div style="flex:none;display:flex;justify-content:center;padding-top:6px"><div style="width:36px;height:4px;border-radius:2px;background:oklch(0.55 0 0)"></div></div>
+
+  <sc-if value="{{ phone }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:none;display:flex;flex-direction:column;gap:8px;padding:6px 12px 10px;border-bottom:1px solid oklch(0.44 0 0)">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;flex:none">
+          <span style="width:74px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:oklch(0.98 0 0);color:oklch(0.255 0 0)">RANGED</span>
+          <span style="width:74px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0)">MELEE</span>
+        </div>
+        <div style="flex:1;display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;min-width:0">
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:oklch(0.335 0 0)">−</span>
+          <span style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0)"><span style="font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">HIT</span><span style="font:700 17px/1.1 'JetBrains Mono',monospace">±0</span></span>
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:oklch(0.335 0 0)">+</span>
+        </div>
+        <span style="flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:4px;font:400 22px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">✕</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;min-width:0">
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:oklch(0.335 0 0)">−</span>
+          <span style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0)"><span style="font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">WOUND</span><span style="font:700 17px/1.1 'JetBrains Mono',monospace">±0</span></span>
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:oklch(0.335 0 0)">+</span>
+        </div>
+        <div style="flex:1;display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;min-width:0">
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;color:oklch(0.55 0 0);background:oklch(0.275 0 0)">−</span>
+          <span style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0)"><span style="font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">INVULN</span><span style="font:700 17px/1.1 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">None</span></span>
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:oklch(0.335 0 0)">+</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <span style="flex:1;display:flex;align-items:center;gap:8px;height:44px;padding:0 10px;border:1px solid oklch(0.44 0 0);border-radius:4px;font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="width:16px;height:16px;border:1.5px solid oklch(0.78 0 0);border-radius:2px;flex:none"></span>AP worsened by 1</span>
+        <span style="flex:1;display:flex;align-items:center;gap:8px;height:44px;padding:0 10px;border:1px solid oklch(0.98 0 0);background:oklch(0.40 0 0);border-radius:4px;font:600 14px 'Fira Sans Condensed',sans-serif"><span style="width:16px;height:16px;background:oklch(0.98 0 0);border-radius:2px;flex:none;display:flex;align-items:center;justify-content:center;font:700 12px/1 sans-serif;color:oklch(0.255 0 0)">✓</span>Half range</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tablet }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;display:flex;gap:10px;align-items:center;padding:6px 16px 10px;border-bottom:1px solid oklch(0.44 0 0)">
+      <span style="font:800 15px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.16em;margin-right:4px">COMBAT</span>
+      <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+        <span style="width:80px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:oklch(0.98 0 0);color:oklch(0.255 0 0)">RANGED</span>
+        <span style="width:80px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0)">MELEE</span>
+      </div>
+      <sc-for list="{{ tabletSteppers }}" as="s" hint-placeholder-count="3">
+        <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:{{ s.mbg }};color:{{ s.mfg }}">−</span>
+          <span style="width:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0)"><span style="font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">{{ s.k }}</span><span style="font:700 17px/1.1 'JetBrains Mono',monospace">{{ s.v }}</span></span>
+          <span style="width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:oklch(0.335 0 0)">+</span>
+        </div>
+      </sc-for>
+      <span style="display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:1px solid oklch(0.44 0 0);border-radius:4px;white-space:nowrap;font:600 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)"><span style="width:16px;height:16px;flex:none;border:1.5px solid oklch(0.78 0 0);border-radius:2px"></span>AP −1</span>
+      <span style="display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:1px solid oklch(0.98 0 0);background:oklch(0.40 0 0);border-radius:4px;white-space:nowrap;font:600 14px 'Fira Sans Condensed',sans-serif"><span style="width:16px;height:16px;flex:none;background:oklch(0.98 0 0);border-radius:2px;display:flex;align-items:center;justify-content:center;font:700 12px/1 sans-serif;color:oklch(0.255 0 0)">✓</span>Half range</span>
+      <span style="flex:1"></span>
+      <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:4px;font:400 22px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">✕</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font:500 16px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">Select a unit on both sides to see combat results.</div>
+  </sc-if>
+  <sc-if value="{{ hasResults }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:{{ cols }};gap:0">
+      <sc-for list="{{ dirs }}" as="d" hint-placeholder-count="2">
+        <div style="padding:10px 12px 12px;border-right:1px solid oklch(0.37 0 0)">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:4px 0 10px;font:600 16px/1.2 'Fira Sans Condensed',sans-serif">
+            <span style="display:inline-flex;align-items:center;gap:6px;color:{{ d.fromC }}"><span style="width:12px;height:12px;flex:none;background:{{ d.fromC }};clip-path:{{ d.fromShape }}"></span>{{ d.from }}</span>
+            <span style="font:500 16px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">→</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;color:{{ d.toC }}"><span style="width:12px;height:12px;flex:none;background:{{ d.toC }};clip-path:{{ d.toShape }}"></span>{{ d.to }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ d.rows }}" as="r" hint-placeholder-count="2">
+              <div>
+                <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px"><span style="font:500 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ r.c }}×</span><span style="font:600 16px 'Fira Sans Condensed',sans-serif">{{ r.n }}</span><span style="font:500 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">({{ r.rng }})</span></div>
+                <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px">
+                  <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5">
+                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:52px;border-radius:3px;background:{{ c.bg }}">
+                      <span style="font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:{{ c.cap }}">{{ c.k }}</span>
+                      <span style="font:700 21px/1 'JetBrains Mono',monospace;letter-spacing:-0.03em;color:{{ c.fg }}">{{ c.v }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;margin-top:6px">
+                  <sc-for list="{{ r.notes }}" as="nt" hint-placeholder-count="1">
+                    <div style="display:flex;gap:7px;align-items:baseline;font:500 14px/1.3 'Fira Sans Condensed',sans-serif;color:{{ nt.fg }}"><span style="flex:none;width:12px;font:700 13px 'JetBrains Mono',monospace;text-align:center">{{ nt.g }}</span><span style="text-wrap:pretty">{{ nt.t }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:520},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const A = 'oklch(0.66 0.20 22)', B = 'oklch(0.82 0.12 210)';
+const SQ = 'inset(0)', DI = 'polygon(50% 0,100% 50%,50% 100%,0 50%)';
+const TONE = {
+  n: { bg: 'oklch(0.335 0 0)', fg: 'oklch(0.98 0 0)', cap: 'oklch(0.78 0 0)' },
+  b: { bg: 'oklch(0.36 0.06 150)', fg: 'oklch(0.84 0.15 150)', cap: 'oklch(0.84 0.15 150)' },
+  p: { bg: 'oklch(0.37 0.06 78)', fg: 'oklch(0.83 0.14 78)', cap: 'oklch(0.83 0.14 78)' }
+};
+const NOTE = { n: ['·', 'oklch(0.88 0 0)'], p: ['+', 'oklch(0.84 0.15 150)'], m: ['!', 'oklch(0.83 0.14 78)'] };
+const K = ['ATK', 'HIT', 'WOUND', 'SAVE', 'D'];
+const row = (c, n, rng, vals, notes) => ({
+  c, n, rng,
+  cells: vals.map((v, i) => { const [val, t] = Array.isArray(v) ? v : [v, 'n']; return { k: K[i], v: val, ...TONE[t] }; }),
+  notes: notes.map(([t, s]) => ({ t: s, g: NOTE[t][0], fg: NOTE[t][1] }))
+});
+const INV = 'Target has a conditional 5+ invuln, not applied — set Invuln override if it applies here';
+class Component extends DCLogic {
+  renderVals() {
+    const tablet = this.props.layout === 'tablet';
+    const empty = !!this.props.empty;
+    return {
+      phone: !tablet, tablet, empty, hasResults: !empty,
+      cols: tablet ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)',
+      tabletSteppers: [
+        { k: 'HIT', v: '±0', mbg: 'oklch(0.335 0 0)', mfg: 'oklch(0.98 0 0)' },
+        { k: 'WOUND', v: '±0', mbg: 'oklch(0.335 0 0)', mfg: 'oklch(0.98 0 0)' },
+        { k: 'INVULN', v: 'None', mbg: 'oklch(0.275 0 0)', mfg: 'oklch(0.55 0 0)' }
+      ],
+      dirs: [
+        { from: 'Lord Discordant on Helstalker', fromC: A, fromShape: SQ, to: 'Warboss in Mega Armour', toC: B, toShape: DI, rows: [
+          row(1, 'Bolt pistol', '12"', ['1', '2+', '5+', '2+', '1'], [['n', 'Save 2+ / AP0'], ['m', INV]]),
+          row(1, 'Baleflamer', '12"', ['D6+3', ['auto', 'b'], '4+', '3+', '2'], [['p', 'Torrent: hits automatically'], ['n', 'Save 3+ / AP−1']]),
+          row(1, 'Magma cutter', '6"', ['2', '3+', '3+', '6+', ['8', 'b']], [['p', 'Melta 2 applied (half range)'], ['n', 'Save 6+ / AP−4'], ['m', INV]])
+        ] },
+        { from: 'Warboss in Mega Armour', fromC: B, fromShape: DI, to: 'Lord Discordant on Helstalker', toC: A, toShape: SQ, rows: [
+          row(1, 'Kustom shoota', '18"', [['6', 'b'], '5+', ['6+', 'p'], '2+', '1'], [['p', 'Rapid Fire 2 applied (half range)'], ['m', 'S4 vs T9: wounds only on 6+'], ['n', 'Save 2+ / AP0 · 4++ not needed']])
+        ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

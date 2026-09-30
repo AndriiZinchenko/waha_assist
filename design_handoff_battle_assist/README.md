@@ -1,5 +1,9 @@
 # Handoff: WAHA — 40K Battle Assist UI Redesign
 
+> **Superseded.** The app now uses the Dataslate design: see
+> `docs/dataslate-migration.md` and `design/dataslate/`. This folder is kept for
+> history only.
+
 ## Overview
 A visual redesign of the army-list, army-detail, and battle-comparison/calculator screens for a Warhammer 40k army-building/battle-assist web app. Goal: replace the flat, beige, "generic form" look of the current app with a darker, higher-contrast, tablet-first UI, while preserving the existing information architecture and interaction model (pick two armies → compare rosters side by side → expand units → run combat math).
 

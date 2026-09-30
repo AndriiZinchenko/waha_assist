@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*{scrollbar-width:none;-webkit-tap-highlight-color:transparent}*::-webkit-scrollbar{display:none}html,body{margin:0;height:100%;background:oklch(0.19 0 0)}a{color:oklch(0.98 0 0);text-decoration:none}a:hover{color:oklch(0.84 0.15 150)}input::placeholder{color:oklch(0.78 0 0)}</style>
+</helmet>
+<div style="height:100vh;display:flex;align-items:center;justify-content:center;background:oklch(0.19 0 0);font-family:'Fira Sans Condensed',sans-serif;color:oklch(0.98 0 0)">
+<div style="position:relative;display:flex;flex-direction:column;overflow:hidden;background:oklch(0.255 0 0);width:{{ frameW }};height:{{ frameH }};border-radius:{{ frameR }};box-shadow:{{ frameShadow }}">
+
+  <div style="flex:none;height:{{ safeTop }}"></div>
+
+  <div style="flex:none;display:flex;align-items:center;gap:2px;height:52px;padding:0 6px;border-bottom:1px solid oklch(0.44 0 0);background:oklch(0.255 0 0);position:relative;z-index:5">
+    <a href="Combat Assistant.dc.html" style="display:flex;align-items:center;gap:2px;height:44px;padding:0 8px 0 2px;font:600 16px 'Fira Sans Condensed',sans-serif"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 5 8 12 15 19"></polyline></svg>{{ t.armies }}</a>
+    <span style="width:36px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:11px;height:11px;border-radius:50%;background:oklch(0.84 0.15 150)"></span></span>
+    <span style="flex:1"></span>
+    <span onClick="{{ toggleVoice }}" style="cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:{{ micBg }};color:{{ micFg }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M6 11a6 6 0 0 0 12 0"></path><line x1="12" y1="17" x2="12" y2="21"></line></svg></span>
+    <span onClick="{{ toggleCalc }}" style="cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:{{ calcBg }};color:{{ calcFg }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"></rect><line x1="8" y1="7.5" x2="16" y2="7.5"></line><line x1="8" y1="12" x2="10" y2="12"></line><line x1="14" y1="12" x2="16" y2="12"></line><line x1="8" y1="16.5" x2="10" y2="16.5"></line><line x1="14" y1="16.5" x2="16" y2="16.5"></line></svg></span>
+    <span onClick="{{ toggleMenu }}" style="cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:{{ menuBg }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg></span>
+    <sc-if value="{{ menu }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;right:6px;top:50px;width:260px;background:oklch(0.335 0 0);border:1px solid oklch(0.44 0 0);border-radius:4px;box-shadow:0 12px 30px oklch(0.05 0 0 / 0.6)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;padding:0 12px;border-bottom:1px solid oklch(0.44 0 0)"><span style="font:600 16px 'Fira Sans Condensed',sans-serif">{{ t.language }}</span>
+          <div style="display:flex;height:40px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+            <span onClick="{{ setEN }}" style="cursor:pointer;width:44px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;background:{{ enBg }};color:{{ enFg }}">EN</span>
+            <span onClick="{{ setUA }}" style="cursor:pointer;width:44px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;background:{{ uaBg }};color:{{ uaFg }}">UA</span>
+          </div>
+        </div>
+        <div onClick="{{ toggleWake }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;padding:0 12px"><span style="font:600 16px 'Fira Sans Condensed',sans-serif">{{ t.wake }}</span><span style="width:48px;height:28px;border-radius:14px;background:{{ wakeBg }};position:relative;flex:none"><span style="position:absolute;top:3px;left:{{ wakeX }};width:22px;height:22px;border-radius:50%;background:oklch(0.255 0 0)"></span></span></div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ voice }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 8px 0 14px;background:{{ voiceBg }};border-bottom:1px solid oklch(0.44 0 0);font:600 15px 'Fira Sans Condensed',sans-serif;color:{{ voiceFg }}">
+      <span style="width:10px;height:10px;border-radius:50%;flex:none;background:{{ voiceFg }};box-shadow:0 0 0 4px oklch(0.98 0 0 / 0.18)"></span>
+      <span style="flex:1;min-width:0">{{ voiceText }}</span>
+      <input value="{{ voiceInput }}" onChange="{{ onVoiceInput }}" onKeyDown="{{ onVoiceKey }}" placeholder="{{ t.type }}" style="width:108px;height:36px;box-sizing:border-box;padding:0 8px;background:oklch(0.255 0 0);border:1px solid oklch(0.44 0 0);border-radius:4px;color:oklch(0.98 0 0);font:600 15px 'JetBrains Mono',monospace;outline:none">
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;font:600 15px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">Loading rosters…</div>
+  </sc-if>
+
+  <sc-if value="{{ ready }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ phone }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;height:56px;flex:none;border-bottom:1px solid oklch(0.44 0 0)">
+        <sc-for list="{{ switcher }}" as="s" hint-placeholder-count="2">
+          <div onClick="{{ s.onTap }}" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:0 12px;min-width:0;flex-direction:{{ s.dir }};text-align:{{ s.align }};background:{{ s.bg }};box-shadow:{{ s.rail }}">
+            <span style="width:14px;height:14px;flex:none;background:{{ s.c }};clip-path:{{ s.shape }}"></span>
+            <div style="min-width:0;flex:1"><div style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:{{ s.c }}">{{ s.label }}</div><div style="font:600 15px/1.2 'Fira Sans Condensed',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ s.fg }}">{{ s.name }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ cols }};gap:6px;background:oklch(0.17 0 0)">
+      <sc-for list="{{ panels }}" as="p" hint-placeholder-count="1">
+        <div data-pane="{{ p.side }}" style="position:relative;min-height:0;overflow-y:auto;background:oklch(0.255 0 0)">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px 6px;border-bottom:1px solid oklch(0.44 0 0);background:{{ p.headBg }};box-shadow:{{ p.headRail }}">
+            <div style="flex:1;min-width:0">
+              <div style="font:700 21px/1.15 'Fira Sans Extra Condensed',sans-serif;text-wrap:pretty">{{ p.army }}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <span onClick="{{ p.openSheet }}" style="cursor:pointer;display:flex;align-items:center;min-height:40px;font:600 15px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);text-decoration:underline dotted;text-underline-offset:4px">{{ p.det }} ›</span>
+                <span style="font:600 16px 'JetBrains Mono',monospace">{{ p.pts }}<span style="font-size:12px;color:oklch(0.78 0 0)">{{ t.pts }}</span></span>
+              </div>
+            </div>
+          </div>
+          <sc-for list="{{ p.rows }}" as="r" hint-placeholder-count="8">
+            <div data-uid="{{ r.id }}" onClick="{{ r.onTap }}" style="cursor:pointer;position:relative;display:flex;align-items:center;gap:10px;min-height:54px;padding:0 14px 0 {{ r.pl }};border-bottom:1px solid oklch(0.37 0 0);background:{{ r.bg }};box-shadow:{{ r.rail }};opacity:{{ r.op }}">
+              <span style="position:absolute;left:20px;top:0;height:50%;width:1.5px;background:oklch(0.55 0 0);display:{{ r.conn }}"></span>
+              <span style="position:absolute;left:20px;top:50%;width:11px;height:1.5px;background:oklch(0.55 0 0);display:{{ r.conn }}"></span>
+              <span style="width:12px;flex:none;font-size:12px;color:oklch(0.78 0 0)">{{ r.chev }}</span>
+              <span style="display:{{ r.badgeD }};min-width:30px;height:30px;box-sizing:border-box;align-items:center;justify-content:center;border:1.5px solid {{ p.c }};border-radius:3px;font:700 15px 'JetBrains Mono',monospace;color:{{ p.c }};flex:none">{{ r.n }}</span>
+              <span style="flex:1;min-width:0;font:{{ r.fw }} 18px/1.2 'Fira Sans Condensed',sans-serif;text-decoration:{{ r.deco }}">{{ r.name }}<span style="color:{{ p.c }}">{{ r.star }}</span></span>
+              <span style="display:{{ r.allyD }};padding:4px 6px;border:1px solid oklch(0.55 0 0);border-radius:2px;font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.88 0 0);flex:none">{{ r.ally }}</span>
+              <span style="flex:none;font:600 16px 'JetBrains Mono',monospace"><span style="color:{{ r.cfg }}">{{ r.live }}</span><span style="color:oklch(0.78 0 0)">/{{ r.total }}</span></span>
+            </div>
+            <sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+              <div style="background:oklch(0.29 0 0);box-shadow:inset 3px 0 0 {{ p.c }};border-bottom:1px solid oklch(0.44 0 0)">
+                <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-bottom:1px solid oklch(0.37 0 0)">
+                  <sc-for list="{{ r.ds.stats }}" as="s" hint-placeholder-count="6">
+                    <div style="display:flex;flex-direction:column;align-items:center;padding:12px 0 9px;border-right:1px solid oklch(0.37 0 0)"><span style="font:700 26px/1 'JetBrains Mono',monospace;letter-spacing:-0.03em">{{ s.v }}</span><span style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-top:7px">{{ s.k }}</span></div>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ r.ds.hasInv }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:baseline;gap:10px;padding:9px 14px;border-bottom:1px solid oklch(0.37 0 0)"><span style="font:700 20px/1 'JetBrains Mono',monospace">{{ r.ds.inv }}</span><span style="font:700 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.88 0 0)">INVULN</span><span style="font-size:13px;color:oklch(0.78 0 0)">{{ r.ds.invNote }}</span></div>
+                </sc-if>
+                <div style="padding:10px 14px 12px;border-bottom:1px solid oklch(0.37 0 0)">
+                  <div style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);margin-bottom:8px">{{ t.keywords }}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px">
+                    <sc-for list="{{ r.ds.keywords }}" as="k" hint-placeholder-count="5">
+                      <span onClick="{{ k.onTap }}" style="cursor:{{ k.cur }};display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border-radius:3px;font:500 15px/1 'Fira Sans Condensed',sans-serif;background:{{ k.bg }};color:{{ k.fg }};text-decoration:{{ k.deco }};text-decoration-style:dotted;text-underline-offset:4px;border:1px solid {{ k.bd }}">{{ k.n }}</span>
+                    </sc-for>
+                    <span style="display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border-radius:3px;font:600 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em;color:oklch(0.88 0 0);border:1px dashed oklch(0.44 0 0)">{{ r.ds.faction }}</span>
+                  </div>
+                  <sc-if value="{{ r.ds.kwOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:8px;padding:10px 12px;border:1px solid oklch(0.44 0 0);border-radius:4px;background:oklch(0.335 0 0)">
+                      <div style="font:700 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;margin-bottom:6px">{{ r.ds.kwName }}</div>
+                      <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty">{{ r.ds.kwText }}</div>
+                    </div>
+                  </sc-if>
+                </div>
+
+                <div style="padding:10px 14px 4px;font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">{{ t.models }}</div>
+                <sc-for list="{{ r.ds.loadouts }}" as="l" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:10px;padding:6px 10px 6px 14px;min-height:56px;background:{{ l.bg }};border-top:1px solid oklch(0.37 0 0)">
+                    <div onClick="{{ l.onTap }}" style="cursor:pointer;flex:1;min-width:0;display:flex;align-items:center;gap:10px;align-self:stretch">
+                      <span style="width:12px;flex:none;font-size:12px;color:oklch(0.88 0 0)">{{ l.chev }}</span>
+                      <div style="flex:1;min-width:0"><div style="font:600 17px/1.15 'Fira Sans Condensed',sans-serif;text-wrap:pretty">{{ l.name }}</div><div style="font-size:13px;line-height:1.3;color:oklch(0.78 0 0);margin-top:2px">{{ l.gear }}</div></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex:none">
+                      <div style="display:flex;align-items:stretch;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden">
+                        <span onClick="{{ l.minus }}" style="cursor:pointer;width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;color:{{ l.mFg }};background:{{ l.mBg }}">−</span>
+                        <span style="width:38px;display:flex;align-items:center;justify-content:center;font:700 20px 'JetBrains Mono',monospace;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0);color:{{ l.cFg }}">{{ l.count }}</span>
+                        <span onClick="{{ l.plus }}" style="cursor:pointer;width:44px;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;color:{{ l.pFg }};background:{{ l.pBg }}">+</span>
+                      </div>
+                      <span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0);width:36px">{{ t.of }} {{ l.of }}</span>
+                    </div>
+                  </div>
+                  <sc-if value="{{ l.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="background:oklch(0.335 0 0);padding-bottom:4px">
+                      <sc-for list="{{ l.groups }}" as="g" hint-placeholder-count="2">
+                        <sc-if value="{{ narrow }}" hint-placeholder-val="{{ true }}">
+                          <div style="padding:12px 14px 6px">
+                            <div style="font:800 15px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;margin-bottom:6px">{{ g.label }}</div>
+                            <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));font:700 11px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.78 0 0);padding-bottom:6px;border-bottom:1px solid oklch(0.44 0 0)"><span>RNG</span><span>A</span><span>{{ g.skill }}</span><span>S</span><span>AP</span><span>D</span></div>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ wide }}" hint-placeholder-val="{{ false }}">
+                          <div style="display:grid;grid-template-columns:minmax(0,1fr) repeat(6,50px);align-items:baseline;padding:12px 14px 6px;border-bottom:1px solid oklch(0.44 0 0);font:700 11px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.78 0 0)"><span style="font:800 15px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.98 0 0)">{{ g.label }}</span><span>RNG</span><span>A</span><span>{{ g.skill }}</span><span>S</span><span>AP</span><span>D</span></div>
+                        </sc-if>
+                        <sc-for list="{{ g.weapons }}" as="w" hint-placeholder-count="2">
+                          <div style="padding:8px 14px 10px;border-bottom:1px solid oklch(0.39 0 0)">
+                            <div style="display:grid;grid-template-columns:{{ wCols }};align-items:baseline;row-gap:5px">
+                              <div style="display:flex;align-items:baseline;gap:8px;min-width:0;grid-column:{{ wNameSpan }}"><span style="font:500 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ w.c }}×</span><span style="font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ w.n }}</span></div>
+                              <sc-for list="{{ w.cells }}" as="c" hint-placeholder-count="6">
+                                <span style="font:600 18px/1.2 'JetBrains Mono',monospace;color:{{ c.fg }}">{{ c.v }}</span>
+                              </sc-for>
+                            </div>
+                            <sc-if value="{{ w.hasKw }}" hint-placeholder-val="{{ true }}">
+                              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px">
+                                <sc-for list="{{ w.kws }}" as="k" hint-placeholder-count="1">
+                                  <span onClick="{{ k.onTap }}" style="cursor:{{ k.cur }};display:inline-flex;align-items:center;min-height:32px;padding:0 9px;border-radius:3px;font:600 13px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.08em;background:{{ k.bg }};color:{{ k.fg }};text-decoration:{{ k.deco }};text-decoration-style:dotted;text-underline-offset:3px">{{ k.n }}</span>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ w.kwOpen }}" hint-placeholder-val="{{ false }}">
+                              <div style="margin-top:8px;padding:10px 12px;border:1px solid oklch(0.44 0 0);border-radius:4px;background:oklch(0.29 0 0);display:flex;flex-direction:column;gap:6px">
+                                <sc-for list="{{ w.kwParas }}" as="pa" hint-placeholder-count="1">
+                                  <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty"><sc-for list="{{ pa.segs }}" as="sg" hint-placeholder-count="1"><span style="font-variant-caps:{{ sg.caps }};font-weight:{{ sg.fw }};letter-spacing:{{ sg.ls }}">{{ sg.t }}</span></sc-for></div>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </sc-for>
+
+                <sc-for list="{{ r.ds.sections }}" as="sec" hint-placeholder-count="3">
+                  <div style="border-top:1px solid oklch(0.44 0 0)">
+                    <div onClick="{{ sec.onTap }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px">
+                      <span style="font:800 15px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em">{{ sec.label }}</span>
+                      <span style="font:500 13px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ sec.count }}</span>
+                      <span style="flex:1"></span>
+                      <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:3px;font:500 18px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">{{ sec.sign }}</span>
+                    </div>
+                    <sc-if value="{{ sec.isText }}" hint-placeholder-val="{{ false }}">
+                      <sc-for list="{{ sec.items }}" as="ab" hint-placeholder-count="2">
+                        <div style="padding:2px 14px 14px">
+                          <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px"><span style="font:600 17px/1.2 'Fira Sans Condensed',sans-serif">{{ ab.n }}</span><span style="font:700 11px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.78 0 0)">{{ ab.src }}</span></div>
+                          <div style="display:flex;flex-direction:column;gap:6px">
+                            <sc-for list="{{ ab.paras }}" as="pa" hint-placeholder-count="1">
+                              <div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty"><sc-for list="{{ pa.segs }}" as="sg" hint-placeholder-count="1"><span style="font-variant-caps:{{ sg.caps }};font-weight:{{ sg.fw }};letter-spacing:{{ sg.ls }}">{{ sg.t }}</span></sc-for></div>
+                            </sc-for>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </sc-if>
+                    <sc-if value="{{ sec.isStrat }}" hint-placeholder-val="{{ false }}">
+                      <sc-for list="{{ sec.groups }}" as="sg2" hint-placeholder-count="2">
+                        <div style="padding:4px 14px 8px;font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">{{ sg2.label }}</div>
+                        <sc-for list="{{ sg2.items }}" as="st" hint-placeholder-count="2">
+                          <div style="margin:0 10px 10px;padding:11px 12px 12px;background:oklch(0.335 0 0);border:1px solid oklch(0.39 0 0);border-radius:4px">
+                            <div style="display:flex;align-items:flex-start;gap:10px">
+                              <div style="flex:1;min-width:0"><div style="font:700 18px/1.15 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.02em;text-transform:uppercase">{{ st.n }}</div><div style="font:600 13px/1.3 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);margin-top:3px">{{ st.type }}</div></div>
+                              <span style="flex:none;display:flex;align-items:baseline;gap:2px;padding:5px 8px;border:1px solid oklch(0.98 0 0);border-radius:3px"><span style="font:700 18px/1 'JetBrains Mono',monospace">{{ st.cp }}</span><span style="font:700 11px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.1em">CP</span></span>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:6px;margin-top:9px">
+                              <sc-for list="{{ st.parts }}" as="pt" hint-placeholder-count="3">
+                                <div style="font:400 15px/1.42 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty"><span style="font:700 12px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.98 0 0);margin-right:6px">{{ pt.k }}:</span>{{ pt.t }}</div>
+                              </sc-for>
+                            </div>
+                          </div>
+                        </sc-for>
+                      </sc-for>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </sc-for>
+          <div style="height:{{ panelPad }}"></div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ calc }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;max-height:{{ calcMax }};display:flex;flex-direction:column;background:oklch(0.29 0 0);border-top:2px solid oklch(0.98 0 0);box-shadow:0 -12px 30px oklch(0.08 0 0 / 0.7);position:relative;z-index:3">
+        <div style="flex:none;display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid oklch(0.44 0 0)">
+          <div style="display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;flex:none">
+            <span onClick="{{ setRanged }}" style="cursor:pointer;width:74px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:{{ rBg }};color:{{ rFg }}">{{ t.ranged }}</span>
+            <span onClick="{{ setMelee }}" style="cursor:pointer;width:74px;display:flex;align-items:center;justify-content:center;font:700 14px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;background:{{ mBg }};color:{{ mFg }}">{{ t.melee }}</span>
+          </div>
+          <sc-for list="{{ steppers }}" as="s" hint-placeholder-count="3">
+            <div style="flex:1 1 130px;display:flex;height:44px;border:1px solid oklch(0.44 0 0);border-radius:4px;overflow:hidden;min-width:0">
+              <span onClick="{{ s.dec }}" style="cursor:pointer;width:44px;flex:none;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:{{ s.dBg }};color:{{ s.dFg }}">−</span>
+              <span style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid oklch(0.44 0 0);border-right:1px solid oklch(0.44 0 0)"><span style="font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">{{ s.k }}</span><span style="font:700 17px/1.1 'JetBrains Mono',monospace;color:{{ s.vFg }}">{{ s.v }}</span></span>
+              <span onClick="{{ s.inc }}" style="cursor:pointer;width:44px;flex:none;display:flex;align-items:center;justify-content:center;font:500 22px 'JetBrains Mono',monospace;background:{{ s.iBg }};color:{{ s.iFg }}">+</span>
+            </div>
+          </sc-for>
+          <sc-for list="{{ checks }}" as="c" hint-placeholder-count="2">
+            <span onClick="{{ c.onTap }}" style="cursor:pointer;flex:1 1 150px;display:flex;align-items:center;gap:8px;height:44px;padding:0 10px;border:1px solid {{ c.bd }};background:{{ c.bg }};border-radius:4px;white-space:nowrap;font:600 14px 'Fira Sans Condensed',sans-serif;color:{{ c.fg }}"><span style="width:16px;height:16px;flex:none;box-sizing:border-box;border:1.5px solid {{ c.boxBd }};background:{{ c.boxBg }};border-radius:2px;display:flex;align-items:center;justify-content:center;font:700 12px/1 sans-serif;color:oklch(0.255 0 0)">{{ c.mark }}</span>{{ c.label }}</span>
+          </sc-for>
+          <span onClick="{{ toggleCalc }}" style="cursor:pointer;flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:4px;font:400 22px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">✕</span>
+        </div>
+        <sc-if value="{{ calcEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:28px 24px;text-align:center;font:500 16px/1.4 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0)">{{ t.selectBoth }}</div>
+        </sc-if>
+        <sc-if value="{{ calcHas }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:{{ cols }};align-content:start">
+            <sc-for list="{{ dirs }}" as="d" hint-placeholder-count="2">
+              <div style="padding:10px 12px 14px;border-right:1px solid oklch(0.37 0 0);border-bottom:1px solid oklch(0.37 0 0)">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:4px 0 10px;font:600 16px/1.2 'Fira Sans Condensed',sans-serif">
+                  <span style="display:inline-flex;align-items:center;gap:6px;color:{{ d.fromC }}"><span style="width:12px;height:12px;flex:none;background:{{ d.fromC }};clip-path:{{ d.fromShape }}"></span>{{ d.from }}</span>
+                  <span style="font:500 16px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">→</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px;color:{{ d.toC }}"><span style="width:12px;height:12px;flex:none;background:{{ d.toC }};clip-path:{{ d.toShape }}"></span>{{ d.to }}</span>
+                </div>
+                <sc-if value="{{ d.none }}" hint-placeholder-val="{{ false }}"><div style="font:500 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.78 0 0)">{{ d.noneText }}</div></sc-if>
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <sc-for list="{{ d.rows }}" as="rw" hint-placeholder-count="2">
+                    <div>
+                      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px;flex-wrap:wrap"><span style="font:500 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ rw.c }}×</span><span style="font:600 16px 'Fira Sans Condensed',sans-serif">{{ rw.n }}</span><span style="font:500 14px 'JetBrains Mono',monospace;color:oklch(0.78 0 0)">{{ rw.rng }}</span></div>
+                      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px">
+                        <sc-for list="{{ rw.cells }}" as="c" hint-placeholder-count="5">
+                          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:52px;border-radius:3px;background:{{ c.bg }}"><span style="font:700 10px/1 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:{{ c.cap }}">{{ c.k }}</span><span style="font:700 21px/1 'JetBrains Mono',monospace;letter-spacing:-0.03em;color:{{ c.fg }}">{{ c.v }}</span></div>
+                        </sc-for>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:3px;margin-top:6px">
+                        <sc-for list="{{ rw.notes }}" as="nt" hint-placeholder-count="1">
+                          <div style="display:flex;gap:7px;align-items:baseline;font:500 14px/1.3 'Fira Sans Condensed',sans-serif;color:{{ nt.fg }}"><span style="flex:none;width:12px;font:700 13px 'JetBrains Mono',monospace;text-align:center">{{ nt.g }}</span><span style="text-wrap:pretty">{{ nt.t }}</span></div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:oklch(0.08 0 0 / 0.6);z-index:10"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;top:{{ sheetTop }};max-width:720px;margin:0 auto;background:oklch(0.29 0 0);border-top:3px solid {{ sheet.c }};border-radius:12px 12px 0 0;display:flex;flex-direction:column;z-index:11">
+      <div style="display:flex;justify-content:center;padding-top:8px"><span style="width:36px;height:4px;border-radius:2px;background:oklch(0.55 0 0)"></span></div>
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px 12px 16px;border-bottom:1px solid oklch(0.44 0 0)">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px"><span style="width:11px;height:11px;background:{{ sheet.c }};clip-path:{{ sheet.shape }}"></span><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:{{ sheet.c }}">{{ sheet.label }}</span></div>
+          <div style="font:800 26px/1.05 'Fira Sans Extra Condensed',sans-serif;text-transform:uppercase;margin-top:4px">{{ sheet.name }}</div>
+          <div style="font:500 14px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);margin-top:3px">{{ sheet.faction }}</div>
+        </div>
+        <span onClick="{{ closeSheet }}" style="cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid oklch(0.44 0 0);border-radius:4px;font:400 22px 'JetBrains Mono',monospace;color:oklch(0.88 0 0)">✕</span>
+      </div>
+      <div style="flex:1;min-height:0;overflow-y:auto;padding-bottom:24px">
+        <div style="padding:12px 16px 4px;font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0)">{{ t.rules }}</div>
+        <sc-for list="{{ sheet.rules }}" as="ab" hint-placeholder-count="1">
+          <div style="padding:0 16px 14px"><div style="font:600 17px 'Fira Sans Condensed',sans-serif;margin-bottom:4px">{{ ab.n }}</div>
+            <div style="display:flex;flex-direction:column;gap:6px"><sc-for list="{{ ab.paras }}" as="pa" hint-placeholder-count="1"><div style="font:400 15px/1.45 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty"><sc-for list="{{ pa.segs }}" as="sg" hint-placeholder-count="1"><span style="font-variant-caps:{{ sg.caps }};font-weight:{{ sg.fw }};letter-spacing:{{ sg.ls }}">{{ sg.t }}</span></sc-for></div></sc-for></div>
+          </div>
+        </sc-for>
+        <div style="padding:10px 16px 8px;font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.14em;color:oklch(0.78 0 0);border-top:1px solid oklch(0.44 0 0)">{{ t.stratagems }} · {{ sheet.count }}</div>
+        <sc-for list="{{ sheet.strats }}" as="st" hint-placeholder-count="3">
+          <div style="margin:0 10px 10px;padding:11px 12px 12px;background:oklch(0.335 0 0);border:1px solid oklch(0.39 0 0);border-radius:4px">
+            <div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><div style="font:700 18px/1.15 'Fira Sans Extra Condensed',sans-serif;text-transform:uppercase">{{ st.n }}</div><div style="font:600 13px 'Fira Sans Condensed',sans-serif;color:oklch(0.88 0 0);margin-top:3px">{{ st.type }}</div></div><span style="display:flex;align-items:baseline;gap:2px;padding:5px 8px;border:1px solid oklch(0.98 0 0);border-radius:3px"><span style="font:700 18px/1 'JetBrains Mono',monospace">{{ st.cp }}</span><span style="font:700 11px/1 'Fira Sans Extra Condensed',sans-serif">CP</span></span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:9px"><sc-for list="{{ st.parts }}" as="pt" hint-placeholder-count="3"><div style="font:400 15px/1.42 'Source Serif 4',serif;color:oklch(0.93 0 0);text-wrap:pretty"><span style="font:700 12px 'Fira Sans Extra Condensed',sans-serif;letter-spacing:0.12em;color:oklch(0.98 0 0);margin-right:6px">{{ pt.k }}:</span>{{ pt.t }}</div></sc-for></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="flex:none;height:{{ safeBottom }};display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box;background:oklch(0.255 0 0)"><span style="width:134px;height:5px;border-radius:3px;background:oklch(0.98 0 0);display:{{ homeD }}"></span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;phone&quot;,&quot;tablet&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const C = {
+  bg0: 'oklch(0.255 0 0)', bg1: 'oklch(0.29 0 0)', bg2: 'oklch(0.335 0 0)', bg3: 'oklch(0.39 0 0)', off: 'oklch(0.275 0 0)',
+  l2: 'oklch(0.44 0 0)', tx: 'oklch(0.98 0 0)', tx2: 'oklch(0.88 0 0)', tx3: 'oklch(0.78 0 0)', dis: 'oklch(0.55 0 0)',
+  a: 'oklch(0.66 0.20 22)', ad: 'oklch(0.34 0.09 22)', b: 'oklch(0.82 0.12 210)', bd: 'oklch(0.35 0.06 215)',
+  pos: 'oklch(0.84 0.15 150)', posd: 'oklch(0.36 0.06 150)', neg: 'oklch(0.83 0.14 78)', negd: 'oklch(0.37 0.06 78)'
+};
+const SQ = 'inset(0)', DI = 'polygon(50% 0,100% 50%,50% 100%,0 50%)';
+const SIDE = { A: { c: C.a, f: C.ad, shape: SQ }, B: { c: C.b, f: C.bd, shape: DI } };
+const TX = {
+  EN: { armies: 'Armies', language: 'Language', wake: 'Keep screen awake', side: 'SIDE', pts: 'pts', keywords: 'KEYWORDS', models: 'MODELS', of: 'of', ranged: 'RANGED', melee: 'MELEE', info: 'INFO', rules: 'RULES', stratagems: 'STRATAGEMS', detachment: 'DETACHMENT', core: 'CORE', hit: 'HIT', wound: 'WOUND', invuln: 'INVULN', none: 'None', apw: 'AP worsened by 1', half: 'Half range', selectBoth: 'Select a unit on both sides to see combat results.', listening: 'Listening — say “3 against 7”', type: '3 v 7', undone: 'Undone', nothing: 'Nothing to undo', notUnderstood: 'Didn’t catch that — try “3 against 7”', noWeapons: 'No live weapons of this type.', open: 'OPEN' },
+  UA: { armies: 'Армії', language: 'Мова', wake: 'Не вимикати екран', side: 'СТОРОНА', pts: 'оч.', keywords: 'КЛЮЧОВІ СЛОВА', models: 'МОДЕЛІ', of: 'з', ranged: 'СТРІЛЬБА', melee: 'БЛИЖНІЙ', info: 'ВІДОМОСТІ', rules: 'ПРАВИЛА', stratagems: 'СТРАТАГЕМИ', detachment: 'ЗАГІН', core: 'БАЗОВІ', hit: 'ВЛУЧ.', wound: 'ПОРАН.', invuln: 'НЕВРАЗЛ.', none: 'Немає', apw: 'БП гірше на 1', half: 'Пів дальності', selectBoth: 'Оберіть загін з кожного боку, щоб побачити результат бою.', listening: 'Слухаю — скажіть «3 проти 7»', type: '3 проти 7', undone: 'Скасовано', nothing: 'Нічого скасовувати', notUnderstood: 'Не розчув — спробуйте «3 проти 7»', noWeapons: 'Немає живої зброї цього типу.', open: 'ВІДКРИТО' }
+};
+const KEY = 'dataslate-proto-v2';
+const INV_STEPS = [null, 6, 5, 4, 3, 2];
+const para = segsArr => segsArr.map(segs => ({ segs }));
+const fmtAp = ap => ap === 0 ? '0' : '−' + Math.abs(ap);
+const sgn = n => n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '±0';
+
+class Component extends DCLogic {
+  state = { core: null, side: 'A', open: { A: 'ivlh8f', B: '17fyghe' }, counts: {}, lo: {}, kw: {}, secs: {}, calc: true,
+    mods: { type: 'ranged', hit: 0, wound: 0, invuln: null, apWorsened: false, halfRange: false },
+    voice: false, vIn: '', vMsg: null, vTone: 'n', hist: [], sheet: null, menu: false, lang: 'EN', wake: true, w: window.innerWidth };
+
+  componentDidMount() {
+    try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) this.setState({ ...s, open: s.open && (s.open.A || s.open.B) ? s.open : this.state.open }); } catch (e) {}
+    this.onResize = () => this.setState({ w: window.innerWidth });
+    window.addEventListener('resize', this.onResize);
+    import('./data/battle-core.js').then(async core => {
+      const data = await core.loadArmies();
+      this.setState({ core, data });
+    }).catch(e => this.setState({ err: String(e) }));
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); }
+  componentDidUpdate() {
+    const { side, open, counts, lo, secs, calc, mods, lang } = this.state;
+    try { localStorage.setItem(KEY, JSON.stringify({ side, open, counts, lo, secs, calc, mods, lang })); } catch (e) {}
+  }
+  flash(msg, tone) {
+    clearTimeout(this.ft);
+    this.setState({ vMsg: msg, vTone: tone });
+    this.ft = setTimeout(() => this.setState({ vMsg: null }), 2500);
+  }
+  orderRows(sideKey) {
+    const { core, data } = this.state;
+    const blocks = core.groupByLeader(data[sideKey].units, data.assignments);
+    const out = [];
+    for (const b of blocks) {
+      for (const l of b.leaders) out.push({ u: l, nested: false });
+      out.push({ u: b.unit, nested: b.leaders.length > 0 });
+    }
+    return out;
+  }
+  toggleUnit(sideKey, id) {
+    this.setState(s => ({ hist: [...s.hist, s.open], open: { ...s.open, [sideKey]: s.open[sideKey] === id ? null : id } }));
+  }
+  runVoice(text) {
+    const t = this.tx();
+    const s = text.trim().toLowerCase();
+    if (/undo|скас/.test(s)) {
+      if (!this.state.hist.length) return this.flash(t.nothing, 'n');
+      this.setState(st => ({ open: st.hist[st.hist.length - 1], hist: st.hist.slice(0, -1) }));
+      return this.flash(t.undone, 'p');
+    }
+    const m = /(\d+)\D+(\d+)/.exec(s);
+    const ra = this.orderRows('A'), rb = this.orderRows('B');
+    if (!m || !ra[m[1] - 1] || !rb[m[2] - 1]) return this.flash(t.notUnderstood, 'm');
+    const a = ra[m[1] - 1].u, b = rb[m[2] - 1].u;
+    this.setState(st => ({ hist: [...st.hist, st.open], open: { A: a.id, B: b.id }, calc: true, vIn: '' }));
+    const scroll = () => [a.id, b.id].forEach(id => {
+      const row = document.querySelector(`[data-uid="${id}"]`);
+      const pane = row && row.closest('[data-pane]');
+      if (pane) pane.scrollTop = Math.max(0, row.offsetTop - 4);
+    });
+    setTimeout(scroll, 60); setTimeout(scroll, 250);
+    this.flash(`${m[1]} → ${a.name} · ${m[2]} → ${b.name}`, 'p');
+  }
+  tx() { return TX[this.state.lang] || TX.EN; }
+
+  datasheet(sideKey, u) {
+    const { core, counts, lo, kw, secs, data } = this.state;
+    const t = this.tx(), sd = SIDE[sideKey];
+    const openKw = kw[u.id] || '';
+    const set = patch => this.setState(s => ({ ...patch(s) }));
+    const P = u.profile;
+    const stats = [['M', P.M ?? '—'], ['T', P.T ?? '—'], ['SV', P.SV != null ? P.SV + '+' : '—'], ['W', P.W ?? '—'], ['LD', P.LD ?? '—'], ['OC', P.OC ?? '—']].map(([k, v]) => ({ k, v }));
+    const toggleKw = key => () => set(s => ({ kw: { ...s.kw, [u.id]: s.kw[u.id] === key ? '' : key } }));
+    const keywords = u.keywords.filter(k => k !== u.name).map(n => {
+      const def = core.keywordDefinition(n), key = 'u:' + n, on = openKw === key;
+      return { n, onTap: def ? toggleKw(key) : undefined, cur: def ? 'pointer' : 'default', bg: on ? C.tx : C.bg2, fg: on ? C.bg0 : C.tx, deco: def ? 'underline' : 'none', bd: on ? C.tx : def ? C.l2 : 'transparent' };
+    });
+    const kwOpenName = openKw.startsWith('u:') ? openKw.slice(2) : '';
+    const mkWeapon = w => {
+      const kws = w.keywords.map(k => {
+        const rule = core.matchRule(k, w.rules), key = 'w:' + w.profileId + ':' + k, on = openKw === key;
+        return { n: k, rule, onTap: rule ? toggleKw(key) : undefined, cur: rule ? 'pointer' : 'default', bg: on ? C.tx : C.bg3, fg: on ? C.bg0 : C.tx, deco: rule ? 'underline' : 'none', on };
+      });
+      const openOne = kws.find(k => k.on);
+      const vals = [w.type === 'melee' ? 'Melee' : (w.range ?? '—'), w.attacks?.raw ?? '—', w.skillRaw === 'N/A' || w.skill == null ? 'auto' : w.skillRaw, w.strength, fmtAp(w.ap), w.damage?.raw ?? '—'];
+      return {
+        c: w.count, n: w.name, cells: vals.map((v, i) => ({ v: i === 0 && v === 'Melee' ? '—' : v, fg: (w.leaderMods && i === 1) ? C.pos : C.tx })),
+        kws, hasKw: kws.length > 0, kwOpen: !!openOne,
+        kwParas: openOne ? para(core.markup(openOne.rule.text)) : []
+      };
+    };
+    const loadouts = u.loadouts.map(l => {
+      const live = core.loadoutLive(counts, u, l);
+      const isOpen = (lo[u.id] ?? (u.loadouts.length === 1 ? l.key : null)) === l.key;
+      const ws = core.loadoutWeapons(u, l, Math.max(live, 1));
+      const abil = new Set(u.abilities.map(a => a.name));
+      const gear = [...new Set([...l.weapons.map(w => w.name), ...(l.key === 'self' ? [] : l.wargear.filter(g => !abil.has(g)))])].join(', ');
+      const setCount = v => () => set(s => ({ counts: { ...s.counts, [core.countKey(u.id, l.key)]: Math.max(0, Math.min(l.modelCount, v)) } }));
+      return {
+        name: core.labelLoadout(l, u.loadouts, u.name), gear, count: live, of: l.modelCount,
+        cFg: live < l.modelCount ? C.neg : C.tx,
+        minus: setCount(live - 1), plus: setCount(live + 1),
+        mFg: live <= 0 ? C.dis : C.tx, mBg: live <= 0 ? C.off : C.bg2,
+        pFg: live >= l.modelCount ? C.dis : C.tx, pBg: live >= l.modelCount ? C.off : C.bg2,
+        open: isOpen, chev: isOpen ? '▾' : '▸', bg: isOpen ? C.bg2 : 'transparent',
+        onTap: () => set(s => ({ lo: { ...s.lo, [u.id]: isOpen ? '' : l.key } })),
+        groups: [['ranged', t.ranged, 'BS'], ['melee', t.melee, 'WS']].map(([ty, label, skill]) => ({ label, skill, weapons: ws.filter(w => w.type === ty).map(mkWeapon) })).filter(g => g.weapons.length)
+      };
+    });
+    const det = core.DETACHMENTS[data[sideKey].detachment];
+    const isInf = u.keywords.some(k => k.toLowerCase() === 'infantry');
+    const core_ = core.CORE_STRATAGEMS.filter(s => !s.only || isInf);
+    const mkStrat = s => ({ n: s.name, cp: s.cost, type: s.type, parts: core.stratParts(s) });
+    const abilities = u.abilities.filter(a => !/^Invulnerable Save/.test(a.name)).map(a => ({ n: a.name, src: a.type !== 'Abilities' ? a.type.toUpperCase() : '', paras: para(core.markup(a.text)) }));
+    const rules = u.rules.map(r => ({ n: r.name, src: '', paras: para(core.markup(r.text)) }));
+    const so = secs[u.id] || {};
+    const tog = k => () => set(s => ({ secs: { ...s.secs, [u.id]: { ...(s.secs[u.id] || {}), [k]: !(s.secs[u.id] || {})[k] } } }));
+    const sections = [
+      { k: 'info', label: t.info, count: abilities.length, items: abilities, text: true },
+      { k: 'rules', label: t.rules, count: rules.length, items: rules, text: true },
+      { k: 'strat', label: t.stratagems, count: (det?.stratagems.length || 0) + core_.length, strat: true }
+    ].map(x => ({ ...x, sign: so[x.k] ? '−' : '+', onTap: tog(x.k), isText: !!so[x.k] && !!x.text, isStrat: !!so[x.k] && !!x.strat,
+      groups: x.strat ? [{ label: t.detachment + (det ? ' · ' + det.name.toUpperCase() : ''), items: (det?.stratagems || []).map(mkStrat) }, { label: t.core, items: core_.map(mkStrat) }] : [] }));
+    return {
+      stats, hasInv: !!u.invuln, inv: u.invuln ? u.invuln.value + '++' : '', invNote: u.invuln?.conditional ? 'conditional' : '',
+      keywords, faction: (u.faction || '').toUpperCase(),
+      kwOpen: !!kwOpenName, kwName: kwOpenName.toUpperCase(), kwText: kwOpenName ? core.keywordDefinition(kwOpenName) : '',
+      loadouts, sections
+    };
+  }
+
+  combat(from, to) {
+    const { core, data, open, counts, mods } = this.state;
+    const t = this.tx();
+    const au = data[from].units.find(u => u.id === open[from]), tu = data[to].units.find(u => u.id === open[to]);
+    const rows = core.computeAttacks(au, counts, tu, mods, mods.type).map(r => {
+      const tone = (k, v, ty) => ({ k, v, bg: ty === 'b' ? C.posd : ty === 'p' ? C.negd : C.bg2, fg: ty === 'b' ? C.pos : ty === 'p' ? C.neg : C.tx, cap: ty === 'b' ? C.pos : ty === 'p' ? C.neg : C.tx3 });
+      const notes = [];
+      const add = (ty, s) => notes.push({ t: s, g: ty === 'p' ? '+' : ty === 'm' ? '!' : '·', fg: ty === 'p' ? C.pos : ty === 'm' ? C.neg : C.tx2 });
+      if (r.hit == null) add('p', 'Torrent: hits automatically');
+      if (r.hit != null && mods.hit) add(mods.hit > 0 ? 'p' : 'm', `Hit ${sgn(mods.hit)} applied`);
+      if (mods.wound) add(mods.wound > 0 ? 'p' : 'm', `Wound ${sgn(mods.wound)} applied`);
+      if (r.anti) add('p', `Anti-${r.anti.keyword} ${r.anti.threshold}+ applied`);
+      if (r.halfOn) add('p', `${r.half.kw} applied (half range)`);
+      else if (r.half) add('n', `${r.half.kw}: turn on Half range if within ${r.range ? parseInt(r.range) / 2 + '"' : 'half range'}`);
+      add('n', `S${r.strength} vs T${r.T} · ` + (r.armor != null && r.armor <= 6 ? `Save ${r.armor}+ / AP${fmtAp(r.ap)}` : `No armour save / AP${fmtAp(r.ap)}`) + (r.invUsed ? ` · ${r.save}++ invuln used` : ''));
+      if (mods.apWorsened) add('m', 'AP worsened by 1 applied');
+      if (r.condInv) add('m', `Target has a conditional ${r.condInv}+ invuln, not applied — set Invuln override if it applies here`);
+      return {
+        c: r.count, n: r.name, rng: r.range && mods.type === 'ranged' ? `(${r.range})` : '',
+        cells: [
+          tone('ATK', r.attacks, r.halfOn && r.half.kind === 'rapidFire' ? 'b' : 'n'),
+          tone(t.hit, r.hit == null ? 'auto' : r.hit + '+', r.hit == null ? 'b' : mods.hit > 0 ? 'b' : mods.hit < 0 ? 'p' : 'n'),
+          tone(t.wound, r.wound + '+', r.anti || mods.wound > 0 ? 'b' : mods.wound < 0 ? 'p' : 'n'),
+          tone('SAVE', r.save == null ? 'none' : r.invUsed ? r.save + '++' : r.save + '+', mods.apWorsened ? 'p' : 'n'),
+          tone('D', r.damage, r.halfOn && r.half.kind === 'melta' ? 'b' : 'n')
+        ], notes
+      };
+    });
+    return { from: au.name, fromC: SIDE[from].c, fromShape: SIDE[from].shape, to: tu.name, toC: SIDE[to].c, toShape: SIDE[to].shape, rows, none: rows.length === 0, noneText: t.noWeapons };
+  }
+
+  renderVals() {
+    const st = this.state, t = this.tx();
+    const forced = this.props.layout ?? 'auto';
+    const wideScreen = forced === 'tablet' || (forced === 'auto' && st.w >= 900);
+    const framed = forced === 'phone' || (forced === 'auto' && st.w >= 480 && !wideScreen);
+    const ready = !!(st.core && st.data);
+    const base = {
+      t, loading: !ready, ready, phone: !wideScreen, narrow: !wideScreen, wide: wideScreen,
+      frameW: framed ? '390px' : '100%', frameH: framed ? '844px' : '100%', frameR: framed ? '48px' : '0',
+      frameShadow: framed ? '0 0 0 9px oklch(0.07 0 0),0 0 0 10px oklch(0.39 0 0)' : 'none',
+      safeTop: framed ? '47px' : 'env(safe-area-inset-top)', safeBottom: framed ? '34px' : 'env(safe-area-inset-bottom)', homeD: framed ? 'block' : 'none',
+      cols: wideScreen ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)',
+      wCols: wideScreen ? 'minmax(0,1fr) repeat(6,50px)' : 'repeat(6,minmax(0,1fr))', wNameSpan: wideScreen ? 'auto' : '1 / -1',
+      calcMax: wideScreen ? '46%' : '58%', panelPad: st.calc ? '24px' : '40px',
+      toggleCalc: () => this.setState(s => ({ calc: !s.calc })),
+      toggleVoice: () => this.setState(s => ({ voice: !s.voice, vMsg: null })),
+      toggleMenu: () => this.setState(s => ({ menu: !s.menu })),
+      toggleWake: () => this.setState(s => ({ wake: !s.wake })),
+      setEN: () => this.setState({ lang: 'EN' }), setUA: () => this.setState({ lang: 'UA' }),
+      enBg: st.lang === 'EN' ? C.tx : 'transparent', enFg: st.lang === 'EN' ? C.bg0 : C.tx2,
+      uaBg: st.lang === 'UA' ? C.tx : 'transparent', uaFg: st.lang === 'UA' ? C.bg0 : C.tx2,
+      wakeBg: st.wake ? C.pos : C.dis, wakeX: st.wake ? '23px' : '3px',
+      menu: st.menu, menuBg: st.menu ? C.bg3 : 'transparent',
+      micBg: st.voice ? C.tx : 'transparent', micFg: st.voice ? C.bg0 : C.tx,
+      calcBg: st.calc ? C.tx : 'transparent', calcFg: st.calc ? C.bg0 : C.tx,
+      voice: st.voice, voiceInput: st.vIn,
+      voiceText: st.vMsg || t.listening,
+      voiceBg: st.vMsg ? (st.vTone === 'p' ? C.posd : st.vTone === 'm' ? C.negd : C.bg2) : C.bg2,
+      voiceFg: st.vMsg ? (st.vTone === 'p' ? C.pos : st.vTone === 'm' ? C.neg : C.tx2) : C.tx,
+      onVoiceInput: e => this.setState({ vIn: e.target.value }),
+      onVoiceKey: e => { if (e.key === 'Enter') this.runVoice(e.target.value); },
+      calc: st.calc && ready, sheetOpen: false, sheet: {}, closeSheet: () => this.setState({ sheet: null }),
+      sheetTop: framed || !wideScreen ? '150px' : '80px'
+    };
+    if (!ready) return base;
+    const { core, data } = st;
+
+    const panelFor = k => {
+      const army = data[k], sd = SIDE[k];
+      const rows = this.orderRows(k).map(({ u, nested }, i) => {
+        const open = st.open[k] === u.id;
+        const live = core.unitLive(st.counts, u), total = core.unitTotal(u);
+        const ally = u.faction !== army.primaryFaction;
+        return {
+          id: u.id, n: i + 1, name: u.name, star: u.isWarlord ? ' ★' : '', live, total, cfg: live < total ? C.neg : C.tx,
+          pl: nested ? '40px' : '14px', conn: nested ? 'block' : 'none',
+          ally: ally ? (u.faction || '').toUpperCase() : '', allyD: ally ? 'inline-block' : 'none',
+          badgeD: st.voice ? 'flex' : 'none',
+          chev: open ? '▾' : '▸', bg: open ? C.bg2 : 'transparent', fw: open ? 700 : 600, rail: open ? `inset 3px 0 0 ${sd.c}` : 'none',
+          op: live === 0 ? 0.45 : 1, deco: live === 0 ? 'line-through' : 'none',
+          onTap: () => this.toggleUnit(k, u.id), open, ds: open ? this.datasheet(k, u) : null
+        };
+      });
+      return {
+        side: k, c: sd.c, army: army.catalogue, det: army.detachment, pts: army.pointsTotal,
+        headBg: wideScreen ? sd.f : 'transparent', headRail: wideScreen ? `inset 0 3px 0 ${sd.c}` : 'none',
+        openSheet: () => this.setState({ sheet: k }), rows
+      };
+    };
+    const panels = wideScreen ? [panelFor('A'), panelFor('B')] : [panelFor(st.side)];
+    const short = c => c.split(' - ').pop();
+    const switcher = ['A', 'B'].map(k => {
+      const on = st.side === k, sd = SIDE[k];
+      return {
+        label: `${t.side} ${k}${st.open[k] ? ' · 1 ' + t.open : ''}`, name: short(data[k].catalogue), c: sd.c, shape: sd.shape,
+        bg: on ? sd.f : 'transparent', rail: on ? `inset 0 -3px 0 ${sd.c}` : 'none', fg: on ? C.tx : C.tx2,
+        dir: k === 'A' ? 'row' : 'row-reverse', align: k === 'A' ? 'left' : 'right',
+        onTap: () => this.setState({ side: k })
+      };
+    });
+
+    const m = st.mods;
+    const setM = patch => this.setState(s => ({ mods: { ...s.mods, ...patch } }));
+    const stp = (k, v, lo, hi, key, disp) => ({
+      k, v: disp, vFg: v === 0 || v == null ? C.tx2 : C.tx,
+      dec: () => v > lo && setM({ [key]: v - 1 }), inc: () => v < hi && setM({ [key]: v + 1 }),
+      dBg: v <= lo ? C.off : C.bg2, dFg: v <= lo ? C.dis : C.tx, iBg: v >= hi ? C.off : C.bg2, iFg: v >= hi ? C.dis : C.tx
+    });
+    const ii = INV_STEPS.indexOf(m.invuln);
+    const invStep = { ...stp(t.invuln, ii, 0, 5, '_', m.invuln == null ? t.none : m.invuln + '++'),
+      dec: () => ii > 0 && setM({ invuln: INV_STEPS[ii - 1] }), inc: () => ii < 5 && setM({ invuln: INV_STEPS[ii + 1] }) };
+    const chk = (label, on, key) => ({ label, onTap: () => setM({ [key]: !on }), mark: on ? '✓' : '', bd: on ? C.tx : C.l2, bg: on ? 'oklch(0.40 0 0)' : 'transparent', fg: on ? C.tx : C.tx2, boxBd: on ? C.tx : C.tx3, boxBg: on ? C.tx : 'transparent' });
+    const both = st.open.A && st.open.B && data.A.units.some(u => u.id === st.open.A) && data.B.units.some(u => u.id === st.open.B);
+    const sh = st.sheet && core.DETACHMENTS[data[st.sheet].detachment];
+
+    return {
+      ...base, panels, switcher,
+      setRanged: () => setM({ type: 'ranged' }), setMelee: () => setM({ type: 'melee' }),
+      rBg: m.type === 'ranged' ? C.tx : 'transparent', rFg: m.type === 'ranged' ? C.bg0 : C.tx2,
+      mBg: m.type === 'melee' ? C.tx : 'transparent', mFg: m.type === 'melee' ? C.bg0 : C.tx2,
+      steppers: [stp(t.hit, m.hit, -2, 2, 'hit', sgn(m.hit)), stp(t.wound, m.wound, -2, 2, 'wound', sgn(m.wound)), invStep],
+      checks: [chk(t.apw, m.apWorsened, 'apWorsened'), chk(t.half, m.halfRange, 'halfRange')],
+      calcEmpty: !both, calcHas: !!both,
+      dirs: both ? [this.combat('A', 'B'), this.combat('B', 'A')] : [],
+      sheetOpen: !!sh,
+      sheet: sh ? {
+        c: SIDE[st.sheet].c, shape: SIDE[st.sheet].shape, label: `${t.detachment} · ${t.side} ${st.sheet}`, name: sh.name, faction: sh.faction,
+        rules: sh.rules.map(r => ({ n: r.name, paras: para(core.markup(r.text)) })),
+        strats: sh.stratagems.map(s => ({ n: s.name, cp: s.cost, type: s.type, parts: core.stratParts(s) })), count: sh.stratagems.length
+      } : {}
+    };
+  }
+}
+</script>
+</body>
+</html>
