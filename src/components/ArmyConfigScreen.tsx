@@ -3,14 +3,19 @@ import type { ArmyEntry } from "../lib/armies";
 import { getDetachmentData } from "../data/detachments";
 import { effectiveDetachment } from "../lib/detachment";
 import { applyLeaderWeaponBonuses } from "../lib/leaderEffects";
+import { useUi } from "../lib/uiStrings";
+import type { Side } from "./ArmyPanel";
 import { DetachmentPanel } from "./DetachmentPanel";
 import { LeaderAssignmentPanel } from "./LeaderAssignmentScreen";
+import { SideMark } from "./SideMark";
 import { UnitVisibilityPanel } from "./UnitVisibilityPanel";
 
-type Tab = "leaders" | "units" | "detachment";
+type Tab = "units" | "leaders" | "detachment";
 
 interface ArmyConfigScreenProps {
   army: ArmyEntry;
+  /** The side this army is assigned to on the army list, if any. */
+  side: Side | null;
   leaderAssignments: Record<string, string>;
   onAssignLeader: (leaderId: string, targetId: string | null) => void;
   hiddenUnitIds: Record<string, boolean>;
@@ -22,6 +27,12 @@ interface ArmyConfigScreenProps {
   onBack: () => void;
 }
 
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: "units", label: "Units" },
+  { id: "leaders", label: "Leaders" },
+  { id: "detachment", label: "Detachment" },
+];
+
 const TAB_DESCRIPTIONS: Record<Tab, string> = {
   leaders: "Assign leaders to the units they attach to.",
   units: "Expand a unit for its full datasheet. Hide units to trim the list down to a smaller points limit.",
@@ -31,6 +42,7 @@ const TAB_DESCRIPTIONS: Record<Tab, string> = {
 
 export function ArmyConfigScreen({
   army,
+  side,
   leaderAssignments,
   onAssignLeader,
   hiddenUnitIds,
@@ -42,45 +54,63 @@ export function ArmyConfigScreen({
   onBack,
 }: ArmyConfigScreenProps) {
   const [tab, setTab] = useState<Tab>("units");
+  const ui = useUi();
   const detachmentData = getDetachmentData(effectiveDetachment(army, detachmentOverrides));
   // Same transform the battle panels apply, so the expanded details match.
   const units = applyLeaderWeaponBonuses(army.parsed.units, leaderAssignments);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 max-w-[920px] w-full mx-auto">
-      <div className="shrink-0 px-4 py-3 flex items-center gap-3">
+    <div
+      className={`${side ? `side-${side}` : ""} flex flex-col flex-1 min-h-0 max-w-[920px] w-full mx-auto`}
+    >
+      <div
+        className="shrink-0 px-[16px] pt-[8px] pb-[12px]"
+        style={{ boxShadow: side ? "inset 0 3px 0 var(--accent)" : undefined }}
+      >
         <button
           type="button"
           onClick={onBack}
-          className="min-h-[44px] px-3 rounded-[7px] text-[14.5px] font-semibold shrink-0"
-          style={{ color: "var(--ink-soft)" }}
+          className="display min-h-[44px] -ml-[6px] px-[6px] flex items-center gap-[6px] text-[16px] font-bold"
+          style={{ color: "var(--ink-2)" }}
         >
-          ‹ Back
+          <span aria-hidden="true" className="text-[20px] leading-none">
+            ‹
+          </span>
+          Back
         </button>
-        <div className="display text-[16.5px] font-semibold truncate min-w-0">
-          {army.parsed.catalogue}
+        {side && (
+          <div className="caption flex items-center gap-[6px] mb-[4px]" style={{ color: "var(--accent)" }}>
+            <SideMark side={side} size={10} />
+            {ui("side")} {side.toUpperCase()}
+          </div>
+        )}
+        <h1 className="display font-bold text-[21px] leading-[1.15] m-0">{army.parsed.catalogue}</h1>
+        <div
+          role="tablist"
+          className="mt-[12px] grid grid-cols-3 h-[46px] rounded-[var(--r-control)] overflow-hidden"
+          style={{ border: "1px solid var(--rule)" }}
+        >
+          {TABS.map((t, i) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(t.id)}
+                className={`display min-w-0 text-[14px] font-extrabold uppercase tracking-[0.1em] truncate px-[4px] ${active ? "selected" : ""}`}
+                style={{
+                  color: active ? undefined : "var(--ink-2)",
+                  borderLeft: i > 0 ? "1px solid var(--rule)" : undefined,
+                }}
+              >
+                {t.label}
+              </button>
+            );
+          })}
         </div>
-      </div>
-
-      <div className="shrink-0 flex gap-1.5 px-4">
-        <TabButton
-          label="Units"
-          active={tab === "units"}
-          onClick={() => setTab("units")}
-        />
-        <TabButton
-          label="Leaders"
-          active={tab === "leaders"}
-          onClick={() => setTab("leaders")}
-        />
-        <TabButton
-          label="Detachment"
-          active={tab === "detachment"}
-          onClick={() => setTab("detachment")}
-        />
-      </div>
-      <div className="shrink-0 px-4 pt-1.5 pb-3 text-[12.5px] text-[var(--ink-soft)]">
-        {TAB_DESCRIPTIONS[tab]}
+        <p className="hint m-0 mt-[10px]">{TAB_DESCRIPTIONS[tab]}</p>
       </div>
 
       {tab === "leaders" ? (
@@ -107,30 +137,5 @@ export function ArmyConfigScreen({
         />
       )}
     </div>
-  );
-}
-
-function TabButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="min-h-[36px] px-4 rounded-[7px] text-[13px] font-semibold"
-      style={{
-        background: active ? "var(--panel)" : "transparent",
-        color: active ? "var(--ink)" : "var(--ink-soft)",
-        border: `1px solid ${active ? "var(--rule)" : "transparent"}`,
-      }}
-    >
-      {label}
-    </button>
   );
 }

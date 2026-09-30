@@ -8,6 +8,8 @@ import { InlineMarkup } from "./InlineMarkup";
 
 interface AttackRowProps {
   row: AttackRowData;
+  /** The target's Toughness, for the "S4 vs T6" line. */
+  targetToughness: number | null;
 }
 
 const MINUS = "−";
@@ -18,7 +20,7 @@ function formatAp(ap: number): string {
 }
 
 function formatMod(mod: number): string {
-  return mod > 0 ? `+${mod}` : String(mod);
+  return mod > 0 ? `+${mod}` : `${MINUS}${-mod}`;
 }
 
 function formatHit(hitTarget: number | null): string {
@@ -26,23 +28,14 @@ function formatHit(hitTarget: number | null): string {
 }
 
 function formatSave(row: AttackRowData): string {
-  if (row.saveTarget === null) return "no save";
+  if (row.saveTarget === null) return "none";
   return `${row.saveTarget}${row.isInvulnFallback ? "++" : "+"}`;
 }
 
-function formatSaveDetail(row: AttackRowData): string | null {
-  if (row.isInvulnFallback) {
-    return row.armorTarget !== null ? `was ${row.armorTarget}+` : null;
-  }
-  if (row.armorTarget !== null) {
-    const sv = row.armorTarget + row.ap;
-    return `${sv}+ / AP${formatAp(row.ap)}`;
-  }
-  return null;
-}
-
-function halfRangeLabel(kind: "melta" | "rapidFire"): string {
-  return kind === "melta" ? "Melta" : "Rapid Fire";
+/** '12"' -> '6"': the distance within which a half-range bonus applies. */
+function halfOf(range: string | null): string | null {
+  const inches = range ? Number.parseFloat(range) : Number.NaN;
+  return Number.isFinite(inches) ? `${inches / 2}"` : null;
 }
 
 type NoteKind = "positive" | "negative" | "neutral";
@@ -52,80 +45,48 @@ interface Note {
   kind: NoteKind;
 }
 
-function toneColor(tone: StatTone): string | undefined {
-  if (tone === "boost") return "var(--boost)";
-  if (tone === "warn") return "var(--warn)";
-  return undefined;
-}
+const NOTE_STYLE: Record<NoteKind, { glyph: string; color: string }> = {
+  neutral: { glyph: "·", color: "var(--ink-2)" },
+  positive: { glyph: "+", color: "var(--positive)" },
+  negative: { glyph: "!", color: "var(--negative)" },
+};
 
-function noteColor(kind: NoteKind): string | undefined {
-  if (kind === "positive") return "var(--positive)";
-  if (kind === "negative") return "var(--negative)";
-  return undefined;
-}
+const CELL_TONE: Record<"neutral" | "boost" | "warn", { bg: string; fg: string; caption: string }> = {
+  neutral: { bg: "var(--paper-sunk)", fg: "var(--ink)", caption: "var(--ink-soft)" },
+  boost: { bg: "var(--positive-fill)", fg: "var(--positive)", caption: "var(--positive)" },
+  warn: { bg: "var(--negative-fill)", fg: "var(--negative)", caption: "var(--negative)" },
+};
 
-function StatCell({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color?: string;
-}) {
+function ResultCell({ label, value, tone }: { label: string; value: string; tone: StatTone }) {
+  const style = CELL_TONE[tone ?? "neutral"];
   return (
-    <>
-      <div
-        className="px-2 py-1 text-[11.5px] uppercase tracking-[0.03em] text-[var(--ink-soft)]"
-        style={{ background: "var(--panel)" }}
-      >
+    <div
+      className="h-[52px] min-w-0 flex flex-col items-center justify-center rounded-[var(--r-chip)]"
+      style={{ background: style.bg }}
+    >
+      <span className="caption caption-sm leading-none" style={{ color: style.caption }}>
         {label}
-      </div>
-      <div
-        className="mono px-2 py-1.5 text-[15px]"
-        style={{ background: "var(--inset)", color }}
+      </span>
+      <span
+        className="mono font-bold text-[21px] leading-none tracking-[-0.03em] mt-[5px] max-w-full truncate px-[2px]"
+        style={{ color: style.fg }}
       >
         {value}
-      </div>
-    </>
+      </span>
+    </div>
   );
 }
 
-/** A clickable pill naming a source ability (a weapon keyword's rule, a
- * leader-attachment weapon bonus, or a leader's auto hit penalty) — click
- * to expand its text in the box below. */
-function SourcePill({
-  label,
-  color,
-  isOpen,
-  onClick,
-}: {
-  label: string;
-  color?: string;
-  isOpen: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="underline decoration-dotted"
-      style={{ color: isOpen ? "var(--accent)" : color }}
-    >
-      {label}
-    </button>
-  );
-}
-
-export function AttackRow({ row }: AttackRowProps) {
+export function AttackRow({ row, targetToughness }: AttackRowProps) {
   const [openLabel, setOpenLabel] = useState<string | null>(null);
   const t = useTranslate();
-  const saveDetail = formatSaveDetail(row);
   const showAttacksDice = /[Dd]/.test(row.attacksRaw);
   const tones = rowTones(row);
   const range = rangeLabel(row);
   const atkValue = showAttacksDice
-    ? `${row.count}×${row.attacksRaw}`
+    ? row.count > 1
+      ? `${row.count}×${row.attacksRaw}`
+      : row.attacksRaw
     : String(row.totalAttacks);
 
   function expandedText(label: string): string | null {
@@ -137,8 +98,21 @@ export function AttackRow({ row }: AttackRowProps) {
     );
   }
 
+  const baseSave = row.armorTarget !== null ? row.armorTarget + row.ap : null;
+  const matchup = [
+    targetToughness != null ? `S${row.strength} vs T${targetToughness}` : `S${row.strength}`,
+    baseSave !== null ? `Save ${baseSave}+ / AP${formatAp(row.ap)}` : `AP${formatAp(row.ap)}`,
+    row.isInvulnFallback && row.saveTarget !== null ? `${row.saveTarget}++ invuln used` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const halfRangeHint =
+    row.halfRangeBonus && !row.halfRangeApplied
+      ? `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value}: turn on Half range if within ${halfOf(row.range) ?? "half range"}`
+      : null;
+
   const notes: Note[] = [
-    saveDetail && { text: `Save ${saveDetail}`, kind: "neutral" },
     row.conditionalInvulnAvailable != null && {
       text: `Target has a conditional ${row.conditionalInvulnAvailable}+ invuln, not applied — set Invuln override if it applies here`,
       kind: "negative",
@@ -161,105 +135,115 @@ export function AttackRow({ row }: AttackRowProps) {
     },
     row.halfRangeApplied &&
       row.halfRangeBonus && {
-        text: `${halfRangeLabel(row.halfRangeBonus.kind)} ${row.halfRangeBonus.value} applied (half range)`,
+        text: `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value} applied (half range)`,
         kind: "positive",
       },
+    halfRangeHint && { text: halfRangeHint, kind: "neutral" },
+    { text: matchup, kind: "neutral" },
   ].filter((n): n is Note => Boolean(n));
 
-  const sourcePills: Array<{ ref: RuleRef; color: string }> = [
-    ...row.leaderMods.map((ref) => ({ ref, color: "var(--boost)" })),
-    ...row.autoHitPenaltySources.map((ref) => ({ ref, color: "var(--warn)" })),
+  const sourcePills: Array<{ ref: RuleRef; tone: "positive" | "negative" }> = [
+    ...row.leaderMods.map((ref) => ({ ref, tone: "positive" as const })),
+    ...row.autoHitPenaltySources.map((ref) => ({ ref, tone: "negative" as const })),
   ];
+  const openText = openLabel ? expandedText(openLabel) : null;
+
+  function toggle(label: string) {
+    setOpenLabel((v) => (v === label ? null : label));
+  }
 
   return (
-    <div
-      className="px-3 py-2 rounded-[8px]"
-      style={{ background: "var(--panel)", border: "1px solid var(--rule)" }}
-    >
-      <div className="text-[14.5px] mb-1.5">
-        <span className="mono">{row.count}×</span> {row.name}
+    <div>
+      <div className="mb-[8px] flex items-baseline gap-[6px] flex-wrap">
+        <span className="mono text-[14px]" style={{ color: "var(--ink-soft)" }}>
+          {row.count}×
+        </span>
+        <span className="text-[17px] font-semibold leading-[1.2]">{row.name}</span>
         {range && (
-          <span className="mono ml-1" style={{ color: "var(--meta)" }}>
+          <span className="mono text-[14px]" style={{ color: "var(--ink-soft)" }}>
             ({range})
           </span>
         )}
       </div>
-      <div
-        className="grid grid-flow-col auto-cols-fr grid-rows-2 gap-px rounded-[6px] overflow-hidden"
-        style={{ background: "var(--rule)" }}
-      >
-        <StatCell label="Atk" value={atkValue} color={toneColor(tones.attacks)} />
-        <StatCell
-          label="Hit"
-          value={formatHit(row.hitTarget)}
-          color={toneColor(tones.hit)}
-        />
-        <StatCell
-          label="Wound"
-          value={`${row.woundTarget}+`}
-          color={toneColor(tones.wound)}
-        />
-        <StatCell label="Save" value={formatSave(row)} color={toneColor(tones.save)} />
-        <StatCell label="D" value={row.damage.raw} color={toneColor(tones.damage)} />
+      <div className="grid grid-cols-[repeat(5,minmax(0,1fr))] gap-[3px]">
+        <ResultCell label="Atk" value={atkValue} tone={tones.attacks} />
+        <ResultCell label="Hit" value={formatHit(row.hitTarget)} tone={tones.hit} />
+        <ResultCell label="Wound" value={`${row.woundTarget}+`} tone={tones.wound} />
+        <ResultCell label="Save" value={formatSave(row)} tone={tones.save} />
+        <ResultCell label="D" value={row.damage.raw} tone={tones.damage} />
       </div>
-      {(notes.length > 0 || row.keywords.length > 0 || sourcePills.length > 0) && (
-        <div className="text-[13px] text-[var(--ink-soft)] leading-[1.5] mt-1.5">
-          {notes.map((note, i) => (
-            <span key={i}>
-              {i > 0 && " · "}
-              <span style={{ color: noteColor(note.kind) }}>{note.text}</span>
-            </span>
-          ))}
-          {row.keywords.length > 0 && (
-            <span>
-              {notes.length > 0 && " · "}
-              {row.keywords.map((kw, i) => {
-                const rule = matchRule(kw, row.rules);
-                return (
-                  <span key={kw}>
-                    {i > 0 && ", "}
-                    {rule ? (
-                      <SourcePill
-                        label={kw}
-                        isOpen={openLabel === kw}
-                        onClick={() =>
-                          setOpenLabel((v) => (v === kw ? null : kw))
-                        }
-                      />
-                    ) : (
-                      kw
-                    )}
-                  </span>
-                );
-              })}
-            </span>
-          )}
-          {sourcePills.length > 0 && (
-            <span>
-              {(notes.length > 0 || row.keywords.length > 0) && " · "}
-              {sourcePills.map(({ ref, color }, i) => (
-                <span key={ref.name}>
-                  {i > 0 && ", "}
-                  <SourcePill
-                    label={ref.name}
-                    color={color}
-                    isOpen={openLabel === ref.name}
-                    onClick={() =>
-                      setOpenLabel((v) => (v === ref.name ? null : ref.name))
-                    }
-                  />
-                </span>
-              ))}
-            </span>
-          )}
-          {openLabel && expandedText(openLabel) && (
-            <div
-              className="rounded-[6px] p-2 mt-1"
-              style={{ background: "var(--inset)", color: "var(--ink)" }}
+      <ul className="m-0 mt-[8px] p-0 list-none flex flex-col gap-[3px]">
+        {notes.map((note, i) => {
+          const style = NOTE_STYLE[note.kind];
+          return (
+            <li
+              key={i}
+              className="grid grid-cols-[12px_1fr] gap-[6px] text-[14px] font-medium leading-[1.35]"
+              style={{ color: style.color }}
             >
-              <InlineMarkup text={t(expandedText(openLabel))} />
-            </div>
-          )}
+              <span className="mono text-center" aria-hidden="true">
+                {style.glyph}
+              </span>
+              <span>{note.text}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {(row.keywords.length > 0 || sourcePills.length > 0) && (
+        <div className="mt-[8px] flex flex-wrap gap-[6px]">
+          {row.keywords.map((kw) => {
+            const rule = matchRule(kw, row.rules);
+            const chip =
+              "display min-h-[32px] px-[8px] flex items-center rounded-[var(--r-chip)] text-[13px] font-semibold tracking-[0.08em]";
+            if (!rule) {
+              return (
+                <span key={kw} className={chip} style={{ background: "var(--raised)" }}>
+                  {kw}
+                </span>
+              );
+            }
+            const isOpen = openLabel === kw;
+            return (
+              <button
+                key={kw}
+                type="button"
+                aria-expanded={isOpen}
+                onClick={() => toggle(kw)}
+                className={`${chip} hit-44 ${isOpen ? "selected" : ""}`}
+                style={{ background: isOpen ? undefined : "var(--raised)" }}
+              >
+                <span className="has-rule">{kw}</span>
+              </button>
+            );
+          })}
+          {sourcePills.map(({ ref, tone }) => (
+            <button
+              key={ref.name}
+              type="button"
+              aria-expanded={openLabel === ref.name}
+              onClick={() => toggle(ref.name)}
+              className="hit-44 min-h-[32px] px-[10px] flex items-center rounded-[15px] text-[13px] font-semibold"
+              style={{
+                background: tone === "positive" ? "var(--positive-fill)" : "var(--negative-fill)",
+                color: tone === "positive" ? "var(--positive)" : "var(--negative)",
+              }}
+            >
+              {tone === "positive" ? "▲" : "▼"} {ref.name}
+            </button>
+          ))}
+        </div>
+      )}
+      {openLabel && openText && (
+        <div
+          className="mt-[8px] rounded-[var(--r-control)] px-[12px] py-[10px]"
+          style={{ background: "var(--paper-sunk)", border: "1px solid var(--rule)" }}
+        >
+          <div className="caption mb-[4px]" style={{ color: "var(--ink)" }}>
+            {openLabel}
+          </div>
+          <p className="prose m-0 whitespace-pre-line">
+            <InlineMarkup text={t(openText)} />
+          </p>
         </div>
       )}
     </div>

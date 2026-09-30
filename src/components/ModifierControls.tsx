@@ -1,4 +1,6 @@
 import type { DirectionModifiers } from "../lib/combat";
+import { useUi } from "../lib/uiStrings";
+import { Stepper } from "./Stepper";
 
 export type WeaponFilter = "ranged" | "melee";
 
@@ -12,6 +14,13 @@ interface ModifierControlsProps {
   onClose: () => void;
 }
 
+const MINUS = "−";
+
+function formatMod(mod: number): string {
+  if (mod === 0) return "±0";
+  return mod > 0 ? `+${mod}` : `${MINUS}${-mod}`;
+}
+
 function WeaponFilterSwitch({
   value,
   onChange,
@@ -22,20 +31,23 @@ function WeaponFilterSwitch({
   const options: WeaponFilter[] = ["ranged", "melee"];
   return (
     <span
-      className="flex rounded-[7px] p-[3px]"
-      style={{ background: "var(--panel)" }}
+      role="group"
+      aria-label="Weapon type"
+      className="flex h-[46px] rounded-[var(--r-control)] overflow-hidden shrink-0"
+      style={{ border: "1px solid var(--rule)" }}
     >
-      {options.map((option) => {
+      {options.map((option, i) => {
         const isActive = value === option;
         return (
           <button
             key={option}
             type="button"
+            aria-pressed={isActive}
             onClick={() => onChange(option)}
-            className="px-3 py-1.5 rounded-[5px] capitalize font-semibold"
+            className={`display w-[74px] text-[14px] font-extrabold uppercase tracking-[0.1em] ${isActive ? "selected" : ""}`}
             style={{
-              color: isActive ? "var(--ink)" : "var(--ink-soft)",
-              background: isActive ? "var(--paper-sunk)" : undefined,
+              color: isActive ? undefined : "var(--ink-2)",
+              borderLeft: i > 0 ? "1px solid var(--rule)" : undefined,
             }}
           >
             {option}
@@ -46,48 +58,42 @@ function WeaponFilterSwitch({
   );
 }
 
-function formatMod(mod: number): string {
-  return mod > 0 ? `+${mod}` : String(mod);
-}
-
-function StepperControl({
+function CheckToggle({
   label,
-  display,
-  onDecrement,
-  onIncrement,
-  decrementDisabled,
-  incrementDisabled,
+  checked,
+  onToggle,
 }: {
   label: string;
-  display: string;
-  onDecrement: () => void;
-  onIncrement: () => void;
-  decrementDisabled: boolean;
-  incrementDisabled: boolean;
+  checked: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <span className="flex items-center gap-1">
-      <span className="text-[var(--ink-soft)]">{label}</span>
-      <button
-        type="button"
-        disabled={decrementDisabled}
-        onClick={onDecrement}
-        className="w-[24px] h-[24px] rounded-[6px] disabled:opacity-40"
-        style={{ background: "var(--panel)", border: "1px solid var(--rule)" }}
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={onToggle}
+      className="h-[46px] px-[12px] flex items-center gap-[10px] rounded-[var(--r-control)] whitespace-nowrap text-[15px] font-semibold"
+      style={{
+        flex: "1 1 130px",
+        border: `1px solid ${checked ? "var(--ink)" : "var(--rule)"}`,
+        background: checked ? "var(--checked-wash)" : undefined,
+        color: checked ? "var(--ink)" : "var(--ink-2)",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        className="w-[18px] h-[18px] shrink-0 flex items-center justify-center rounded-[var(--r-tag)] text-[13px] font-bold"
+        style={{
+          border: `1.5px solid ${checked ? "var(--ink)" : "var(--ink-2)"}`,
+          background: checked ? "var(--ink)" : undefined,
+          color: "var(--paper)",
+        }}
       >
-        −
-      </button>
-      <span className="mono inline-block w-[2.5em] text-center">{display}</span>
-      <button
-        type="button"
-        disabled={incrementDisabled}
-        onClick={onIncrement}
-        className="w-[24px] h-[24px] rounded-[6px] disabled:opacity-40"
-        style={{ background: "var(--panel)", border: "1px solid var(--rule)" }}
-      >
-        +
-      </button>
-    </span>
+        {checked ? "✓" : ""}
+      </span>
+      {label}
+    </button>
   );
 }
 
@@ -98,92 +104,87 @@ export function ModifierControls({
   onWeaponFilterChange,
   onClose,
 }: ModifierControlsProps) {
+  const ui = useUi();
+  const stepperStyle = { flex: "1 1 130px" };
+
   return (
-    <div className="px-4 py-2 flex items-start justify-between gap-4 text-[13.5px]">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <WeaponFilterSwitch value={weaponFilter} onChange={onWeaponFilterChange} />
-        <StepperControl
-          label="Hit"
-          display={formatMod(modifiers.hitMod)}
-          decrementDisabled={modifiers.hitMod <= -1}
-          incrementDisabled={modifiers.hitMod >= 1}
-          onDecrement={() =>
-            onChange({ ...modifiers, hitMod: (modifiers.hitMod - 1) as -1 | 0 | 1 })
-          }
-          onIncrement={() =>
-            onChange({ ...modifiers, hitMod: (modifiers.hitMod + 1) as -1 | 0 | 1 })
-          }
-        />
-        <StepperControl
-          label="Wound"
-          display={formatMod(modifiers.woundMod)}
-          decrementDisabled={modifiers.woundMod <= -1}
-          incrementDisabled={modifiers.woundMod >= 1}
-          onDecrement={() =>
-            onChange({ ...modifiers, woundMod: (modifiers.woundMod - 1) as -1 | 0 | 1 })
-          }
-          onIncrement={() =>
-            onChange({ ...modifiers, woundMod: (modifiers.woundMod + 1) as -1 | 0 | 1 })
-          }
-        />
-        <StepperControl
-          label="Invuln"
-          display={
-            modifiers.invulnOverride === null ? "None" : `${modifiers.invulnOverride}+`
-          }
-          decrementDisabled={modifiers.invulnOverride === null}
-          incrementDisabled={modifiers.invulnOverride === 6}
-          onDecrement={() =>
-            onChange({
-              ...modifiers,
-              invulnOverride:
-                modifiers.invulnOverride === null || modifiers.invulnOverride <= 2
-                  ? null
-                  : modifiers.invulnOverride - 1,
-            })
-          }
-          onIncrement={() =>
-            onChange({
-              ...modifiers,
-              invulnOverride:
-                modifiers.invulnOverride === null
-                  ? 2
-                  : Math.min(6, modifiers.invulnOverride + 1),
-            })
-          }
-        />
-        <button
-          type="button"
-          onClick={() => onChange({ ...modifiers, apWorsened: !modifiers.apWorsened })}
-          className="px-3 py-1.5 rounded-[7px]"
-          style={{
-            border: `1px solid ${modifiers.apWorsened ? "var(--side-a)" : "var(--rule)"}`,
-            color: modifiers.apWorsened ? "var(--side-a-heading)" : "var(--ink-soft)",
-            background: modifiers.apWorsened ? "var(--paper-sunk)" : "var(--panel)",
-          }}
-        >
-          AP worsened by 1
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange({ ...modifiers, halfRange: !modifiers.halfRange })}
-          className="px-3 py-1.5 rounded-[7px]"
-          style={{
-            border: `1px solid ${modifiers.halfRange ? "var(--side-a)" : "var(--rule)"}`,
-            color: modifiers.halfRange ? "var(--side-a-heading)" : "var(--ink-soft)",
-            background: modifiers.halfRange ? "var(--paper-sunk)" : "var(--panel)",
-          }}
-        >
-          Half range (Melta/Rapid Fire)
-        </button>
-      </div>
+    <div className="px-[12px] py-[10px] flex flex-wrap gap-[8px]">
+      <WeaponFilterSwitch value={weaponFilter} onChange={onWeaponFilterChange} />
+      <Stepper
+        caption="Hit"
+        value={formatMod(modifiers.hitMod)}
+        style={stepperStyle}
+        decrementLabel="Hit modifier down"
+        incrementLabel="Hit modifier up"
+        decrementDisabled={modifiers.hitMod <= -1}
+        incrementDisabled={modifiers.hitMod >= 1}
+        onDecrement={() =>
+          onChange({ ...modifiers, hitMod: (modifiers.hitMod - 1) as -1 | 0 | 1 })
+        }
+        onIncrement={() =>
+          onChange({ ...modifiers, hitMod: (modifiers.hitMod + 1) as -1 | 0 | 1 })
+        }
+      />
+      <Stepper
+        caption="Wound"
+        value={formatMod(modifiers.woundMod)}
+        style={stepperStyle}
+        decrementLabel="Wound modifier down"
+        incrementLabel="Wound modifier up"
+        decrementDisabled={modifiers.woundMod <= -1}
+        incrementDisabled={modifiers.woundMod >= 1}
+        onDecrement={() =>
+          onChange({ ...modifiers, woundMod: (modifiers.woundMod - 1) as -1 | 0 | 1 })
+        }
+        onIncrement={() =>
+          onChange({ ...modifiers, woundMod: (modifiers.woundMod + 1) as -1 | 0 | 1 })
+        }
+      />
+      <Stepper
+        caption="Invuln"
+        value={modifiers.invulnOverride === null ? "None" : `${modifiers.invulnOverride}++`}
+        style={stepperStyle}
+        decrementLabel="Invulnerable save override down"
+        incrementLabel="Invulnerable save override up"
+        decrementDisabled={modifiers.invulnOverride === null}
+        incrementDisabled={modifiers.invulnOverride === 6}
+        onDecrement={() =>
+          onChange({
+            ...modifiers,
+            invulnOverride:
+              modifiers.invulnOverride === null || modifiers.invulnOverride <= 2
+                ? null
+                : modifiers.invulnOverride - 1,
+          })
+        }
+        onIncrement={() =>
+          onChange({
+            ...modifiers,
+            invulnOverride:
+              modifiers.invulnOverride === null
+                ? 2
+                : Math.min(6, modifiers.invulnOverride + 1),
+          })
+        }
+      />
+      <CheckToggle
+        label={ui("calc.apWorsened")}
+        checked={modifiers.apWorsened}
+        onToggle={() => onChange({ ...modifiers, apWorsened: !modifiers.apWorsened })}
+      />
+      <CheckToggle
+        label={ui("calc.halfRange")}
+        checked={modifiers.halfRange}
+        onToggle={() => onChange({ ...modifiers, halfRange: !modifiers.halfRange })}
+      />
       <button
         type="button"
         onClick={onClose}
-        className="shrink-0 px-3 py-1.5 rounded-[7px]"
-        style={{ border: "1px solid var(--rule)", color: "var(--ink-soft)" }}
+        aria-label="Close both units"
+        className="w-[46px] h-[46px] shrink-0 flex items-center justify-center rounded-[var(--r-control)] text-[20px]"
+        style={{ border: "1px solid var(--rule)", color: "var(--ink-2)" }}
       >
-        Close
+        ✕
       </button>
     </div>
   );

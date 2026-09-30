@@ -1,6 +1,6 @@
 import type { WeaponEntry } from "../../parseRoster.mjs";
 import { mergeByProfileId } from "../lib/weapons";
-import { WeaponRow } from "./WeaponRow";
+import { WEAPON_GRID, WeaponRow } from "./WeaponRow";
 
 interface WeaponTableProps {
   weapons: WeaponEntry[];
@@ -38,66 +38,45 @@ function groupSubProfiles(weapons: MergedWeapon[]): Group[] {
   return groups;
 }
 
+/**
+ * RANGED / MELEE group: the label, one shared column header, then the
+ * weapons. Phone: each weapon is a name line over a six-value line on the
+ * header's grid. Tablet (≥900px): one row per weapon, name first.
+ */
 function Section({
   label,
+  skillLabel,
   weapons,
-  divider = false,
 }: {
   label: string;
+  skillLabel: string;
   weapons: MergedWeapon[];
-  /** Draw a full-width rule above this group, separating it from the one
-   * before it. */
-  divider?: boolean;
 }) {
   if (weapons.length === 0) return null;
   const groups = groupSubProfiles(weapons);
-  // Zebra striping restarts per group so rows never read as one list
-  // continuing across the divider.
-  let rowIndex = 0;
+  const columns = ["RNG", "A", skillLabel, "S", "AP", "D"];
 
   return (
-    <div
-      className={divider ? "mt-2 pt-1" : undefined}
-      style={divider ? { borderTop: "1px solid var(--rule)" } : undefined}
-    >
-      <div
-        className="mx-3 mt-1.5 mb-1 pl-2 text-[12.5px] font-semibold uppercase tracking-[0.06em]"
-        style={{
-          color: "var(--accent-heading)",
-          borderLeft: "3px solid var(--accent)",
-        }}
-      >
-        {label}
+    <div className="pt-[12px]">
+      <div className="section-label px-[14px]">{label}</div>
+      <div className={`${WEAPON_GRID} px-[14px] pt-[6px] pb-[4px]`} aria-hidden="true">
+        <span className="hidden min-[900px]:block" />
+        {columns.map((c) => (
+          <span key={c} className="caption caption-sm">
+            {c}
+          </span>
+        ))}
       </div>
       {groups.map((group) => {
         if (group.kind === "single") {
-          const zebra = rowIndex % 2 === 1;
-          rowIndex += 1;
-          return (
-            <WeaponRow
-              key={group.weapon.profileId}
-              weapon={group.weapon}
-              zebra={zebra}
-            />
-          );
+          return <WeaponRow key={group.weapon.profileId} weapon={group.weapon} />;
         }
         return (
-          <div key={group.name}>
-            <div className="px-3 pt-1 text-[15.5px] font-semibold">
-              {group.name}
-            </div>
-            {group.variants.map((variant) => {
-              const zebra = rowIndex % 2 === 1;
-              rowIndex += 1;
-              return (
-                <WeaponRow
-                  key={variant.profileId}
-                  weapon={variant}
-                  indent
-                  zebra={zebra}
-                />
-              );
-            })}
+          <div key={group.name} style={{ borderTop: "1px solid var(--rule-soft)" }}>
+            <div className="px-[14px] pt-[10px] text-[17px] font-semibold">{group.name}</div>
+            {group.variants.map((variant) => (
+              <WeaponRow key={variant.profileId} weapon={variant} indent />
+            ))}
           </div>
         );
       })}
@@ -111,19 +90,9 @@ export function WeaponTable({ weapons }: WeaponTableProps) {
   const melee = merged.filter((w) => w.type === "melee");
 
   return (
-    <div>
-      <div className="px-3 pt-2 grid grid-cols-[2.5rem_1fr_3rem_2.5rem_2.5rem_2rem_2rem_2.5rem] gap-x-1 text-[11.5px] text-[var(--ink-soft)] uppercase tracking-[0.04em]">
-        <span>Ct</span>
-        <span>Weapon</span>
-        <span>Range</span>
-        <span>A</span>
-        <span>Skill</span>
-        <span>S</span>
-        <span>AP</span>
-        <span>D</span>
-      </div>
-      <Section label="Ranged" weapons={ranged} />
-      <Section label="Melee" weapons={melee} divider={ranged.length > 0} />
+    <div className="pb-[4px]">
+      <Section label="Ranged" skillLabel="BS" weapons={ranged} />
+      <Section label="Melee" skillLabel="WS" weapons={melee} />
     </div>
   );
 }

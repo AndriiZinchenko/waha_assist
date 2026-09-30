@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { startListening } from "../lib/speech";
+import { useUi } from "../lib/uiStrings";
 import { parseVoiceCommand, type VoiceCommand } from "../lib/voiceCommand";
 
 export type VoiceFeedback =
   | { kind: "ok"; text: string; onUndo: () => void }
   | { kind: "error"; text: string };
+
+/** What the banner shows: a result plus how to colour it. */
+type BannerMessage =
+  | { tone: "positive"; text: string; onUndo?: () => void }
+  | { tone: "neutral"; text: string }
+  | { tone: "negative"; text: string };
 
 interface VoiceCommanderProps {
   /** BCP-47 tag for the recognizer, e.g. "en-US" / "uk-UA". */
@@ -17,36 +24,48 @@ interface VoiceCommanderProps {
   onFatal: (reason: string) => void;
 }
 
-const FEEDBACK_MS = 6000;
+const FEEDBACK_MS = 2500;
+
+/** Heard something shaped like a command that didn't parse. */
+const LOOKS_LIKE_COMMAND = /against|versus|\bvs\b|проти/i;
+
+const TONE_STYLE = {
+  positive: { background: "var(--positive-fill)", color: "var(--positive)" },
+  neutral: { background: "var(--paper-sunk)", color: "var(--ink-2)" },
+  negative: { background: "var(--negative-fill)", color: "var(--negative)" },
+} as const;
 
 /**
  * Hands-free listener. Mounted while voice mode is on: keeps the mic open,
- * parses every finished utterance as "X against Y" (or "undo"), and shows a
- * status pill at the bottom of the unit lists so the player can see from
- * across the table what was heard — a mishear is one "undo", spoken or
- * tapped, not a wrong calculation nobody noticed.
+ * parses every finished utterance as "X against Y" (or "undo"), and shows
+ * a banner under the header so the player can see from across the table
+ * what was heard — a mishear is one "undo", spoken or tapped, not a wrong
+ * calculation nobody noticed.
  */
 export function VoiceCommander({ lang, onSelect, onFatal }: VoiceCommanderProps) {
-  const [feedback, setFeedback] = useState<VoiceFeedback | null>(null);
+  const [message, setMessage] = useState<BannerMessage | null>(null);
+  const ui = useUi();
   // The undo for the most recent selection stays available (by voice)
-  // even after its chip has faded.
+  // even after its message has faded.
   const lastUndoRef = useRef<(() => void) | null>(null);
   // Latest props, so the long-lived listener never calls a stale closure.
   const onSelectRef = useRef(onSelect);
   const onFatalRef = useRef(onFatal);
+  const uiRef = useRef(ui);
   onSelectRef.current = onSelect;
   onFatalRef.current = onFatal;
+  uiRef.current = ui;
 
   useEffect(() => {
     function undo() {
       const fn = lastUndoRef.current;
       lastUndoRef.current = null;
       if (!fn) {
-        setFeedback({ kind: "error", text: "Nothing to undo" });
+        setMessage({ tone: "neutral", text: "Nothing to undo" });
         return;
       }
       fn();
-      setFeedback({ kind: "error", text: "Undone" });
+      setMessage({ tone: "positive", text: "Undone" });
     }
 
     const stop = startListening(lang, {
@@ -56,7 +75,13 @@ export function VoiceCommander({ lang, onSelect, onFatal }: VoiceCommanderProps)
           command = parseVoiceCommand(text);
           if (command) break;
         }
-        if (!command) return; // ordinary table talk — stay quiet
+        if (!command) {
+          // Ordinary table talk stays quiet; only a near-miss is reported.
+          if (alternatives.some((text) => LOOKS_LIKE_COMMAND.test(text))) {
+            setMessage({ tone: "neutral", text: uiRef.current("voice.notUnderstood") });
+          }
+          return;
+        }
         if (command.type === "undo") {
           undo();
           return;
@@ -64,8 +89,12 @@ export function VoiceCommander({ lang, onSelect, onFatal }: VoiceCommanderProps)
         const result = onSelectRef.current(command);
         // A rejected command (number out of range) leaves the previous
         // selection — and its undo — untouched.
-        if (result.kind === "ok") lastUndoRef.current = result.onUndo;
-        setFeedback(result);
+        if (result.kind === "ok") {
+          lastUndoRef.current = result.onUndo;
+          setMessage({ tone: "positive", text: result.text, onUndo: result.onUndo });
+        } else {
+          setMessage({ tone: "negative", text: result.text });
+        }
       },
       onFatal(reason) {
         onFatalRef.current(reason);
@@ -75,51 +104,43 @@ export function VoiceCommander({ lang, onSelect, onFatal }: VoiceCommanderProps)
   }, [lang]);
 
   useEffect(() => {
-    if (!feedback) return;
-    const timer = window.setTimeout(() => setFeedback(null), FEEDBACK_MS);
+    if (!message) return;
+    const timer = window.setTimeout(() => setMessage(null), FEEDBACK_MS);
     return () => window.clearTimeout(timer);
-  }, [feedback]);
+  }, [message]);
 
-  const isError = feedback?.kind === "error";
+  const style = message ? TONE_STYLE[message.tone] : TONE_STYLE.neutral;
 
   return (
     <div
       role="status"
-      className="absolute inset-x-0 bottom-3 z-20 flex justify-center pointer-events-none"
+      className="shrink-0 min-h-[48px] px-[16px] flex items-center gap-[12px]"
+      style={{ ...style, borderBottom: "1px solid var(--rule)" }}
     >
-      <div
-        className="pointer-events-auto flex items-center gap-2.5 max-w-[92%] px-3.5 py-2 rounded-full text-[14px] shadow-lg"
-        style={{
-          background: "var(--panel)",
-          border: `1px solid ${isError ? "var(--warn)" : "var(--rule)"}`,
-          color: isError ? "var(--warn)" : "var(--ink)",
-        }}
-      >
-        {!feedback && (
-          <span
-            className="voice-dot shrink-0 w-[9px] h-[9px] rounded-full"
-            style={{ background: "var(--negative)" }}
-            aria-hidden="true"
-          />
-        )}
-        <span className="truncate">
-          {feedback ? feedback.text : "Listening — say “3 against 7”"}
-        </span>
-        {feedback?.kind === "ok" && (
-          <button
-            type="button"
-            onClick={() => {
-              lastUndoRef.current = null;
-              feedback.onUndo();
-              setFeedback({ kind: "error", text: "Undone" });
-            }}
-            className="shrink-0 font-semibold underline underline-offset-2"
-            style={{ color: "var(--ink-soft)" }}
-          >
-            Undo
-          </button>
-        )}
-      </div>
+      {!message && (
+        <span
+          aria-hidden="true"
+          className="voice-dot shrink-0 w-[10px] h-[10px] rounded-full"
+          style={{ background: "var(--ink)", boxShadow: "0 0 0 4px var(--ring)" }}
+        />
+      )}
+      <span className="flex-1 min-w-0 truncate text-[15px] font-semibold" style={{ color: message ? undefined : "var(--ink)" }}>
+        {message ? message.text : "Listening — say “3 against 7”"}
+      </span>
+      {message?.tone === "positive" && message.onUndo && (
+        <button
+          type="button"
+          onClick={() => {
+            lastUndoRef.current = null;
+            message.onUndo?.();
+            setMessage({ tone: "positive", text: "Undone" });
+          }}
+          className="display shrink-0 min-h-[40px] px-[12px] rounded-[var(--r-control)] text-[14px] font-bold uppercase tracking-[0.1em]"
+          style={{ border: "1px solid currentColor" }}
+        >
+          Undo
+        </button>
+      )}
     </div>
   );
 }

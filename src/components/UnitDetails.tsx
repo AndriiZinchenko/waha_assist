@@ -1,7 +1,7 @@
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
 import { ModelCounter } from "./ModelCounter";
-import { StatStrip } from "./StatStrip";
+import { StatStrip, UnitKeywords } from "./StatStrip";
 import { UnitInfo } from "./UnitInfo";
 import { UnitRules } from "./UnitRules";
 import { UnitStratagems } from "./UnitStratagems";
@@ -18,9 +18,10 @@ interface UnitDetailsProps {
   weapons?: "counter" | "table";
 }
 
-/** The expanded body of a unit: stats, models and weapons, info, rules and
- * stratagems. Shared by the battle panels' unit rows and the army
- * configuration screen so both show the same card. */
+/** The expanded body of a unit: stats, keywords, models and weapons, info,
+ * rules and stratagems. Shared by the battle panels' unit rows and the
+ * army configuration screen so both show the same datasheet. Sits on
+ * --panel with a rail in the side colour of the surrounding panel. */
 export function UnitDetails({
   unit,
   counts,
@@ -30,28 +31,18 @@ export function UnitDetails({
 }: UnitDetailsProps) {
   return (
     <div
-      className="rounded-[10px] p-4 flex flex-col gap-3.5"
-      style={{
-        background: "var(--accent-wash)",
-        border: "1px solid var(--rule)",
-        borderLeft: "3px solid var(--accent)",
-      }}
+      className="flex flex-col"
+      style={{ background: "var(--panel)", boxShadow: "inset 3px 0 0 var(--accent)" }}
     >
       <StatStrip unit={unit} />
+      <UnitKeywords unit={unit} />
       {weapons === "counter" ? (
         <ModelCounter unit={unit} counts={counts} onCountChange={onCountChange} />
       ) : (
         unit.weapons.length > 0 && (
-          <div>
-            <div
-              className="text-[12px] font-semibold uppercase tracking-[0.06em] mb-2"
-              style={{ color: "var(--accent-heading)" }}
-            >
-              Weapons
-            </div>
-            <div className="rounded-[8px] py-1" style={{ background: "var(--inset)" }}>
-              <WeaponTable weapons={unit.weapons} />
-            </div>
+          <div style={{ borderTop: "1px solid var(--rule-soft)" }}>
+            <div className="caption px-[14px] pt-[12px] pb-[4px]">Weapons</div>
+            <WeaponTable weapons={unit.weapons} />
           </div>
         )
       )}

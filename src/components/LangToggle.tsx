@@ -10,13 +10,16 @@ const OPTIONS: Array<{ value: Lang; label: string }> = [
   { value: "uk", label: "UA" },
 ];
 
+/** EN | UA segmented control; the selected half is inverted. */
 export function LangToggle({ lang, onChange }: LangToggleProps) {
   return (
     <span
-      className="flex rounded-[7px] p-[3px]"
-      style={{ background: "var(--panel)" }}
+      role="group"
+      aria-label="Language"
+      className="flex h-[46px] shrink-0 rounded-[var(--r-control)] overflow-hidden"
+      style={{ border: "1px solid var(--rule)" }}
     >
-      {OPTIONS.map((option) => {
+      {OPTIONS.map((option, i) => {
         const isActive = lang === option.value;
         return (
           <button
@@ -24,10 +27,10 @@ export function LangToggle({ lang, onChange }: LangToggleProps) {
             type="button"
             onClick={() => onChange(option.value)}
             aria-pressed={isActive}
-            className="min-w-[36px] min-h-[36px] px-2 rounded-[5px] text-[12.5px] font-semibold"
+            className={`display w-[48px] text-[15px] font-extrabold tracking-[0.08em] ${isActive ? "selected" : ""}`}
             style={{
-              color: isActive ? "var(--ink)" : "var(--ink-soft)",
-              background: isActive ? "var(--paper-sunk)" : undefined,
+              color: isActive ? undefined : "var(--ink-2)",
+              borderLeft: i > 0 ? "1px solid var(--rule)" : undefined,
             }}
           >
             {option.label}

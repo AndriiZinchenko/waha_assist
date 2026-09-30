@@ -1,44 +1,87 @@
 @import "tailwindcss";
 
+/* Dataslate design tokens — see docs/dataslate-migration.md §2. Components
+   reference these by name; no colour literals outside this file. */
 :root {
   color-scheme: dark;
 
-  --paper: oklch(0.23 0.006 260);
-  --panel: oklch(0.27 0.006 260);
-  --paper-sunk: oklch(0.32 0.02 260);
-  --inset: oklch(0.17 0.006 260);
-  --header-bg: oklch(0.19 0.006 260);
-  --rule: oklch(0.34 0.008 260);
-  --ink: oklch(0.92 0.004 260);
-  --ink-soft: oklch(0.58 0.01 260);
+  /* Ground — neutral graphite, zero chroma */
+  --inset: oklch(0.19 0 0); /* page behind frames, gutters between tablet panels */
+  --paper: oklch(0.255 0 0); /* screen background, unit list */
+  --panel: oklch(0.29 0 0); /* open datasheet body, calculator, sheets */
+  --paper-sunk: oklch(0.335 0 0); /* open row, loadout row, stat/result cell, stratagem card */
+  --raised: oklch(0.39 0 0); /* weapon keyword chip bg, card border */
+  --disabled-bg: oklch(0.275 0 0); /* stepper button at bound */
+  --header-bg: oklch(0.255 0 0); /* header = paper; separated by --rule */
+  --rule-soft: oklch(0.37 0 0); /* row dividers */
+  --rule: oklch(0.44 0 0); /* control borders, section dividers */
 
-  /* Interactive accent for open/expanded state. Each ArmyPanel overrides
-     this family with its own side colour; the root values are what the
-     combat calculator sees, since it sits outside both panels. */
-  --accent: oklch(0.72 0.12 265);
-  --accent-heading: oklch(0.86 0.08 265);
-  --accent-wash: oklch(0.24 0.04 265 / 0.5);
+  /* Ink */
+  --ink: oklch(0.98 0 0); /* primary text, all numerals */
+  --ink-2: oklch(0.88 0 0); /* secondary text, hints, unselected segment */
+  --ink-soft: oklch(0.78 0 0); /* captions, stat labels, "of N" */
+  --ink-prose: oklch(0.93 0 0); /* rules paragraphs (serif) */
+  --ink-off: oklch(0.55 0 0); /* disabled glyphs, leader connector lines */
 
-  --side-a: oklch(0.55 0.1 190);
-  --side-a-heading: oklch(0.85 0.08 190);
-  --side-a-fill: oklch(0.44 0.11 190);
-  --side-a-wash: oklch(0.22 0.02 190 / 0.5);
-  --side-b: oklch(0.55 0.1 30);
-  --side-b-heading: oklch(0.8 0.1 30);
-  --side-b-wash: oklch(0.24 0.06 30 / 0.35);
+  /* Sides — three shades each */
+  --side-a: oklch(0.66 0.2 22); /* crimson: marks, rails, names in results */
+  --side-a-fill: oklch(0.34 0.09 22); /* selected row / switcher / panel header wash */
+  --side-a-on: oklch(0.16 0.03 22); /* text on solid --side-a */
+  --side-b: oklch(0.82 0.12 210); /* cyan */
+  --side-b-fill: oklch(0.35 0.06 215);
+  --side-b-on: oklch(0.16 0.03 215);
 
-  /* Neutral metadata accent: readable but carrying none of the good/bad
-     meaning of --boost, --warn, --positive or --negative. */
-  --meta: oklch(0.7 0.07 230);
+  /* The side in scope. Each ArmyPanel (and any side-tied screen) overrides
+     these with its own side's values; outside a side — the calculator —
+     they stay neutral. */
+  --accent: var(--ink);
+  --accent-fill: var(--paper-sunk);
+  --accent-on: var(--paper);
 
-  --warn: oklch(0.68 0.16 30);
-  --boost: oklch(0.75 0.12 90);
-  --positive: oklch(0.68 0.15 145);
-  --negative: oklch(0.68 0.16 30);
+  /* Tones — never reuse a side hue */
+  --positive: oklch(0.84 0.15 150); /* boosted cells, applied rules, synced */
+  --positive-fill: oklch(0.36 0.06 150);
+  --negative: oklch(0.83 0.14 78); /* amber: penalised cells, warnings, conflict */
+  --negative-fill: oklch(0.37 0.06 78);
+  --boost: var(--positive); /* leader-boosted values use the positive family */
+  --warn: var(--negative);
 
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --font-display: "Chakra Petch", "IBM Plex Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Selected control = inverted: bg --ink, text --paper */
+  --selected-bg: var(--ink);
+  --selected-fg: var(--paper);
+  --checked-wash: oklch(0.4 0 0); /* background of an ON checkbox-toggle */
+
+  /* Scrim and drop shadow behind sheets/drawers */
+  --scrim: oklch(0 0 0 / 0.55);
+  --shadow-up: 0 -12px 30px oklch(0 0 0 / 0.45);
+  --ring: oklch(0.98 0 0 / 0.18); /* halo around the voice listening dot */
+
+  /* Type */
+  --font-display: "Fira Sans Extra Condensed", "Fira Sans Condensed", system-ui, sans-serif;
+  --font-sans: "Fira Sans Condensed", system-ui, sans-serif;
+  --font-prose: "Source Serif 4", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Shape */
+  --r-tag: 2px;
+  --r-chip: 3px;
+  --r-control: 4px;
+  --r-sheet: 12px;
+  --chamfer: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  --mark-a: inset(0); /* square */
+  --mark-b: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); /* diamond */
+}
+
+.side-a {
+  --accent: var(--side-a);
+  --accent-fill: var(--side-a-fill);
+  --accent-on: var(--side-a-on);
+}
+
+.side-b {
+  --accent: var(--side-b);
+  --accent-fill: var(--side-b-fill);
+  --accent-on: var(--side-b-on);
 }
 
 html,
@@ -62,7 +105,19 @@ body {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
 }
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+/* ---- Type roles (§3). Size/weight/colour set here so components only
+   pick a role. ---- */
 
 .mono {
   font-family: var(--font-mono);
@@ -72,8 +127,100 @@ body {
   font-family: var(--font-display);
 }
 
+.prose {
+  font-family: var(--font-prose);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-prose);
+  text-wrap: pretty;
+}
+
+.hint {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* SECTION LABEL — RANGED, INFO, STRATAGEMS */
+.section-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* CAPTION — stat captions, KEYWORDS, SIDE A */
+.caption {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.caption-sm {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+/* Inverted = selected control */
+.selected {
+  background: var(--selected-bg);
+  color: var(--selected-fg);
+}
+
+.chamfer {
+  clip-path: var(--chamfer);
+}
+
+/* Panel header: plain on phones (the side switcher carries the side);
+   the side's banner on tablets. */
+.panel-header {
+  background: var(--paper);
+}
+
+@media (min-width: 900px) {
+  .panel-header {
+    background: var(--accent-fill);
+    box-shadow: inset 0 3px 0 var(--accent);
+  }
+}
+
+/* Dotted underline for anything with a rule behind it */
+.has-rule {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+/* A compact (32px) chip still gets a 44px hit area. */
+.hit-44 {
+  position: relative;
+}
+
+.hit-44::before {
+  content: "";
+  position: absolute;
+  inset: -6px -3px;
+}
+
+/* ---- Collapse animation ---- */
+
 .expand-body {
   display: grid;
+  /* An explicit column so the body is always constrained to the panel width;
+     the implicit auto column would otherwise size to the content minimum
+     width (the weapon table fixed columns) and push the whole list into a
+     horizontal scroll on phones. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: 0fr;
   transition: grid-template-rows 150ms ease;
 }

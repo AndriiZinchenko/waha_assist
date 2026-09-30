@@ -17,6 +17,7 @@ const base: AttackRow = {
   saveTarget: 4,
   isInvulnFallback: false,
   ap: -3,
+  strength: 8,
   damage: { dice: 0, sides: 0, flat: 3, raw: "3", avg: 3 },
   range: '36"',
   keywords: [],

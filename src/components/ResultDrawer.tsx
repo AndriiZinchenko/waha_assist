@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import { emptyModifiers, type DirectionModifiers } from "../lib/combat";
 import { AttackTable } from "./AttackTable";
@@ -14,6 +14,29 @@ interface ResultDrawerProps {
   onClose: () => void;
 }
 
+/**
+ * Docked at the bottom of the battle area, never taller than 58% of it on
+ * phones and 46% on tablets, so the unit lists above stay usable. The
+ * controls stick to the top of the drawer while the results scroll.
+ */
+function Drawer({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="shrink-0 flex flex-col max-h-[58%] min-[900px]:max-h-[46%] overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]"
+      style={{
+        background: "var(--panel)",
+        borderTop: "2px solid var(--ink)",
+        boxShadow: "var(--shadow-up)",
+      }}
+    >
+      <div aria-hidden="true" className="shrink-0 flex justify-center pt-[6px]">
+        <span className="w-[36px] h-[4px] rounded-full" style={{ background: "var(--rule)" }} />
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export function ResultDrawer({
   unitA,
   unitB,
@@ -25,12 +48,11 @@ export function ResultDrawer({
 }: ResultDrawerProps) {
   if (!unitA || !unitB) {
     return (
-      <div
-        className="shrink-0 border-t border-[var(--rule)] px-4 py-2 text-[14.5px] text-[var(--ink-soft)]"
-        style={{ background: "var(--inset)" }}
-      >
-        Select a unit on both sides to see combat results.
-      </div>
+      <Drawer>
+        <p className="m-0 p-[28px] text-center text-[16px] font-medium" style={{ color: "var(--ink-2)" }}>
+          Select a unit on both sides to see combat results.
+        </p>
+      </Drawer>
     );
   }
 
@@ -71,13 +93,10 @@ function CombatResults({
   const [weaponFilter, setWeaponFilter] = useState<WeaponFilter>("ranged");
 
   return (
-    <div
-      className="shrink-0 border-t border-[var(--rule)] max-h-[46vh] overflow-y-auto overscroll-contain"
-      style={{ background: "var(--inset)" }}
-    >
+    <Drawer>
       <div
-        className="sticky top-0 z-10 border-b border-[var(--rule)]"
-        style={{ background: "var(--inset)" }}
+        className="sticky top-0 z-10"
+        style={{ background: "var(--panel)", borderBottom: "1px solid var(--rule)" }}
       >
         <ModifierControls
           modifiers={modifiers}
@@ -87,7 +106,7 @@ function CombatResults({
           onClose={onClose}
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 p-2">
+      <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-x-[24px] px-[12px] pb-[16px]">
         <AttackTable
           attacker={unitA}
           attackerCounts={counts}
@@ -109,6 +128,6 @@ function CombatResults({
           weaponFilter={weaponFilter}
         />
       </div>
-    </div>
+    </Drawer>
   );
 }

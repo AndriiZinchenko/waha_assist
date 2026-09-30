@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ParsedArmy, ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
 import { computeVisiblePoints } from "../lib/armyPoints";
-import { ToggleButton } from "./LeaderAssignmentScreen";
+import { Chevron } from "./Collapsible";
 import { UnitDetails } from "./UnitDetails";
 
 interface UnitVisibilityPanelProps {
@@ -31,84 +31,84 @@ export function UnitVisibilityPanel({
   const livePoints = computeVisiblePoints(units, hiddenUnitIds);
   const limit = army.pointsLimit;
   const overLimit = limit != null && livePoints > limit;
+  const fill = limit ? Math.min(1, livePoints / limit) : 1;
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div
-        className="shrink-0 mx-4 mb-2 px-3 py-2 rounded-[8px] flex items-center justify-between"
-        style={{ background: "var(--inset)", border: "1px solid var(--rule)" }}
-      >
-        <span className="text-[12.5px] text-[var(--ink-soft)] uppercase tracking-[0.03em]">
-          Live total
-        </span>
-        <span
-          className="mono text-[16.5px] font-semibold"
-          style={{ color: overLimit ? "var(--warn)" : "var(--positive)" }}
-        >
-          {livePoints}
+      <div className="shrink-0 px-[16px] pb-[12px]">
+        <div className="flex items-baseline gap-[6px]">
+          <span
+            className="mono font-bold text-[28px] leading-none"
+            style={{ color: overLimit ? "var(--negative)" : "var(--ink)" }}
+          >
+            {livePoints}
+          </span>
           {limit != null && (
-            <span className="text-[var(--ink-soft)]"> / {limit}pts</span>
+            <span className="mono font-medium text-[18px]" style={{ color: "var(--ink-soft)" }}>
+              / {limit}pts
+            </span>
           )}
-        </span>
+        </div>
+        <div className="mt-[8px] h-[6px] w-full" style={{ background: "var(--paper-sunk)" }}>
+          <div
+            className="h-full"
+            style={{
+              width: `${fill * 100}%`,
+              background: overLimit ? "var(--negative)" : "var(--ink-2)",
+            }}
+          />
+        </div>
       </div>
 
-      <ul className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col gap-2 px-4 pb-4">
+      <ul className="flex-1 min-h-0 overflow-y-auto overscroll-contain m-0 p-0 list-none pb-[env(safe-area-inset-bottom)]">
         {units.map((unit) => {
           const hidden = Boolean(hiddenUnitIds[unit.id]);
           const expanded = expandedId === unit.id;
           return (
-            <li
-              key={unit.id}
-              className="rounded-[8px] overflow-hidden shrink-0"
-              style={{
-                background: "var(--panel)",
-                border: "1px solid var(--rule)",
-                opacity: hidden ? 0.55 : 1,
-              }}
-            >
-              <div className="flex items-center justify-between gap-3 p-3">
+            <li key={unit.id} style={{ borderTop: "1px solid var(--rule-soft)" }}>
+              <div
+                className="min-h-[54px] pl-[14px] pr-[12px] py-[5px] flex items-center gap-[10px]"
+                style={{
+                  background: expanded ? "var(--paper-sunk)" : undefined,
+                  boxShadow: expanded ? "inset 3px 0 0 var(--accent)" : undefined,
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setExpandedId(expanded ? null : unit.id)}
                   aria-expanded={expanded}
-                  className="flex-1 min-w-0 min-h-[44px] flex items-center gap-2 text-left"
+                  className="flex-1 min-w-0 min-h-[44px] flex items-center gap-[10px] text-left"
                 >
+                  <Chevron open={expanded} />
                   <span
-                    className="inline-block transition-transform duration-150 shrink-0"
+                    className="flex-1 min-w-0 text-[17px] leading-[1.2]"
                     style={{
-                      color: expanded ? "var(--accent)" : "var(--ink-soft)",
-                      transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+                      fontWeight: expanded ? 700 : 600,
+                      color: hidden ? "var(--ink-soft)" : undefined,
+                      textDecoration: hidden ? "line-through" : undefined,
                     }}
                   >
-                    ›
+                    {unit.name}
+                    {unit.isWarlord && <span style={{ color: "var(--accent)" }}> ★</span>}
                   </span>
-                  <span className="min-w-0">
-                    <span className="text-[14.5px] font-semibold truncate block">
-                      {unit.name}
-                      {unit.isWarlord ? " ★" : ""}
-                    </span>
-                    <span className="mono text-[12.5px] text-[var(--ink-soft)]">
-                      {unit.totalPoints}pts
-                    </span>
+                  <span
+                    className="mono text-[14px] font-semibold shrink-0"
+                    style={{ color: "var(--ink-soft)" }}
+                  >
+                    {unit.totalPoints}
                   </span>
                 </button>
-                <ToggleButton
-                  label={hidden ? "Hidden" : "Visible"}
-                  active={!hidden}
-                  onClick={() => onToggle(unit.id)}
-                />
+                <VisibilityToggle hidden={hidden} onClick={() => onToggle(unit.id)} />
               </div>
               <div className="expand-body" data-open={expanded}>
                 <div>
-                  <div className="px-3 pb-3">
-                    <UnitDetails
-                      unit={unit}
-                      counts={counts}
-                      onCountChange={onCountChange}
-                      detachmentData={detachmentData}
-                      weapons="table"
-                    />
-                  </div>
+                  <UnitDetails
+                    unit={unit}
+                    counts={counts}
+                    onCountChange={onCountChange}
+                    detachmentData={detachmentData}
+                    weapons="table"
+                  />
                 </div>
               </div>
             </li>
@@ -116,5 +116,30 @@ export function UnitVisibilityPanel({
         })}
       </ul>
     </div>
+  );
+}
+
+function VisibilityToggle({ hidden, onClick }: { hidden: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={!hidden}
+      onClick={onClick}
+      className="display shrink-0 w-[80px] h-[44px] flex items-center justify-center gap-[6px] rounded-[var(--r-control)] text-[13px] font-bold uppercase tracking-[0.1em]"
+      style={{
+        border: hidden ? "1px dashed var(--ink-off)" : "1px solid var(--ink-2)",
+        color: hidden ? "var(--ink-soft)" : "var(--ink)",
+      }}
+    >
+      {!hidden && (
+        <span
+          aria-hidden="true"
+          className="w-[7px] h-[7px] rounded-full"
+          style={{ background: "var(--positive)" }}
+        />
+      )}
+      {hidden ? "Hidden" : "Visible"}
+    </button>
   );
 }

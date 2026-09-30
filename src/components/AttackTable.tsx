@@ -7,6 +7,7 @@ import {
 import type { Side } from "./ArmyPanel";
 import type { WeaponFilter } from "./ModifierControls";
 import { AttackRow } from "./AttackRow";
+import { SideMark } from "./SideMark";
 
 interface AttackTableProps {
   attacker: ParsedUnit;
@@ -16,16 +17,19 @@ interface AttackTableProps {
    * a leader attached (e.g. Grand Master Voldus's Sanctuary: -1 to hit). */
   targetSideUnits: ParsedUnit[];
   leaderAssignments: Record<string, string>;
+  /** The attacker's side. */
   side: Side;
   modifiers: DirectionModifiers;
   weaponFilter: WeaponFilter;
 }
 
-const ACCENT: Record<Side, string> = {
+const COLOR: Record<Side, string> = {
   a: "var(--side-a)",
   b: "var(--side-b)",
 };
 
+/** One direction of the fight: "■ Attacker → ◆ Defender" and a block per
+ * weapon the attacker brings. */
 export function AttackTable({
   attacker,
   attackerCounts,
@@ -36,6 +40,7 @@ export function AttackTable({
   modifiers,
   weaponFilter,
 }: AttackTableProps) {
+  const targetSide: Side = side === "a" ? "b" : "a";
   const autoHitMod = leaderHitPenaltyAgainst(
     target,
     targetSideUnits,
@@ -57,29 +62,31 @@ export function AttackTable({
   const filtered = rows.filter((row) => row.type === weaponFilter);
 
   return (
-    <div>
-      <div className="px-4 py-2 text-[14.5px] mb-1">
-        <span style={{ color: ACCENT[side] }}>{attacker.name}</span>
-        <span className="text-[var(--ink-soft)]"> → </span>
-        <span style={{ color: ACCENT[side === "a" ? "b" : "a"] }}>{target.name}</span>
-      </div>
-      <AttackSection rows={filtered} />
-    </div>
-  );
-}
-
-function AttackSection({
-  rows,
-}: {
-  rows: ReturnType<typeof computeAttackTable>;
-}) {
-  if (rows.length === 0) return null;
-
-  return (
-    <div className="flex flex-col gap-3 px-1">
-      {rows.map((row) => (
-        <AttackRow key={row.profileId} row={row} />
-      ))}
-    </div>
+    <section className="pt-[14px]">
+      <h3 className="m-0 mb-[10px] flex flex-wrap items-center gap-x-[8px] gap-y-[2px] text-[17px] font-semibold leading-[1.25]">
+        <span className="flex items-center gap-[7px]" style={{ color: COLOR[side] }}>
+          <SideMark side={side} size={12} />
+          {attacker.name}
+        </span>
+        <span className="mono text-[14px]" style={{ color: "var(--ink-soft)" }}>
+          →
+        </span>
+        <span className="flex items-center gap-[7px]" style={{ color: COLOR[targetSide] }}>
+          <SideMark side={targetSide} size={12} />
+          {target.name}
+        </span>
+      </h3>
+      {filtered.length === 0 ? (
+        <p className="m-0 text-[14px] font-medium" style={{ color: "var(--ink-2)" }}>
+          No {weaponFilter} weapons.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-[16px]">
+          {filtered.map((row) => (
+            <AttackRow key={row.profileId} row={row} targetToughness={target.profile.T} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

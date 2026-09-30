@@ -1,29 +1,51 @@
+import type { ReactNode } from "react";
+
 interface VoiceToggleProps {
   enabled: boolean;
   onToggle: () => void;
 }
 
 /** Header switch for voice mode. While on, every unit row shows its
- * number and the tap-to-speak button appears over the unit lists. */
+ * number and the listening banner sits under the header. */
 export function VoiceToggle({ enabled, onToggle }: VoiceToggleProps) {
+  return (
+    <HeaderIconButton
+      pressed={enabled}
+      onClick={onToggle}
+      label={enabled ? "Turn voice commands off" : "Turn voice commands on"}
+    >
+      <MicIcon />
+    </HeaderIconButton>
+  );
+}
+
+/** 44×44 header icon button; ON is inverted. */
+export function HeaderIconButton({
+  pressed,
+  onClick,
+  label,
+  children,
+}: {
+  pressed?: boolean;
+  onClick: () => void;
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
-      onClick={onToggle}
-      aria-pressed={enabled}
-      aria-label={enabled ? "Turn voice commands off" : "Turn voice commands on"}
-      className="min-w-[44px] min-h-[44px] rounded-[7px] flex items-center justify-center"
-      style={{
-        color: enabled ? "var(--ink)" : "var(--ink-soft)",
-        background: enabled ? "var(--paper-sunk)" : undefined,
-      }}
+      onClick={onClick}
+      aria-pressed={pressed}
+      aria-label={label}
+      className={`w-[44px] h-[44px] shrink-0 rounded-[var(--r-control)] flex items-center justify-center ${pressed ? "selected" : ""}`}
+      style={{ color: pressed ? undefined : "var(--ink)" }}
     >
-      <MicIcon />
+      {children}
     </button>
   );
 }
 
-export function MicIcon({ size = 20 }: { size?: number }) {
+export function MicIcon({ size = 22 }: { size?: number }) {
   return (
     <svg
       width={size}

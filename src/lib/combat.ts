@@ -40,6 +40,8 @@ export interface AttackRow {
   saveTarget: number | null;
   isInvulnFallback: boolean;
   ap: number;
+  /** The weapon's Strength, for the "S4 vs T6" line. */
+  strength: number;
   damage: DiceExpr;
   /** The weapon's printed range, shown beside its name. Null when the
    * export carries none. */
@@ -226,6 +228,7 @@ export function computeAttackTable(
       saveTarget,
       isInvulnFallback,
       ap: effectiveAp,
+      strength: weapon.strength,
       damage,
       range: weapon.range ?? null,
       keywords: weapon.keywords,

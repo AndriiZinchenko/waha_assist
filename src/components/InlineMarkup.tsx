@@ -6,9 +6,10 @@ interface InlineMarkupProps {
 
 /**
  * Rules text with its `**bold**` and `^^keyword^^` markers rendered: bold
- * in the main ink, keywords in small caps the way a datasheet prints them.
- * Line breaks pass through, so wrap in a `whitespace-pre-line` container
- * when the text has paragraphs.
+ * at 700, keywords in all-small-caps the way a datasheet prints them. The
+ * font comes from the surrounding `.prose` container. Line breaks pass
+ * through, so wrap in a `whitespace-pre-line` container when the text has
+ * paragraphs.
  */
 export function InlineMarkup({ text }: InlineMarkupProps) {
   if (!text) return null;
@@ -19,13 +20,11 @@ export function InlineMarkup({ text }: InlineMarkupProps) {
         return (
           <span
             key={i}
-            className={[
-              segment.bold ? "font-semibold" : "",
-              segment.keyword ? "tracking-[0.03em]" : "",
-            ].join(" ")}
             style={{
+              fontWeight: segment.bold ? 700 : 600,
               color: segment.bold ? "var(--ink)" : undefined,
-              fontVariant: segment.keyword ? "small-caps" : undefined,
+              fontVariantCaps: segment.keyword ? "all-small-caps" : undefined,
+              letterSpacing: segment.keyword ? "0.04em" : undefined,
             }}
           >
             {segment.text}

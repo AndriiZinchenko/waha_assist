@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
 import { getUnitLiveTotal } from "../lib/loadouts";
+import { Chevron } from "./Collapsible";
 import { UnitDetails } from "./UnitDetails";
 
 interface UnitRowProps {
@@ -35,77 +36,85 @@ export const UnitRow = forwardRef<HTMLLIElement, UnitRowProps>(function UnitRow(
 ) {
   const liveCount = getUnitLiveTotal(counts, unit.id, unit);
   const isCasualty = liveCount < unit.modelCount;
+  const isDestroyed = liveCount === 0;
   const isAllied = unit.keywords.includes("Allied Units");
 
   return (
-    <li
-      ref={ref}
-      className="border-b border-[var(--rule)]"
-      style={{ background: indent ? "var(--paper-sunk)" : undefined }}
-    >
+    <li ref={ref} style={{ borderBottom: "1px solid var(--rule-soft)" }}>
       <button
         type="button"
         onClick={onToggle}
-        className={`w-full h-[48px] flex items-center justify-between ${indent ? "pl-9 pr-4" : "px-4"}`}
-        style={{ background: expanded ? "var(--panel)" : undefined }}
+        aria-expanded={expanded}
+        className={`relative w-full min-h-[54px] flex items-center gap-[10px] pr-[14px] py-[6px] text-left ${indent ? "pl-[40px]" : "pl-[14px]"}`}
+        style={{
+          background: expanded ? "var(--paper-sunk)" : undefined,
+          boxShadow: expanded ? "inset 3px 0 0 var(--accent)" : undefined,
+          opacity: isDestroyed && !expanded ? 0.45 : undefined,
+        }}
       >
-        <span className="flex items-center gap-2 min-w-0">
+        {indent && <LeaderConnector />}
+        <Chevron open={expanded} />
+        {number !== undefined && (
           <span
-            className="inline-block transition-transform duration-150 shrink-0"
+            className="mono shrink-0 w-[30px] h-[30px] rounded-[var(--r-control)] flex items-center justify-center text-[15px] font-bold"
+            style={{ border: "1.5px solid var(--accent)", color: "var(--accent)" }}
+          >
+            {number}
+          </span>
+        )}
+        <span className="flex-1 min-w-0 flex flex-wrap items-center gap-x-[8px] gap-y-[2px]">
+          <span
+            className="text-[17px] leading-[1.2]"
             style={{
-              color: expanded ? "var(--accent)" : "var(--ink-soft)",
-              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+              fontWeight: expanded ? 700 : 600,
+              textDecoration: isDestroyed ? "line-through" : undefined,
             }}
           >
-            ›
-          </span>
-          {number !== undefined && (
-            <span
-              className="mono shrink-0 min-w-[26px] h-[22px] px-1.5 rounded-[5px] flex items-center justify-center text-[13px] font-semibold"
-              style={{
-                background: "var(--accent)",
-                color: "var(--ink)",
-              }}
-            >
-              {number}
-            </span>
-          )}
-          <span className="truncate">
             {unit.name}
-            {unit.isWarlord ? " ★" : ""}
+            {unit.isWarlord && <span style={{ color: "var(--accent)" }}> ★</span>}
           </span>
           {isAllied && unit.faction && (
             <span
-              className="text-[9px] font-semibold uppercase tracking-[0.04em] px-1.5 py-[1px] rounded-[4px] shrink-0"
-              style={{
-                background: "var(--accent-wash)",
-                color: "var(--accent-heading)",
-                border: "1px solid var(--accent)",
-              }}
+              className="display text-[10px] font-bold uppercase tracking-[0.12em] px-[5px] py-[1px] rounded-[var(--r-tag)]"
+              style={{ border: "1px solid var(--ink-off)", color: "var(--ink-2)" }}
             >
               {unit.faction}
             </span>
           )}
         </span>
-        <span className="mono text-[16.5px]">
-          <span style={{ color: isCasualty ? "var(--warn)" : undefined }}>
+        <span className="mono text-[16px] font-semibold shrink-0">
+          <span style={{ color: isCasualty ? "var(--negative)" : "var(--ink)" }}>
             {liveCount}
           </span>
-          /{unit.modelCount}
+          <span style={{ color: "var(--ink-soft)" }}>/{unit.modelCount}</span>
         </span>
       </button>
       <div className="expand-body" data-open={expanded}>
         <div>
-          <div className="mx-4 mb-4">
-            <UnitDetails
-              unit={unit}
-              counts={counts}
-              onCountChange={onCountChange}
-              detachmentData={detachmentData}
-            />
-          </div>
+          <UnitDetails
+            unit={unit}
+            counts={counts}
+            onCountChange={onCountChange}
+            detachmentData={detachmentData}
+          />
         </div>
       </div>
     </li>
   );
 });
+
+/** The └ joining a bodyguard unit to the leader row above it. */
+function LeaderConnector() {
+  return (
+    <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[40px]">
+      <span
+        className="absolute left-[20px] top-0 h-1/2"
+        style={{ width: 1.5, background: "var(--ink-off)" }}
+      />
+      <span
+        className="absolute left-[20px] top-1/2 w-[11px]"
+        style={{ height: 1.5, background: "var(--ink-off)" }}
+      />
+    </span>
+  );
+}

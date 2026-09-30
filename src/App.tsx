@@ -8,8 +8,9 @@ import { effectiveDetachment } from "./lib/detachment";
 import { orderedUnits } from "./lib/leaders";
 import { SPEECH_SUPPORTED } from "./lib/speech";
 import type { VoiceCommand } from "./lib/voiceCommand";
-import { loadState, saveState, type StoredState } from "./lib/persistence";
+import { loadState, pickSynced, saveState, type StoredState } from "./lib/persistence";
 import { useSync } from "./lib/useSync";
+import { useWakeLock } from "./lib/useWakeLock";
 import { LangProvider, type Lang } from "./lib/i18n";
 import { ArmyConfigScreen } from "./components/ArmyConfigScreen";
 import { ArmyPanel, type Side } from "./components/ArmyPanel";
@@ -17,6 +18,7 @@ import { ArmySetupScreen } from "./components/ArmySetupScreen";
 import { SyncConflictModal } from "./components/SyncConflictModal";
 import { SyncStatus } from "./components/SyncStatus";
 import { CombatToggle } from "./components/CombatToggle";
+import { HeaderOverflow } from "./components/HeaderOverflow";
 import { LangToggle } from "./components/LangToggle";
 import { ResultDrawer } from "./components/ResultDrawer";
 import { SideSwitcher } from "./components/SideSwitcher";
@@ -39,6 +41,7 @@ function App() {
   const [route, navigate] = useHashRoute();
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const sync = useSync(state, setState);
+  const wakeLock = useWakeLock();
 
   const armyA = armies.find((a) => a.id === route.a) ?? null;
   const armyB = armies.find((a) => a.id === route.b) ?? null;
@@ -207,26 +210,49 @@ function App() {
     route.screen === "config"
       ? (armies.find((a) => a.id === route.configArmyId) ?? null)
       : null;
+  const configSide: Side | null = configArmy
+    ? route.a === configArmy.id
+      ? "a"
+      : route.b === configArmy.id
+        ? "b"
+        : null
+    : null;
 
   return (
     <LangProvider lang={state.lang}>
-      <div className="h-dvh flex flex-col">
+      <div className="h-dvh flex flex-col" style={{ background: "var(--paper)" }}>
         <header
-          className="shrink-0 flex items-center justify-between px-3 py-2 border-b border-[var(--rule)]"
-          style={{ background: "var(--header-bg)" }}
+          className="shrink-0 pt-[env(safe-area-inset-top)]"
+          style={{ background: "var(--header-bg)", borderBottom: "1px solid var(--rule)" }}
         >
-          <button
-            type="button"
-            onClick={handleOpenSetup}
-            className="display min-h-[44px] px-4 rounded-[7px] text-[14.5px] font-semibold"
-            style={{ color: "var(--ink-soft)" }}
-          >
-            Armies
-          </button>
-          <span className="flex items-center gap-1.5">
+          <div className="h-[52px] px-[6px] flex items-center gap-[4px]">
+            {route.screen === "list" ? (
+              <span className="px-[8px] flex items-baseline gap-[6px] whitespace-nowrap">
+                <span className="display font-extrabold text-[17px] tracking-[0.06em]">
+                  COMBAT ASSISTANT
+                </span>
+                <span className="mono font-bold text-[12px]" style={{ color: "var(--ink-soft)" }}>
+                  40K
+                </span>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleOpenSetup}
+                className="display min-h-[44px] px-[8px] flex items-center gap-[6px] rounded-[var(--r-control)] text-[18px] font-bold"
+              >
+                <span aria-hidden="true" className="text-[22px] leading-none">
+                  ‹
+                </span>
+                Armies
+              </button>
+            )}
             <SyncStatus status={sync.status} />
-            <LangToggle lang={state.lang} onChange={handleChangeLang} />
-            <WakeLockToggle />
+            <span className="flex-1" />
+            <span className="hidden min-[900px]:flex items-center gap-[8px] mr-[4px]">
+              <LangToggle lang={state.lang} onChange={handleChangeLang} />
+              <WakeLockToggle enabled={wakeLock.enabled} onToggle={wakeLock.toggle} />
+            </span>
             {SPEECH_SUPPORTED && (
               <VoiceToggle
                 enabled={voiceEnabled}
@@ -234,17 +260,38 @@ function App() {
               />
             )}
             <CombatToggle enabled={combatEnabled} onToggle={handleToggleCombat} />
-          </span>
+            <span className="min-[900px]:hidden">
+              <HeaderOverflow
+                lang={state.lang}
+                onChangeLang={handleChangeLang}
+                wakeEnabled={wakeLock.enabled}
+                onToggleWake={wakeLock.toggle}
+              />
+            </span>
+          </div>
         </header>
         {showPanels && armyA && armyB ? (
-          <>
+          <div className="flex-1 min-h-0 flex flex-col">
+            {voiceEnabled && (
+              <VoiceCommander
+                lang={state.lang === "uk" ? "uk-UA" : "en-US"}
+                onSelect={handleVoiceSelect}
+                onFatal={() => setVoiceEnabled(false)}
+              />
+            )}
             <SideSwitcher
               active={activeSide}
               onSelect={handleSetActiveSide}
               labelA={armyA.parsed.catalogue}
               labelB={armyB.parsed.catalogue}
+              openA={unitA !== null}
+              openB={unitB !== null}
             />
-            <div className="relative flex flex-1 min-h-0">
+            {/* A always left, B always right; the 6px gutter shows --inset. */}
+            <div
+              className="flex flex-1 min-h-0 min-[900px]:gap-[6px]"
+              style={{ background: "var(--inset)" }}
+            >
               <ArmyPanel
                 side="a"
                 army={armyA}
@@ -271,13 +318,6 @@ function App() {
                 detachment={effectiveDetachment(armyB, state.detachmentOverrides)}
                 showNumbers={voiceEnabled}
               />
-              {voiceEnabled && (
-                <VoiceCommander
-                  lang={state.lang === "uk" ? "uk-UA" : "en-US"}
-                  onSelect={handleVoiceSelect}
-                  onFatal={() => setVoiceEnabled(false)}
-                />
-              )}
             </div>
             {combatEnabled && (
               <ResultDrawer
@@ -290,10 +330,11 @@ function App() {
                 onClose={handleCloseUnits}
               />
             )}
-          </>
+          </div>
         ) : configArmy ? (
           <ArmyConfigScreen
             army={configArmy}
+            side={configSide}
             leaderAssignments={state.leaderAssignments}
             onAssignLeader={handleAssignLeader}
             hiddenUnitIds={state.hiddenUnitIds}
@@ -317,6 +358,8 @@ function App() {
         {sync.prompt && (
           <SyncConflictModal
             reason={sync.prompt.reason}
+            local={pickSynced(state)}
+            server={sync.prompt.serverData}
             onKeepLocal={sync.keepLocal}
             onUseServer={sync.useServer}
           />

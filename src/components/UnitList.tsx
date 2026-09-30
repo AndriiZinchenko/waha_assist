@@ -69,7 +69,7 @@ export function UnitList({
   }
 
   return (
-    <ul className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+    <ul className="m-0 p-0 list-none">
       {blocks.map((block) => (
         <Fragment key={block.unit.id}>
           {block.leaders.map((leader) => (

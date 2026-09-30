@@ -6,6 +6,8 @@ import {
   labelLoadout,
   loadoutCountKey,
 } from "../lib/loadouts";
+import { Chevron } from "./Collapsible";
+import { Stepper } from "./Stepper";
 import { WeaponTable } from "./WeaponTable";
 
 interface ModelCounterProps {
@@ -14,6 +16,8 @@ interface ModelCounterProps {
   onCountChange: (key: string, next: number) => void;
 }
 
+/** MODELS: one row per wargear loadout with a casualty stepper; each row
+ * opens the weapon table for that loadout. */
 export function ModelCounter({ unit, counts, onCountChange }: ModelCounterProps) {
   const [openLoadouts, setOpenLoadouts] = useState<Set<string>>(() => new Set());
 
@@ -32,82 +36,66 @@ export function ModelCounter({ unit, counts, onCountChange }: ModelCounterProps)
   }
 
   return (
-    <div>
-      <div
-        className="text-[12px] font-semibold uppercase tracking-[0.06em] mb-2"
-        style={{ color: "var(--accent-heading)" }}
-      >
-        Models
-      </div>
+    <div style={{ borderTop: "1px solid var(--rule-soft)" }}>
+      <div className="caption px-[14px] pt-[12px] pb-[6px]">Models</div>
       {unit.loadouts.map((loadout) => {
         const key = loadoutCountKey(unit.id, loadout.key);
         const live = getLoadoutLiveCount(counts, unit.id, loadout);
-        const label = labelLoadout(loadout, unit.loadouts);
+        const label =
+          unit.loadouts.length <= 1 ? unit.name : labelLoadout(loadout, unit.loadouts);
+        // Weapons only: a loadout's wargear list also carries abilities
+        // (invulnerable saves and the like), which are noise here.
+        const gear = [...new Set(loadout.weapons.map((w) => w.name))].join(", ");
         const isOpen = openLoadouts.has(loadout.key);
         const loadoutWeapons = getLoadoutWeapons(unit, loadout, live);
         const isCasualty = live < loadout.modelCount;
 
         return (
-          <div
-            key={loadout.key}
-            className="border-t py-2"
-            style={{ borderColor: "var(--rule)" }}
-          >
-            <div className="flex items-center justify-between gap-2">
+          <div key={loadout.key} style={{ borderTop: "1px solid var(--rule-soft)" }}>
+            <div
+              className="min-h-[56px] pl-[14px] pr-[10px] py-[6px] flex items-center gap-[10px]"
+              style={{ background: isOpen ? "var(--paper-sunk)" : undefined }}
+            >
               <button
                 type="button"
                 onClick={() => toggleOpen(loadout.key)}
-                className="flex items-center gap-1.5 text-[14.5px]"
+                aria-expanded={isOpen}
+                className="flex-1 min-w-0 min-h-[44px] flex items-center gap-[10px] text-left"
               >
-                <span
-                  className="inline-block transition-transform duration-150"
-                  style={{
-                    color: isOpen ? "var(--accent)" : "var(--ink-soft)",
-                    transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
-                  }}
-                >
-                  ›
+                <Chevron open={isOpen} />
+                <span className="min-w-0">
+                  <span className="block text-[17px] font-semibold leading-[1.2]">{label}</span>
+                  {gear && gear !== label && (
+                    <span
+                      className="block text-[13px] leading-[1.3] mt-[2px]"
+                      style={{ color: "var(--ink-soft)" }}
+                    >
+                      {gear}
+                    </span>
+                  )}
                 </span>
-                {label}
               </button>
-              <span className="mono text-[16.5px] flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={live <= 0}
-                  onClick={() => onCountChange(key, Math.max(0, live - 1))}
-                  className="w-[26px] h-[26px] rounded-[5px] disabled:opacity-40"
-                  style={{ background: "var(--panel)" }}
-                >
-                  −
-                </button>
-                <span
-                  className="inline-block w-[1.5em] text-center"
-                  style={{ color: isCasualty ? "var(--warn)" : "var(--accent)" }}
-                >
-                  {live}
-                </span>
-                <button
-                  type="button"
-                  disabled={live >= loadout.modelCount}
-                  onClick={() =>
-                    onCountChange(key, Math.min(loadout.modelCount, live + 1))
-                  }
-                  className="w-[26px] h-[26px] rounded-[5px] disabled:opacity-40"
-                  style={{ background: "var(--panel)" }}
-                >
-                  +
-                </button>
-                <span className="text-[var(--ink-soft)]">
-                  of {loadout.modelCount}
-                </span>
+              <Stepper
+                value={live}
+                valueWidth={38}
+                valueColor={isCasualty ? "var(--negative)" : undefined}
+                decrementLabel={`Remove a model from ${label}`}
+                incrementLabel={`Add a model to ${label}`}
+                decrementDisabled={live <= 0}
+                incrementDisabled={live >= loadout.modelCount}
+                onDecrement={() => onCountChange(key, Math.max(0, live - 1))}
+                onIncrement={() => onCountChange(key, Math.min(loadout.modelCount, live + 1))}
+              />
+              <span
+                className="mono font-medium text-[13px] shrink-0 w-[34px]"
+                style={{ color: "var(--ink-soft)" }}
+              >
+                of {loadout.modelCount}
               </span>
             </div>
             <div className="expand-body" data-open={isOpen}>
               <div>
-                <div
-                  className="mt-2.5 ml-5 rounded-[8px] py-1"
-                  style={{ background: "var(--inset)" }}
-                >
+                <div style={{ background: "var(--paper-sunk)" }}>
                   <WeaponTable weapons={loadoutWeapons} />
                 </div>
               </div>

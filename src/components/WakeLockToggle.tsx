@@ -1,65 +1,63 @@
-import { useEffect, useRef, useState } from "react";
+import { WAKE_LOCK_SUPPORTED } from "../lib/useWakeLock";
+import { useUi } from "../lib/uiStrings";
 
-const SUPPORTED = typeof navigator !== "undefined" && "wakeLock" in navigator;
+interface WakeLockToggleProps {
+  enabled: boolean;
+  onToggle: () => void;
+  /** "inline" for the tablet header; "row" for the phone overflow menu. */
+  variant?: "inline" | "row";
+}
 
-export function WakeLockToggle() {
-  const [enabled, setEnabled] = useState(false);
-  const sentinelRef = useRef<WakeLockSentinel | null>(null);
+/** Keep-screen-awake switch. State lives in `useWakeLock` (App). */
+export function WakeLockToggle({ enabled, onToggle, variant = "inline" }: WakeLockToggleProps) {
+  const ui = useUi();
+  if (!WAKE_LOCK_SUPPORTED) return null;
 
-  useEffect(() => {
-    if (!enabled) return;
-
-    async function reacquire() {
-      if (document.visibilityState === "visible" && sentinelRef.current == null) {
-        try {
-          const sentinel = await navigator.wakeLock.request("screen");
-          sentinelRef.current = sentinel;
-          sentinel.addEventListener("release", () => {
-            if (sentinelRef.current === sentinel) sentinelRef.current = null;
-          });
-        } catch {
-          setEnabled(false);
-        }
-      }
-    }
-
-    document.addEventListener("visibilitychange", reacquire);
-    return () => document.removeEventListener("visibilitychange", reacquire);
-  }, [enabled]);
-
-  if (!SUPPORTED) return null;
-
-  async function toggle() {
-    if (enabled) {
-      await sentinelRef.current?.release();
-      sentinelRef.current = null;
-      setEnabled(false);
-      return;
-    }
-    try {
-      const sentinel = await navigator.wakeLock.request("screen");
-      sentinelRef.current = sentinel;
-      sentinel.addEventListener("release", () => {
-        if (sentinelRef.current === sentinel) sentinelRef.current = null;
-      });
-      setEnabled(true);
-    } catch {
-      // permission denied, or the tab isn't visible/focused — leave off
-    }
+  if (variant === "row") {
+    return (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={enabled}
+        onClick={onToggle}
+        className="w-full min-h-[52px] px-[14px] flex items-center justify-between gap-[12px] text-left text-[16px] font-semibold"
+      >
+        {ui("overflow.wake")}
+        <Switch on={enabled} />
+      </button>
+    );
   }
 
   return (
     <button
       type="button"
-      onClick={toggle}
       aria-pressed={enabled}
-      className="min-h-[44px] px-4 rounded-[7px] text-[14.5px] font-semibold"
+      onClick={onToggle}
+      className={`display min-h-[44px] px-[12px] rounded-[var(--r-control)] text-[15px] font-bold uppercase tracking-[0.08em] whitespace-nowrap ${enabled ? "selected" : ""}`}
+      style={{ color: enabled ? undefined : "var(--ink-2)" }}
+    >
+      Awake
+    </button>
+  );
+}
+
+function Switch({ on }: { on: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="relative shrink-0 w-[44px] h-[26px] rounded-full"
       style={{
-        color: enabled ? "var(--ink)" : "var(--ink-soft)",
-        background: enabled ? "var(--paper-sunk)" : undefined,
+        background: on ? "var(--ink)" : "var(--paper)",
+        border: `1px solid ${on ? "var(--ink)" : "var(--rule)"}`,
       }}
     >
-      Keep Awake
-    </button>
+      <span
+        className="absolute top-[3px] w-[18px] h-[18px] rounded-full transition-[left] duration-150"
+        style={{
+          left: on ? 21 : 3,
+          background: on ? "var(--paper)" : "var(--ink-2)",
+        }}
+      />
+    </span>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import type { ArmyEntry } from "../lib/armies";
 import { computeVisiblePoints, visibleUnits } from "../lib/armyPoints";
 import { applyLeaderWeaponBonuses } from "../lib/leaderEffects";
@@ -28,21 +28,6 @@ interface ArmyPanelProps {
   showNumbers?: boolean;
 }
 
-const ACCENT: Record<Side, string> = {
-  a: "var(--side-a)",
-  b: "var(--side-b)",
-};
-
-const ACCENT_HEADING: Record<Side, string> = {
-  a: "var(--side-a-heading)",
-  b: "var(--side-b-heading)",
-};
-
-const ACCENT_WASH: Record<Side, string> = {
-  a: "var(--side-a-wash)",
-  b: "var(--side-b-wash)",
-};
-
 export function ArmyPanel({
   side,
   army,
@@ -59,13 +44,6 @@ export function ArmyPanel({
   const [detachmentOpen, setDetachmentOpen] = useState(false);
   const detachmentData = getDetachmentData(detachment);
 
-  const style = {
-    "--accent": ACCENT[side],
-    "--accent-heading": ACCENT_HEADING[side],
-    "--accent-wash": ACCENT_WASH[side],
-    borderRight: side === "a" ? "1px solid var(--rule)" : undefined,
-  } as CSSProperties;
-
   const visible = visibleUnits(army.parsed.units, hiddenUnitIds);
   const hasHiddenUnits = visible.length < army.parsed.units.length;
   const points = hasHiddenUnits
@@ -78,28 +56,33 @@ export function ArmyPanel({
 
   return (
     <section
-      className={`${hidden ? "hidden min-[900px]:flex" : "flex"} flex-col flex-1 min-w-0 h-full overflow-hidden`}
-      style={style}
+      aria-label={`Side ${side.toUpperCase()}: ${army.parsed.catalogue}`}
+      className={`side-${side} ${hidden ? "hidden min-[900px]:flex" : "flex"} flex-col flex-1 min-w-0 h-full overflow-hidden`}
+      style={{ background: "var(--paper)" }}
     >
-      <PanelHeader
-        army={army.parsed}
-        points={points}
-        detachment={detachment}
-        detachmentData={detachmentData}
-        onOpenDetachment={() => setDetachmentOpen(true)}
-      />
-      <UnitList
-        units={units}
-        leaderAssignments={leaderAssignments}
-        selectedUnitId={selectedUnitId}
-        onSelectUnit={onSelectUnit}
-        counts={counts}
-        onCountChange={onCountChange}
-        detachmentData={detachmentData}
-        showNumbers={showNumbers}
-      />
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+        <PanelHeader
+          side={side}
+          army={army.parsed}
+          points={points}
+          detachment={detachment}
+          detachmentData={detachmentData}
+          onOpenDetachment={() => setDetachmentOpen(true)}
+        />
+        <UnitList
+          units={units}
+          leaderAssignments={leaderAssignments}
+          selectedUnitId={selectedUnitId}
+          onSelectUnit={onSelectUnit}
+          counts={counts}
+          onCountChange={onCountChange}
+          detachmentData={detachmentData}
+          showNumbers={showNumbers}
+        />
+      </div>
       {detachmentOpen && detachmentData && (
         <DetachmentModal
+          side={side}
           data={detachmentData}
           onClose={() => setDetachmentOpen(false)}
         />

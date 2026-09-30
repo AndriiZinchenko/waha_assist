@@ -16,10 +16,10 @@ export default defineConfig({
         name: "40k Combat Assistant",
         short_name: "40k Assist",
         description: "Warhammer 40k combat assistant",
-        theme_color: "#292a30",
-        background_color: "#33353c",
+        theme_color: "#232323",
+        background_color: "#232323",
         display: "standalone",
-        orientation: "landscape",
+        orientation: "any",
         start_url: "/",
         icons: [
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },
@@ -34,25 +34,6 @@ export default defineConfig({
         // silently leave it out of the precache once it grows, and the app
         // would stop working offline with no build error.
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-stylesheets",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-webfonts",
-              cacheableResponse: { statuses: [0, 200] },
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-        ],
       },
     }),
   ],

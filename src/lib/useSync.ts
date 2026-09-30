@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { pickSynced, saveState, withSynced, type StoredState } from "./persistence";
+import { pickSynced, saveState, withSynced, type StoredState, type SyncedState } from "./persistence";
 import { createSyncApi } from "./syncApi";
 import { reconcile } from "./syncReconcile";
 import type { SyncStatusValue } from "../components/SyncStatus";
@@ -21,6 +21,8 @@ export function useSync(
   const [prompt, setPrompt] = useState<{
     reason: "offline-edits" | "conflict";
     serverRev: number;
+    /** The server's copy, so the dialog can show what each side holds. */
+    serverData: SyncedState | null;
   } | null>(null);
 
   // The effects below run on timers and events, so they read the current
@@ -54,7 +56,7 @@ export function useSync(
         return;
       }
       if (result.status === "conflict") {
-        setPrompt({ reason: "conflict", serverRev: result.doc.rev });
+        setPrompt({ reason: "conflict", serverRev: result.doc.rev, serverData: result.doc.data });
         setStatus("conflict");
         return;
       }
@@ -94,7 +96,11 @@ export function useSync(
       setStatus("synced");
       return;
     }
-    setPrompt({ reason: decision.reason, serverRev: decision.serverRev });
+    setPrompt({
+      reason: decision.reason,
+      serverRev: decision.serverRev,
+      serverData: decision.serverData,
+    });
     setStatus("conflict");
   }, [push, setState]);
 
