@@ -72,3 +72,53 @@ describe("validateRoster", () => {
     expect(result.error.length).toBeGreaterThan(0);
   });
 });
+
+import { exportMatchesList, listsForSystem } from "./syncArmies.mjs";
+
+describe("listsForSystem", () => {
+  const rows = [
+    { list_key: "a", name: "Grey", id_system: 3 },
+    { list_key: "b", name: "Unnamed list", id_system: 7 },
+    { list_key: "c", name: "Orks", id_system: "3" },
+  ];
+
+  it("keeps only the lists of the given game system", () => {
+    expect(listsForSystem(rows, 3).map((r) => r.list_key)).toEqual(["a", "c"]);
+  });
+
+  it("returns nothing when no system id is known", () => {
+    expect(listsForSystem(rows, undefined)).toEqual([]);
+  });
+});
+
+describe("exportMatchesList", () => {
+  const grey = {
+    roster: { name: "Grey", forces: [{ catalogueName: "Imperium - Grey Knights" }] },
+  };
+
+  it("accepts an export whose roster name and catalogue match the list", () => {
+    expect(
+      exportMatchesList(grey, { name: "Grey", catalogue: "Imperium - Grey Knights" }),
+    ).toEqual({ ok: true });
+  });
+
+  it("rejects an export of a different list, naming both", () => {
+    const result = exportMatchesList(grey, { name: "Unnamed list", catalogue: null });
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("Grey");
+    expect(result.error).toContain("Unnamed list");
+  });
+
+  it("rejects an export from a different catalogue even when the names match", () => {
+    const result = exportMatchesList(grey, {
+      name: "Grey",
+      catalogue: "Xenos - Orks",
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("Xenos - Orks");
+  });
+
+  it("skips the catalogue check when the list's catalogue is unknown", () => {
+    expect(exportMatchesList(grey, { name: "Grey", catalogue: null })).toEqual({ ok: true });
+  });
+});

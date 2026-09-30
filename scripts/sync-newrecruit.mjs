@@ -15,8 +15,15 @@ import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { planWrites, validateRoster } from "./lib/syncArmies.mjs";
+import {
+  exportMatchesList,
+  listsForSystem,
+  planWrites,
+  validateRoster,
+} from "./lib/syncArmies.mjs";
 
+// Only 40k 10th Edition lists are rosters the app can read.
+const SYSTEM_SHORT = "wh40k-10e";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ARMIES_DIR = path.join(ROOT, "armies");
 const SESSION_FILE = path.join(ROOT, ".newrecruit-session.json");
@@ -166,12 +173,29 @@ async function sync() {
     if (!data || data.__error) {
       throw new Error(data?.__error ?? "user_get_data returned nothing");
     }
-    const lists = (data.lists ?? []).map((l) => ({
+    // The account can hold lists for other games too (Horus Heresy, ...).
+    // Only 40k 10th Edition rosters are readable by the app.
+    const library = await rpc(page, "get_library");
+    if (!library || library.__error) {
+      throw new Error(library?.__error ?? "get_library returned nothing");
+    }
+    const system = (library.systems ?? library).find((s) => s.short === SYSTEM_SHORT);
+    if (!system) throw new Error(`game system ${SYSTEM_SHORT} not found in the library`);
+    const bookName = (id) =>
+      (system.books ?? []).find((b) => String(b.id) === String(id))?.name ?? null;
+
+    const allRows = data.lists ?? [];
+    const rows = listsForSystem(allRows, system.id);
+    const lists = rows.map((l) => ({
       key: l.list_key,
       name: l.name ?? l.list_key,
+      catalogue: bookName(l.id_book),
       raw: l,
     }));
-    log(`Found ${lists.length} list(s) on New Recruit.`);
+    log(`Found ${lists.length} ${system.name} list(s) on New Recruit.`);
+    if (allRows.length > rows.length) {
+      log(`  (ignoring ${allRows.length - rows.length} list(s) from other game systems)`);
+    }
     if (lists.length && DRY_RUN) {
       log("First list metadata:", JSON.stringify(lists[0].raw, null, 2));
     }
@@ -189,6 +213,13 @@ async function sync() {
       }
       try {
         const json = await exportList(page, w);
+        const list = lists.find((l) => l.key === w.key);
+        const match = exportMatchesList(json, { name: w.name, catalogue: list?.catalogue ?? null });
+        if (!match.ok) {
+          skipped.push(`${w.name}: ${match.error}`);
+          log(`  skip  ${w.name}: ${match.error}`);
+          continue;
+        }
         const check = validateRoster(json);
         if (!check.ok) {
           skipped.push(`${w.name}: ${check.error}`);

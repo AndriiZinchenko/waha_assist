@@ -49,3 +49,44 @@ export function validateRoster(json) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
+
+/**
+ * The lists that belong to one game system. New Recruit accounts can hold
+ * lists for several games (e.g. Horus Heresy next to 40k) and
+ * `user_get_data` returns all of them; only one system's lists are rosters
+ * this app can read.
+ *
+ * @param {{id_system: number | string}[]} rows  user_get_data list rows
+ * @param {number | string | undefined} systemId  the wanted system's id
+ */
+export function listsForSystem(rows, systemId) {
+  if (systemId === undefined || systemId === null) return [];
+  return rows.filter((row) => String(row.id_system) === String(systemId));
+}
+
+/**
+ * Whether an export is the list that was asked for. When New Recruit cannot
+ * open a list it can hand back whatever list it last had loaded, which would
+ * otherwise be saved under the wrong file name.
+ *
+ * @param {any} json  the exported roster
+ * @param {{name: string, catalogue: string | null}} list  what was requested
+ */
+export function exportMatchesList(json, list) {
+  const roster = json?.roster;
+  const name = roster?.name;
+  if (name !== list.name) {
+    return {
+      ok: false,
+      error: `export is "${name ?? "?"}", expected "${list.name}"`,
+    };
+  }
+  const catalogue = roster?.forces?.[0]?.catalogueName;
+  if (list.catalogue && catalogue !== list.catalogue) {
+    return {
+      ok: false,
+      error: `export is from ${catalogue ?? "an unknown catalogue"}, expected ${list.catalogue}`,
+    };
+  }
+  return { ok: true };
+}
