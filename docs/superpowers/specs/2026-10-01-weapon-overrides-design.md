@@ -57,8 +57,9 @@ from the core book's shared rules.
 
 ### Output
 
-`src/data/unit-options/<faction-slug>.ts`, one per roster faction, plus
-`index.ts` and `types.ts`. Generated; not edited by hand.
+`src/data/unit-options/<faction-slug>.ts`, one per roster faction, and a
+`factions.ts` that lists them, all generated and not edited by hand. `types.ts`
+and `index.ts` (the lookup) are hand-written.
 
 ```ts
 export interface WeaponOptionProfile {
@@ -90,7 +91,8 @@ export interface FactionUnitOptions {
 }
 ```
 
-`index.ts` exports `unitOptions(catalogue, entryId): { weapons, rules } | null`.
+`index.ts` exports `unitOptions(catalogue, entryId): { name, weapons, rules } | null`
+and `optionsLookup(catalogue)`, which binds it to one catalogue.
 
 ### Script
 
