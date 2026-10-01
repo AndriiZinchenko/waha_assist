@@ -1,3 +1,5 @@
+import type { UnitWeaponOverride } from "./weaponOverrides";
+
 /** The fields that live on the server and follow you between devices.
  * Adding a field to the synced set means adding it here and to
  * `pickSynced` / `withSynced` — the sync machinery itself never mentions
@@ -16,6 +18,10 @@ export interface SyncedState {
    * Absent when the roster's detachment is used as is. An army-list
    * property like the two above, so it is kept and synced the same way. */
   detachmentOverrides: Record<string, string>;
+  /** unitId -> the weapons the user set for that unit in place of the
+   * roster's. An army-list property like the three above: kept forever,
+   * synced, and never touched by an army sync (armies/ is not edited). */
+  weaponOverrides: Record<string, UnitWeaponOverride>;
 }
 
 export interface StoredState extends SyncedState {
@@ -47,6 +53,7 @@ export function emptyState(): StoredState {
     leaderAssignments: {},
     hiddenUnitIds: {},
     detachmentOverrides: {},
+    weaponOverrides: {},
     lang: "en",
     syncedBaseRev: 0,
     syncDirty: false,
@@ -83,6 +90,7 @@ export function loadState(storage: StorageLike = window.localStorage): StoredSta
     leaderAssignments: candidate.leaderAssignments ?? {},
     hiddenUnitIds: candidate.hiddenUnitIds ?? {},
     detachmentOverrides: candidate.detachmentOverrides ?? {},
+    weaponOverrides: candidate.weaponOverrides ?? {},
     lang: candidate.lang === "uk" ? "uk" : "en",
     syncedBaseRev:
       typeof candidate.syncedBaseRev === "number" && candidate.syncedBaseRev >= 0
@@ -104,6 +112,7 @@ export function pickSynced(state: StoredState): SyncedState {
     leaderAssignments: state.leaderAssignments,
     hiddenUnitIds: state.hiddenUnitIds,
     detachmentOverrides: state.detachmentOverrides,
+    weaponOverrides: state.weaponOverrides,
   };
 }
 
@@ -119,6 +128,7 @@ export function withSynced(
     hiddenUnitIds: synced.hiddenUnitIds,
     // Older server documents predate this field.
     detachmentOverrides: synced.detachmentOverrides ?? {},
+    weaponOverrides: synced.weaponOverrides ?? {},
     syncedBaseRev: rev,
     syncDirty: dirty,
   };
@@ -128,7 +138,8 @@ export function isEmptySynced(synced: SyncedState): boolean {
   return (
     Object.keys(synced.leaderAssignments).length === 0 &&
     Object.keys(synced.hiddenUnitIds).length === 0 &&
-    Object.keys(synced.detachmentOverrides ?? {}).length === 0
+    Object.keys(synced.detachmentOverrides ?? {}).length === 0 &&
+    Object.keys(synced.weaponOverrides ?? {}).length === 0
   );
 }
 

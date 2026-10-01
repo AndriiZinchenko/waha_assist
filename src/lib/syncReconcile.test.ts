@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { reconcile, type ServerDoc } from "./syncReconcile";
 import type { SyncedState } from "./persistence";
 
-const empty: SyncedState = { leaderAssignments: {}, hiddenUnitIds: {}, detachmentOverrides: {} };
-const local: SyncedState = { leaderAssignments: { l1: "u1" }, hiddenUnitIds: {}, detachmentOverrides: {} };
-const remote: SyncedState = { leaderAssignments: { l2: "u2" }, hiddenUnitIds: {}, detachmentOverrides: {} };
+const empty: SyncedState = { leaderAssignments: {}, hiddenUnitIds: {}, detachmentOverrides: {}, weaponOverrides: {} };
+const local: SyncedState = { leaderAssignments: { l1: "u1" }, hiddenUnitIds: {}, detachmentOverrides: {}, weaponOverrides: {} };
+const remote: SyncedState = { leaderAssignments: { l2: "u2" }, hiddenUnitIds: {}, detachmentOverrides: {}, weaponOverrides: {} };
 const doc = (rev: number, data: SyncedState): ServerDoc => ({ rev, updatedAt: null, data });
 
 describe("reconcile", () => {

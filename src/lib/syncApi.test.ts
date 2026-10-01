@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createSyncApi } from "./syncApi";
 import type { SyncedState } from "./persistence";
 
-const data: SyncedState = { leaderAssignments: { l1: "u1" }, hiddenUnitIds: {}, detachmentOverrides: {} };
+const data: SyncedState = { leaderAssignments: { l1: "u1" }, hiddenUnitIds: {}, detachmentOverrides: {}, weaponOverrides: {} };
 const doc = { rev: 2, updatedAt: "2026-09-09T00:00:00.000Z", data };
 
 function jsonResponse(status: number, body: unknown) {

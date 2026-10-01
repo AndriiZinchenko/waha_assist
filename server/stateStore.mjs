@@ -11,8 +11,44 @@ export function emptyDoc() {
   return {
     rev: 0,
     updatedAt: null,
-    data: { leaderAssignments: {}, hiddenUnitIds: {}, detachmentOverrides: {} },
+    data: { leaderAssignments: {}, hiddenUnitIds: {}, detachmentOverrides: {}, weaponOverrides: {} },
   };
+}
+
+function normalizeGroups(raw) {
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const groups = [];
+  for (const g of raw) {
+    if (
+      typeof g?.key !== "string" ||
+      !Number.isInteger(g.modelCount) ||
+      g.modelCount < 0 ||
+      !Array.isArray(g.weapons)
+    ) {
+      return null;
+    }
+    const weapons = [];
+    for (const w of g.weapons) {
+      if (typeof w?.name !== "string" || typeof w.perModel !== "number" || !(w.perModel > 0)) {
+        return null;
+      }
+      weapons.push({ name: w.name, perModel: w.perModel });
+    }
+    groups.push({ key: g.key, modelCount: g.modelCount, weapons });
+  }
+  return groups;
+}
+
+/** A malformed override is dropped whole: half an edit is worse than none. */
+function normalizeWeaponOverrides(value) {
+  const out = {};
+  if (typeof value !== "object" || value === null) return out;
+  for (const [unitId, raw] of Object.entries(value)) {
+    const groups = normalizeGroups(raw?.groups);
+    if (!groups || typeof raw.rosterSignature !== "string") continue;
+    out[unitId] = { groups, rosterSignature: raw.rosterSignature };
+  }
+  return out;
 }
 
 /**
@@ -43,7 +79,12 @@ export function normalizeSyncedData(value) {
       if (typeof val === "string") detachmentOverrides[key] = val;
     }
   }
-  return { leaderAssignments, hiddenUnitIds, detachmentOverrides };
+  return {
+    leaderAssignments,
+    hiddenUnitIds,
+    detachmentOverrides,
+    weaponOverrides: normalizeWeaponOverrides(source.weaponOverrides),
+  };
 }
 
 export async function readDoc(dir) {

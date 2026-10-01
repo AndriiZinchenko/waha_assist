@@ -63,12 +63,31 @@ describe("normalizeSyncedData", () => {
         leaderAssignments: { l1: "u1", bad: 7 },
         hiddenUnitIds: { u1: true, u2: "yes" },
         detachmentOverrides: { Orks: "Green Tide", Grey: 3 },
+        weaponOverrides: {
+          good: {
+            groups: [{ key: "g1", modelCount: 3, weapons: [{ name: "Lascannon", perModel: 1 }] }],
+            rosterSignature: "3xlascannon",
+          },
+          badShape: { groups: "no" },
+          badCount: { groups: [{ key: "g1", modelCount: -1, weapons: [] }], rosterSignature: "x" },
+          badWeapon: {
+            groups: [{ key: "g1", modelCount: 1, weapons: [{ name: "X", perModel: 0 }] }],
+            rosterSignature: "x",
+          },
+          noSignature: { groups: [{ key: "g1", modelCount: 1, weapons: [] }] },
+        },
         somethingElse: 1,
       }),
     ).toEqual({
       leaderAssignments: { l1: "u1" },
       hiddenUnitIds: { u1: true },
       detachmentOverrides: { Orks: "Green Tide" },
+      weaponOverrides: {
+        good: {
+          groups: [{ key: "g1", modelCount: 3, weapons: [{ name: "Lascannon", perModel: 1 }] }],
+          rosterSignature: "3xlascannon",
+        },
+      },
     });
   });
 
@@ -77,6 +96,7 @@ describe("normalizeSyncedData", () => {
       leaderAssignments: {},
       hiddenUnitIds: {},
       detachmentOverrides: {},
+      weaponOverrides: {},
     });
   });
 
@@ -87,5 +107,27 @@ describe("normalizeSyncedData", () => {
       detachmentOverrides: { Orks: "Green Tide" },
     });
     expect((await readDoc(dir)).data.detachmentOverrides).toEqual({ Orks: "Green Tide" });
+  });
+
+  it("keeps weapon overrides through a write and read", async () => {
+    const override = {
+      groups: [{ key: "g1", modelCount: 2, weapons: [{ name: "Guardian Spear", perModel: 1 }] }],
+      rosterSignature: "2xsentinel blade",
+    };
+    await writeDoc(dir, 0, {
+      leaderAssignments: {},
+      hiddenUnitIds: {},
+      detachmentOverrides: {},
+      weaponOverrides: { u1: override },
+    });
+    expect((await readDoc(dir)).data.weaponOverrides).toEqual({ u1: override });
+  });
+
+  it("reads a document written before weapon overrides existed", async () => {
+    await writeFile(
+      path.join(dir, "state.json"),
+      JSON.stringify({ rev: 4, updatedAt: null, data: { leaderAssignments: { l1: "u1" }, hiddenUnitIds: {} } }),
+    );
+    expect((await readDoc(dir)).data.weaponOverrides).toEqual({});
   });
 });

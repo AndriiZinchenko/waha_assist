@@ -35,6 +35,7 @@ describe("persistence", () => {
       leaderAssignments: { l1: "u1" },
       hiddenUnitIds: { u2: true },
       detachmentOverrides: { Grey: "Hallowed Conclave" },
+      weaponOverrides: {},
       lang: "uk",
       syncedBaseRev: 3,
       syncDirty: false,
@@ -117,6 +118,7 @@ describe("sync bookkeeping", () => {
       leaderAssignments: { l1: "u1" },
       hiddenUnitIds: { u2: true },
       detachmentOverrides: {},
+      weaponOverrides: {},
     });
   });
 
@@ -127,14 +129,24 @@ describe("sync bookkeeping", () => {
       lang: "uk",
       leaderAssignments: { old: "x" },
     };
+    const override = {
+      groups: [{ key: "g1", modelCount: 2, weapons: [{ name: "Lascannon", perModel: 1 }] }],
+      rosterSignature: "2xlascannon",
+    };
     const next = withSynced(
       state,
-      { leaderAssignments: { l9: "u9" }, hiddenUnitIds: {}, detachmentOverrides: { Orks: "Green Tide" } },
+      {
+        leaderAssignments: { l9: "u9" },
+        hiddenUnitIds: {},
+        detachmentOverrides: { Orks: "Green Tide" },
+        weaponOverrides: { u9: override },
+      },
       7,
       false,
     );
     expect(next.leaderAssignments).toEqual({ l9: "u9" });
     expect(next.detachmentOverrides).toEqual({ Orks: "Green Tide" });
+    expect(next.weaponOverrides).toEqual({ u9: override });
     expect(next.modelCounts).toEqual({ "u1:weapon": 2 });
     expect(next.lang).toBe("uk");
     expect(next.syncedBaseRev).toBe(7);
@@ -142,11 +154,19 @@ describe("sync bookkeeping", () => {
   });
 
   it("recognises an empty synced set", () => {
-    const none = { leaderAssignments: {}, hiddenUnitIds: {}, detachmentOverrides: {} };
+    const none = {
+      leaderAssignments: {},
+      hiddenUnitIds: {},
+      detachmentOverrides: {},
+      weaponOverrides: {},
+    };
     expect(isEmptySynced(none)).toBe(true);
     expect(isEmptySynced({ ...none, leaderAssignments: { l1: "u1" } })).toBe(false);
     expect(isEmptySynced({ ...none, hiddenUnitIds: { u1: true } })).toBe(false);
     expect(isEmptySynced({ ...none, detachmentOverrides: { Orks: "Green Tide" } })).toBe(false);
+    expect(
+      isEmptySynced({ ...none, weaponOverrides: { u1: { groups: [], rosterSignature: "" } } }),
+    ).toBe(false);
   });
 
   // Saved before detachments could be chosen: the field is simply absent.
@@ -157,5 +177,15 @@ describe("sync bookkeeping", () => {
       JSON.stringify({ ...emptyState(), detachmentOverrides: undefined }),
     );
     expect(loadState(storage).detachmentOverrides).toEqual({});
+  });
+
+  // Saved before weapons could be edited: the field is simply absent.
+  it("loads a stored state that predates weapon overrides", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      "waha:state",
+      JSON.stringify({ ...emptyState(), weaponOverrides: undefined }),
+    );
+    expect(loadState(storage).weaponOverrides).toEqual({});
   });
 });
