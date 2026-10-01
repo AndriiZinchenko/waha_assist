@@ -3,9 +3,11 @@ import type { ParsedArmy, ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
 import { computeVisiblePoints } from "../lib/armyPoints";
 import { Chevron } from "./Collapsible";
+import { optionsLookup } from "../data/unit-options";
 import type { UnitWeaponOverride } from "../lib/weaponOverrides";
 import { EditedTag } from "./EditedTag";
 import { UnitDetails } from "./UnitDetails";
+import { WeaponEditor } from "./WeaponEditor";
 
 interface UnitVisibilityPanelProps {
   army: ParsedArmy;
@@ -30,8 +32,12 @@ export function UnitVisibilityPanel({
   counts,
   onCountChange,
   detachmentData,
+  weaponOverrides,
+  onSetWeaponOverride,
 }: UnitVisibilityPanelProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const lookup = optionsLookup(army.catalogue);
   const livePoints = computeVisiblePoints(units, hiddenUnitIds);
   const limit = army.pointsLimit;
   const overLimit = limit != null && livePoints > limit;
@@ -68,6 +74,7 @@ export function UnitVisibilityPanel({
         {units.map((unit) => {
           const hidden = Boolean(hiddenUnitIds[unit.id]);
           const expanded = expandedId === unit.id;
+          const rosterUnit = army.units.find((u) => u.id === unit.id);
           return (
             <li key={unit.id} style={{ borderTop: "1px solid var(--rule-soft)" }}>
               <div
@@ -113,6 +120,18 @@ export function UnitVisibilityPanel({
                     onCountChange={onCountChange}
                     detachmentData={detachmentData}
                     weapons="table"
+                    onEditWeapons={rosterUnit ? () => setEditingId(unit.id) : undefined}
+                    editor={
+                      expanded && editingId === unit.id && rosterUnit ? (
+                        <WeaponEditor
+                          unit={rosterUnit}
+                          override={weaponOverrides[unit.id] ?? null}
+                          options={lookup(rosterUnit.entryId)}
+                          onChange={(next) => onSetWeaponOverride(unit.id, next)}
+                          onClose={() => setEditingId(null)}
+                        />
+                      ) : undefined
+                    }
                   />
                 </div>
               </div>

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
 import { EditedNotice } from "./EditedTag";
@@ -17,6 +18,10 @@ interface UnitDetailsProps {
    * tables tucked behind them. "table" (configuration): no counters, one
    * always-visible weapon table for the whole unit. */
   weapons?: "counter" | "table";
+  /** Configuration screen only: opens the weapon editor. */
+  onEditWeapons?: () => void;
+  /** When set, shown in place of the weapon table (the open weapon editor). */
+  editor?: ReactNode;
 }
 
 /** The expanded body of a unit: stats, keywords, models and weapons, info,
@@ -29,6 +34,8 @@ export function UnitDetails({
   onCountChange,
   detachmentData,
   weapons = "counter",
+  onEditWeapons,
+  editor,
 }: UnitDetailsProps) {
   return (
     <div
@@ -41,10 +48,22 @@ export function UnitDetails({
       {weapons === "counter" ? (
         <ModelCounter unit={unit} counts={counts} onCountChange={onCountChange} />
       ) : (
-        unit.weapons.length > 0 && (
+        (unit.weapons.length > 0 || editor || onEditWeapons) && (
           <div style={{ borderTop: "1px solid var(--rule-soft)" }}>
-            <div className="caption px-[14px] pt-[12px] pb-[4px]">Weapons</div>
-            <WeaponTable weapons={unit.weapons} />
+            <div className="flex items-center justify-between gap-[10px] px-[14px] pt-[12px] pb-[4px]">
+              <span className="caption">Weapons</span>
+              {onEditWeapons && !editor && (
+                <button
+                  type="button"
+                  onClick={onEditWeapons}
+                  className="min-h-[44px] px-[12px] rounded-[var(--r-control)] text-[15px] font-semibold"
+                  style={{ border: "1px solid var(--rule)" }}
+                >
+                  Edit weapons
+                </button>
+              )}
+            </div>
+            {editor ?? <WeaponTable weapons={unit.weapons} />}
           </div>
         )
       )}
