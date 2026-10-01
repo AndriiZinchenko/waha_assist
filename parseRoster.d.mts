@@ -58,6 +58,9 @@ export interface WeaponEntry {
    * — so the UI can flag a stat as modified and name the source ability.
    * Absent/empty on a weapon straight from `parseRoster`. */
   leaderMods?: RuleRef[];
+  /** App-level: this weapon differs from the roster's (added, or a
+   * different number of it) because of a weapon override. */
+  edited?: boolean;
 }
 
 export interface LoadoutWeapon {
@@ -84,6 +87,9 @@ export interface UnitProfile {
 
 export interface ParsedUnit {
   id: string;
+  /** The unit's entry id in the New Recruit catalogue (last "::" segment of
+   * the selection's entryId); null when the export carries none. */
+  entryId?: string | null;
   name: string;
   kind: string;
   basePoints: number;
@@ -101,6 +107,15 @@ export interface ParsedUnit {
   abilities: Ability[];
   abilitySections: AbilitySection[];
   rules: RuleRef[];
+  /** App-level (not roster): the unit's weapons were replaced by a weapon
+   * override. Set only by `applyWeaponOverride`. */
+  weaponsEdited?: boolean;
+  /** App-level: the roster unit's loadouts differ from when the override
+   * was made. */
+  rosterChanged?: boolean;
+  /** App-level: override weapons found neither in the catalogue nor on the
+   * roster unit. */
+  missingWeapons?: string[];
 }
 
 export interface ParsedArmy {

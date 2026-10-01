@@ -392,6 +392,11 @@ function parseUnit(sel, referenceInfo) {
 
   return {
     id: sel.id,
+    // The unit's entry in the New Recruit catalogue: the last "::" segment of
+    // the selection's "<catalogueId>::<entryId>". Used to look up the weapons
+    // the datasheet offers (src/data/unit-options).
+    entryId:
+      typeof sel.entryId === "string" && sel.entryId ? sel.entryId.split("::").pop() : null,
     name: sel.name,
     kind: sel.type, // "unit" | "model"
     basePoints: pts(sel),
