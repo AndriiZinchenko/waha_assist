@@ -219,3 +219,50 @@ describe("rendering", () => {
     expect(text).toContain("  xenosOrks,");
   });
 });
+
+describe("weaponOptionsForEntry: shared profiles", () => {
+  const sharedBoltPistol = profile("p-bolt-pistol", "Bolt pistol", "Ranged Weapons", {
+    Range: '12"', A: "1", BS: "3+", S: "4", AP: "0", D: "1", Keywords: "Pistol",
+  });
+  const sharedAbility = profile("p-ability", "Oath of Moment", "Abilities", { Description: "x" });
+
+  function sharedCatalogue(infoLinks) {
+    return {
+      sharedProfiles: [sharedBoltPistol, sharedAbility],
+      sharedSelectionEntries: [
+        {
+          id: "unit-legionaries",
+          name: "Legionaries",
+          type: "unit",
+          selectionEntries: [{ id: "sel-bp", name: "Bolt pistol", type: "upgrade", infoLinks }],
+        },
+      ],
+    };
+  }
+
+  it("reads a weapon whose profile is attached through a profile info link", () => {
+    const cat = sharedCatalogue([
+      { id: "il1", name: "Bolt pistol", type: "profile", targetId: "p-bolt-pistol" },
+    ]);
+    expect(weaponOptionsForEntry("unit-legionaries", indexNodes([cat]))).toEqual([
+      {
+        name: "Bolt pistol",
+        rules: [],
+        profiles: [
+          {
+            id: "p-bolt-pistol", name: "Bolt pistol", type: "ranged", range: '12"',
+            attacks: "1", skill: "3+", strength: 4, ap: 0, damage: "1", keywords: "Pistol",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("ignores a profile link that is not a weapon, and one that points nowhere", () => {
+    const cat = sharedCatalogue([
+      { id: "il2", name: "Oath of Moment", type: "profile", targetId: "p-ability" },
+      { id: "il3", name: "Ghost", type: "profile", targetId: "nope" },
+    ]);
+    expect(weaponOptionsForEntry("unit-legionaries", indexNodes([cat]))).toEqual([]);
+  });
+});

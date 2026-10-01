@@ -82,6 +82,19 @@ function toProfile(profile) {
   };
 }
 
+/**
+ * The weapon profiles of an entry: those written on it, plus those attached
+ * through profile info links (BattleScribe's way of reusing a shared
+ * profile, which most catalogues use for common weapons like a bolt pistol).
+ */
+function weaponProfiles(node, byId) {
+  const linked = (node.infoLinks ?? [])
+    .filter((l) => l.type === "profile")
+    .map((l) => byId.get(l.targetId))
+    .filter(Boolean);
+  return [...(node.profiles ?? []), ...linked].filter((p) => WEAPON_TYPES.has(p.typeName));
+}
+
 function ruleNames(node) {
   const names = new Set();
   for (const link of node.infoLinks ?? []) {
@@ -108,7 +121,7 @@ export function weaponOptionsForEntry(entryId, byId) {
     if (!node || depth > MAX_DEPTH || path.has(node.id)) return;
     if (CRUSADE.test(node.name ?? "")) return;
     path.add(node.id);
-    const profiles = (node.profiles ?? []).filter((p) => WEAPON_TYPES.has(p.typeName));
+    const profiles = weaponProfiles(node, byId);
     if (profiles.length > 0 && !found.has(nameKey(node.name))) {
       found.set(nameKey(node.name), {
         name: node.name,

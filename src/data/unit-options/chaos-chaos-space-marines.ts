@@ -85,6 +85,26 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
       "name": "Chaos Rhino",
       "weapons": [
         {
+          "name": "Combi-bolter",
+          "profiles": [
+            {
+              "id": "356a-666c-2ce5-9dcb",
+              "name": "Combi-bolter",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
+              "keywords": "Rapid Fire 2"
+            }
+          ],
+          "rules": [
+            "Rapid Fire"
+          ]
+        },
+        {
           "name": "Combi-weapon",
           "profiles": [
             {
@@ -150,6 +170,44 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
       "name": "Chaos Terminator Squad",
       "weapons": [
         {
+          "name": "Combi-bolter",
+          "profiles": [
+            {
+              "id": "356a-666c-2ce5-9dcb",
+              "name": "Combi-bolter",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
+              "keywords": "Rapid Fire 2"
+            }
+          ],
+          "rules": [
+            "Rapid Fire"
+          ]
+        },
+        {
+          "name": "Accursed weapon",
+          "profiles": [
+            {
+              "id": "79e9-512b-5b1e-d478",
+              "name": "Accursed weapon",
+              "type": "melee",
+              "range": "Melee",
+              "attacks": "4",
+              "skill": "3+",
+              "strength": 5,
+              "ap": -2,
+              "damage": "1",
+              "keywords": "-"
+            }
+          ],
+          "rules": []
+        },
+        {
           "name": "Combi-weapon",
           "profiles": [
             {
@@ -188,6 +246,26 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
             }
           ],
           "rules": []
+        },
+        {
+          "name": "Chainfist",
+          "profiles": [
+            {
+              "id": "9418-65ca-7638-22ac",
+              "name": "Chainfist",
+              "type": "melee",
+              "range": "Melee",
+              "attacks": "3",
+              "skill": "4+",
+              "strength": 8,
+              "ap": -2,
+              "damage": "2",
+              "keywords": "Anti-VEHICLE 3+"
+            }
+          ],
+          "rules": [
+            "Anti-"
+          ]
         },
         {
           "name": "Heavy flamer",
@@ -336,6 +414,24 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
       "name": "Havocs",
       "weapons": [
         {
+          "name": "Accursed weapon",
+          "profiles": [
+            {
+              "id": "79e9-512b-5b1e-d478",
+              "name": "Accursed weapon",
+              "type": "melee",
+              "range": "Melee",
+              "attacks": "4",
+              "skill": "3+",
+              "strength": 5,
+              "ap": -2,
+              "damage": "1",
+              "keywords": "-"
+            }
+          ],
+          "rules": []
+        },
+        {
           "name": "Power fist",
           "profiles": [
             {
@@ -348,6 +444,129 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
               "strength": 8,
               "ap": -2,
               "damage": "2",
+              "keywords": "-"
+            }
+          ],
+          "rules": []
+        },
+        {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "id": "2d43-6b3b-7297-3604",
+              "name": "Astartes chainsword",
+              "type": "melee",
+              "range": "Melee",
+              "attacks": "4",
+              "skill": "3+",
+              "strength": 4,
+              "ap": -1,
+              "damage": "1",
+              "keywords": "-"
+            }
+          ],
+          "rules": []
+        },
+        {
+          "name": "Flamer",
+          "profiles": [
+            {
+              "id": "24af-e727-aa06-d6cc",
+              "name": "Flamer",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "D6",
+              "skill": "N/A",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
+              "keywords": "Ignores Cover, Torrent"
+            }
+          ],
+          "rules": [
+            "Ignores Cover",
+            "Torrent"
+          ]
+        },
+        {
+          "name": "Plasma gun",
+          "profiles": [
+            {
+              "id": "38ff-30e0-10e1-fb2a",
+              "name": "Plasma gun - standard",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 7,
+              "ap": -2,
+              "damage": "1",
+              "keywords": "Rapid Fire 1"
+            },
+            {
+              "id": "8416-1e2b-edc1-7acf",
+              "name": "Plasma gun - supercharge",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 8,
+              "ap": -3,
+              "damage": "2",
+              "keywords": "Hazardous, Rapid Fire 1"
+            }
+          ],
+          "rules": [
+            "Hazardous",
+            "Rapid Fire"
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "id": "46a1-162a-774b-d91b",
+              "name": "Plasma pistol - standard",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 7,
+              "ap": -2,
+              "damage": "1",
+              "keywords": "Pistol"
+            },
+            {
+              "id": "499c-b49b-0c00-f9c8",
+              "name": "Plasma pistol - supercharge",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 8,
+              "ap": -3,
+              "damage": "2",
+              "keywords": "Hazardous, Pistol"
+            }
+          ],
+          "rules": [
+            "Hazardous",
+            "Pistol"
+          ]
+        },
+        {
+          "name": "Boltgun",
+          "profiles": [
+            {
+              "id": "63e7-7452-2edb-99dc",
+              "name": "Boltgun",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
               "keywords": "-"
             }
           ],
@@ -521,6 +740,113 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
           "rules": []
         },
         {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "id": "2d43-6b3b-7297-3604",
+              "name": "Astartes chainsword",
+              "type": "melee",
+              "range": "Melee",
+              "attacks": "4",
+              "skill": "3+",
+              "strength": 4,
+              "ap": -1,
+              "damage": "1",
+              "keywords": "-"
+            }
+          ],
+          "rules": []
+        },
+        {
+          "name": "Heavy melee weapon",
+          "profiles": [
+            {
+              "id": "54a-9461-807a-7750",
+              "name": "Heavy melee weapon",
+              "type": "melee",
+              "range": "Melee",
+              "attacks": "3",
+              "skill": "3+",
+              "strength": 8,
+              "ap": -2,
+              "damage": "2",
+              "keywords": "-"
+            }
+          ],
+          "rules": []
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "id": "ed0b-7e33-319d-93e4",
+              "name": "Bolt pistol",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
+              "keywords": "Pistol"
+            }
+          ],
+          "rules": [
+            "Pistol"
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "id": "46a1-162a-774b-d91b",
+              "name": "Plasma pistol - standard",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 7,
+              "ap": -2,
+              "damage": "1",
+              "keywords": "Pistol"
+            },
+            {
+              "id": "499c-b49b-0c00-f9c8",
+              "name": "Plasma pistol - supercharge",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 8,
+              "ap": -3,
+              "damage": "2",
+              "keywords": "Hazardous, Pistol"
+            }
+          ],
+          "rules": [
+            "Hazardous",
+            "Pistol"
+          ]
+        },
+        {
+          "name": "Boltgun",
+          "profiles": [
+            {
+              "id": "63e7-7452-2edb-99dc",
+              "name": "Boltgun",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
+              "keywords": "-"
+            }
+          ],
+          "rules": []
+        },
+        {
           "name": "Close combat weapon",
           "profiles": [
             {
@@ -669,6 +995,39 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
           "rules": [
             "Blast",
             "Heavy"
+          ]
+        },
+        {
+          "name": "Plasma gun",
+          "profiles": [
+            {
+              "id": "38ff-30e0-10e1-fb2a",
+              "name": "Plasma gun - standard",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 7,
+              "ap": -2,
+              "damage": "1",
+              "keywords": "Rapid Fire 1"
+            },
+            {
+              "id": "8416-1e2b-edc1-7acf",
+              "name": "Plasma gun - supercharge",
+              "type": "ranged",
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 8,
+              "ap": -3,
+              "damage": "2",
+              "keywords": "Hazardous, Rapid Fire 1"
+            }
+          ],
+          "rules": [
+            "Hazardous",
+            "Rapid Fire"
           ]
         },
         {
@@ -881,6 +1240,26 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
             "Devastating Wounds",
             "Precision"
           ]
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "id": "ed0b-7e33-319d-93e4",
+              "name": "Bolt pistol",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
+              "keywords": "Pistol"
+            }
+          ],
+          "rules": [
+            "Pistol"
+          ]
         }
       ]
     },
@@ -942,6 +1321,26 @@ export const chaosChaosSpaceMarines: FactionUnitOptions = {
           "rules": [
             "Anti-",
             "Psychic"
+          ]
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "id": "ed0b-7e33-319d-93e4",
+              "name": "Bolt pistol",
+              "type": "ranged",
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": 4,
+              "ap": 0,
+              "damage": "1",
+              "keywords": "Pistol"
+            }
+          ],
+          "rules": [
+            "Pistol"
           ]
         }
       ]
