@@ -72,6 +72,8 @@ export interface AttackRow {
    * Hazardous after attacking. */
   twinLinked: boolean;
   hazardous: boolean;
+  /** The weapon was changed by a weapon override (shown with an EDITED tag). */
+  edited: boolean;
 }
 
 function baseWoundTarget(strength: number, toughness: number): number {
@@ -265,6 +267,7 @@ export function computeAttackTable(
       heavyApplied: weapon.skill === null ? false : heavyApplied,
       twinLinked: hasKeyword(weapon.keywords, "Twin-linked"),
       hazardous: hasKeyword(weapon.keywords, "Hazardous"),
+      edited: weapon.edited === true,
     };
   });
 }

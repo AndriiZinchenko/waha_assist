@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { WeaponEntry } from "../../parseRoster.mjs";
 import { useTranslate } from "../lib/i18n";
 import { matchRule } from "../lib/rules";
+import { EditedTag } from "./EditedTag";
 import { InlineMarkup } from "./InlineMarkup";
 
 interface WeaponRowProps {
@@ -66,6 +67,7 @@ export function WeaponRow({ weapon, indent = false }: WeaponRowProps) {
           {weapon.count}×
         </span>
         <span className="text-[17px] font-semibold leading-[1.2]">{weapon.name}</span>
+        {weapon.edited && <EditedTag className="self-center" />}
       </span>
       {values.map((v) => (
         <span

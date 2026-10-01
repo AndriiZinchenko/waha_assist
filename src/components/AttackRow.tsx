@@ -4,6 +4,7 @@ import type { AttackRow as AttackRowData } from "../lib/combat";
 import { useTranslate } from "../lib/i18n";
 import { matchRule } from "../lib/rules";
 import { rangeLabel, rowTones, type StatTone } from "../lib/attackDisplay";
+import { EditedTag } from "./EditedTag";
 import { InlineMarkup } from "./InlineMarkup";
 
 interface AttackRowProps {
@@ -171,6 +172,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
           {row.count}×
         </span>
         <span className="text-[17px] font-semibold leading-[1.2]">{row.name}</span>
+        {row.edited && <EditedTag className="self-center" />}
         {range && (
           <span className="mono text-[14px]" style={{ color: "var(--ink-soft)" }}>
             ({range})

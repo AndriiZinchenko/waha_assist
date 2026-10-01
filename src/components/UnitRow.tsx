@@ -3,6 +3,7 @@ import type { ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
 import { getUnitLiveTotal } from "../lib/loadouts";
 import { Chevron } from "./Collapsible";
+import { EditedTag } from "./EditedTag";
 import { UnitDetails } from "./UnitDetails";
 
 interface UnitRowProps {
@@ -81,6 +82,7 @@ export const UnitRow = forwardRef<HTMLLIElement, UnitRowProps>(function UnitRow(
               {unit.faction}
             </span>
           )}
+          {unit.weaponsEdited && <EditedTag />}
         </span>
         <span className="mono text-[16px] font-semibold shrink-0">
           <span style={{ color: isCasualty ? "var(--negative)" : "var(--ink)" }}>

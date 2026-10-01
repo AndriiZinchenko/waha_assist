@@ -1,5 +1,6 @@
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
+import { EditedNotice } from "./EditedTag";
 import { ModelCounter } from "./ModelCounter";
 import { StatStrip, UnitKeywords } from "./StatStrip";
 import { UnitInfo } from "./UnitInfo";
@@ -36,6 +37,7 @@ export function UnitDetails({
     >
       <StatStrip unit={unit} />
       <UnitKeywords unit={unit} />
+      {unit.weaponsEdited && <EditedNotice unit={unit} />}
       {weapons === "counter" ? (
         <ModelCounter unit={unit} counts={counts} onCountChange={onCountChange} />
       ) : (

@@ -34,6 +34,7 @@ const base: AttackRow = {
   heavyApplied: false,
   twinLinked: false,
   hazardous: false,
+  edited: false,
 };
 
 describe("rowTones: hit", () => {

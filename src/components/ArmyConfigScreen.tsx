@@ -3,6 +3,8 @@ import type { ArmyEntry } from "../lib/armies";
 import { getDetachmentData } from "../data/detachments";
 import { effectiveDetachment } from "../lib/detachment";
 import { applyLeaderWeaponBonuses } from "../lib/leaderEffects";
+import { optionsLookup } from "../data/unit-options";
+import { applyWeaponOverrides, type UnitWeaponOverride } from "../lib/weaponOverrides";
 import { useUi } from "../lib/uiStrings";
 import type { Side } from "./ArmyPanel";
 import { DetachmentPanel } from "./DetachmentPanel";
@@ -24,6 +26,8 @@ interface ArmyConfigScreenProps {
   onCountChange: (key: string, next: number) => void;
   detachmentOverrides: Record<string, string>;
   onChooseDetachment: (armyId: string, detachment: string | null) => void;
+  weaponOverrides: Record<string, UnitWeaponOverride>;
+  onSetWeaponOverride: (unitId: string, override: UnitWeaponOverride | null) => void;
   onBack: () => void;
 }
 
@@ -51,13 +55,18 @@ export function ArmyConfigScreen({
   onCountChange,
   detachmentOverrides,
   onChooseDetachment,
+  weaponOverrides,
+  onSetWeaponOverride,
   onBack,
 }: ArmyConfigScreenProps) {
   const [tab, setTab] = useState<Tab>("units");
   const ui = useUi();
   const detachmentData = getDetachmentData(effectiveDetachment(army, detachmentOverrides));
   // Same transform the battle panels apply, so the expanded details match.
-  const units = applyLeaderWeaponBonuses(army.parsed.units, leaderAssignments);
+  const units = applyLeaderWeaponBonuses(
+    applyWeaponOverrides(army.parsed.units, weaponOverrides, optionsLookup(army.parsed.catalogue)),
+    leaderAssignments,
+  );
 
   return (
     <div
@@ -134,6 +143,8 @@ export function ArmyConfigScreen({
           counts={counts}
           onCountChange={onCountChange}
           detachmentData={detachmentData}
+          weaponOverrides={weaponOverrides}
+          onSetWeaponOverride={onSetWeaponOverride}
         />
       )}
     </div>

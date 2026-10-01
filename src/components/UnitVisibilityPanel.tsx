@@ -3,6 +3,8 @@ import type { ParsedArmy, ParsedUnit } from "../../parseRoster.mjs";
 import type { DetachmentData } from "../data/detachments";
 import { computeVisiblePoints } from "../lib/armyPoints";
 import { Chevron } from "./Collapsible";
+import type { UnitWeaponOverride } from "../lib/weaponOverrides";
+import { EditedTag } from "./EditedTag";
 import { UnitDetails } from "./UnitDetails";
 
 interface UnitVisibilityPanelProps {
@@ -16,6 +18,8 @@ interface UnitVisibilityPanelProps {
   counts: Record<string, number>;
   onCountChange: (key: string, next: number) => void;
   detachmentData: DetachmentData | null;
+  weaponOverrides: Record<string, UnitWeaponOverride>;
+  onSetWeaponOverride: (unitId: string, override: UnitWeaponOverride | null) => void;
 }
 
 export function UnitVisibilityPanel({
@@ -90,6 +94,7 @@ export function UnitVisibilityPanel({
                   >
                     {unit.name}
                     {unit.isWarlord && <span style={{ color: "var(--accent)" }}> ★</span>}
+                    {unit.weaponsEdited && <EditedTag className="ml-[8px] align-middle" />}
                   </span>
                   <span
                     className="mono text-[14px] font-semibold shrink-0"

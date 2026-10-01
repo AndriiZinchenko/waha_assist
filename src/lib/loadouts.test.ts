@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { WeaponEntry, WeaponLoadout } from "../../parseRoster.mjs";
 import {
+  clearUnitCounts,
   getLiveWeaponCount,
   getLoadoutLiveCount,
   getLoadoutWeapons,
@@ -237,5 +238,17 @@ describe("getLiveWeaponCount with a weapon mounted twice in one loadout", () => 
   it("scales every mount with the live model count", () => {
     const counts = { "forgefiend:self": 0 };
     expect(getLiveWeaponCount(counts, "forgefiend", forgefiend as never, "ecto")).toBe(0);
+  });
+});
+
+describe("clearUnitCounts", () => {
+  it("removes every live count of one unit and keeps the rest", () => {
+    expect(
+      clearUnitCounts({ "u1:a": 2, "u1:ovr:g1": 3, "u2:a": 4 }, "u1"),
+    ).toEqual({ "u2:a": 4 });
+  });
+
+  it("does not touch a unit whose id merely starts with the same text", () => {
+    expect(clearUnitCounts({ "u10:a": 1, "u1:a": 2 }, "u1")).toEqual({ "u10:a": 1 });
   });
 });

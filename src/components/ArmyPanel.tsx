@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { ArmyEntry } from "../lib/armies";
 import { computeVisiblePoints, visibleUnits } from "../lib/armyPoints";
 import { applyLeaderWeaponBonuses } from "../lib/leaderEffects";
+import { optionsLookup } from "../data/unit-options";
+import { applyWeaponOverrides, type UnitWeaponOverride } from "../lib/weaponOverrides";
 import { getDetachmentData } from "../data/detachments";
 import { DetachmentModal } from "./DetachmentModal";
 import { PanelHeader } from "./PanelHeader";
@@ -24,6 +26,8 @@ interface ArmyPanelProps {
   hiddenUnitIds: Record<string, boolean>;
   /** The detachment in play: the configured choice, else the roster's own. */
   detachment: string | null;
+  /** unitId -> weapon override, applied before leader bonuses. */
+  weaponOverrides: Record<string, UnitWeaponOverride>;
   /** Voice mode on — show each unit's list number. */
   showNumbers?: boolean;
 }
@@ -39,6 +43,7 @@ export function ArmyPanel({
   leaderAssignments,
   hiddenUnitIds,
   detachment,
+  weaponOverrides,
   showNumbers = false,
 }: ArmyPanelProps) {
   const [detachmentOpen, setDetachmentOpen] = useState(false);
@@ -52,7 +57,10 @@ export function ArmyPanel({
   // Leader-attachment weapon bonuses (e.g. Castellan Crowe's +1 Attacks to
   // Purifying Flame) resolved against the visible list, so a hidden leader
   // doesn't still buff a unit that's effectively not in the game.
-  const units = applyLeaderWeaponBonuses(visible, leaderAssignments);
+  const units = applyLeaderWeaponBonuses(
+    applyWeaponOverrides(visible, weaponOverrides, optionsLookup(army.parsed.catalogue)),
+    leaderAssignments,
+  );
 
   return (
     <section

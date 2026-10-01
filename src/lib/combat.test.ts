@@ -702,3 +702,12 @@ describe("computeAttackTable — reminder keywords", () => {
     expect(row.hazardous).toBe(false);
   });
 });
+
+describe("computeAttackTable — edited weapons", () => {
+  it("carries the weapon's edited flag onto its row", () => {
+    const [edited] = computeAttackTable(makeAttacker({ edited: true }), {}, makeUnit());
+    expect(edited.edited).toBe(true);
+    const [plain] = computeAttackTable(makeAttacker(), {}, makeUnit());
+    expect(plain.edited).toBe(false);
+  });
+});

@@ -26,6 +26,13 @@ export function getUnitLiveTotal(
   );
 }
 
+/** `counts` without any live model count of `unitId`. Editing a unit's
+ * weapons changes its groups, so counts kept for the old ones must go. */
+export function clearUnitCounts(counts: CountsMap, unitId: string): CountsMap {
+  const prefix = `${unitId}:`;
+  return Object.fromEntries(Object.entries(counts).filter(([key]) => !key.startsWith(prefix)));
+}
+
 export function getLiveWeaponCount(
   counts: CountsMap,
   unitId: string,

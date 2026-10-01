@@ -4,6 +4,9 @@ import { assignArmy, type Slot } from "./lib/armySetup";
 import { useHashRoute } from "./lib/useHashRoute";
 import { visibleUnits } from "./lib/armyPoints";
 import { applyLeaderWeaponBonuses } from "./lib/leaderEffects";
+import { optionsLookup } from "./data/unit-options";
+import { clearUnitCounts } from "./lib/loadouts";
+import { applyWeaponOverrides, type UnitWeaponOverride } from "./lib/weaponOverrides";
 import { effectiveDetachment } from "./lib/detachment";
 import { orderedUnits } from "./lib/leaders";
 import { SPEECH_SUPPORTED } from "./lib/speech";
@@ -55,13 +58,21 @@ function App() {
   // the same effective stats.
   const unitsA = armyA
     ? applyLeaderWeaponBonuses(
-        visibleUnits(armyA.parsed.units, state.hiddenUnitIds),
+        applyWeaponOverrides(
+          visibleUnits(armyA.parsed.units, state.hiddenUnitIds),
+          state.weaponOverrides,
+          optionsLookup(armyA.parsed.catalogue),
+        ),
         state.leaderAssignments,
       )
     : [];
   const unitsB = armyB
     ? applyLeaderWeaponBonuses(
-        visibleUnits(armyB.parsed.units, state.hiddenUnitIds),
+        applyWeaponOverrides(
+          visibleUnits(armyB.parsed.units, state.hiddenUnitIds),
+          state.weaponOverrides,
+          optionsLookup(armyB.parsed.catalogue),
+        ),
         state.leaderAssignments,
       )
     : [];
@@ -174,6 +185,27 @@ function App() {
         hiddenUnitIds[unitId] = true;
       }
       const nextState: StoredState = { ...prev, hiddenUnitIds, syncDirty: true };
+      saveState(nextState);
+      return nextState;
+    });
+    sync.noteLocalEdit();
+  }
+
+  function handleSetWeaponOverride(unitId: string, override: UnitWeaponOverride | null) {
+    setState((prev) => {
+      const weaponOverrides = { ...prev.weaponOverrides };
+      if (override === null) {
+        delete weaponOverrides[unitId];
+      } else {
+        weaponOverrides[unitId] = override;
+      }
+      // The groups changed, so live counts kept for the old ones are stale.
+      const nextState: StoredState = {
+        ...prev,
+        weaponOverrides,
+        modelCounts: clearUnitCounts(prev.modelCounts, unitId),
+        syncDirty: true,
+      };
       saveState(nextState);
       return nextState;
     });
@@ -303,6 +335,7 @@ function App() {
                 leaderAssignments={state.leaderAssignments}
                 hiddenUnitIds={state.hiddenUnitIds}
                 detachment={effectiveDetachment(armyA, state.detachmentOverrides)}
+                weaponOverrides={state.weaponOverrides}
                 showNumbers={voiceEnabled}
               />
               <ArmyPanel
@@ -316,6 +349,7 @@ function App() {
                 leaderAssignments={state.leaderAssignments}
                 hiddenUnitIds={state.hiddenUnitIds}
                 detachment={effectiveDetachment(armyB, state.detachmentOverrides)}
+                weaponOverrides={state.weaponOverrides}
                 showNumbers={voiceEnabled}
               />
             </div>
@@ -342,6 +376,8 @@ function App() {
             onCountChange={handleCountChange}
             detachmentOverrides={state.detachmentOverrides}
             onChooseDetachment={handleChooseDetachment}
+            weaponOverrides={state.weaponOverrides}
+            onSetWeaponOverride={handleSetWeaponOverride}
             onBack={handleCloseConfig}
           />
         ) : (
