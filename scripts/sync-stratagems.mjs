@@ -16,7 +16,7 @@ import { readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { launchBrowser } from "./sync-newrecruit.mjs";
+import { bookRoot, launchBrowser, openLibrary } from "./lib/nrSession.mjs";
 import { camelCase, detachmentFromRoster, slugify, toStratagem } from "./lib/stratagems.mjs";
 import {
   detachmentsForCatalogue,
@@ -40,41 +40,6 @@ const DRY_RUN = args.has("--dry-run");
 const HEADED = args.has("--headed");
 
 const log = (...m) => console.log(...m);
-
-/** Run one of New Recruit's RPC calls in the page, as the signed-in user. */
-function rpc(page, method, params = []) {
-  return page.evaluate(
-    async ({ method, params }) => {
-      const send = () =>
-        fetch(`/api/rpc?m=${encodeURIComponent(method)}`, {
-          method: "POST",
-          body: JSON.stringify({ method, params }),
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            "Content-Type": "application/json",
-            Authorization: localStorage.getItem("access") || "",
-          },
-        });
-      let res = await send();
-      if (res.status === 403 && localStorage.getItem("refresh")) {
-        const t = await fetch("/api/token", {
-          method: "POST",
-          body: JSON.stringify({ token: localStorage.getItem("refresh") }),
-          headers: { "Content-Type": "application/json" },
-        });
-        if (t.ok) {
-          localStorage.setItem("access", (await t.json()).token);
-          res = await send();
-        }
-      }
-      if (!res.ok) return { __error: `rpc ${method} failed (${res.status})` };
-      const body = await res.json();
-      if (body && body.obfuscated) return JSON.parse(atob(body.data));
-      return body;
-    },
-    { method, params },
-  );
-}
 
 function tsString(value) {
   // Bodies are multi-line, so a template literal keeps them readable in the
@@ -162,11 +127,6 @@ function renderIndex(factions) {
   return lines.join("\n");
 }
 
-/** The catalogue or game-system root of a book row's content. */
-function bookRoot(content) {
-  return content.catalogue ?? content.gameSystem ?? null;
-}
-
 async function main() {
   if (!existsSync(SESSION_FILE)) {
     console.error("No saved session. Run: npm run sync:armies -- --login");
@@ -213,28 +173,11 @@ async function main() {
       process.exit(2);
     }
 
-    const library = await rpc(page, "get_library");
-    if (!library || library.__error) {
-      throw new Error(library?.__error ?? "get_library returned nothing");
-    }
-    const systems = library.systems ?? library;
-    const system = systems.find((s) => s.short === SYSTEM_SHORT);
-    if (!system) throw new Error(`system ${SYSTEM_SHORT} not found`);
-    const books = system.books ?? [];
-
-    const bookCache = new Map();
-    async function fetchBook(book) {
-      if (bookCache.has(book.id)) return bookCache.get(book.id);
-      const row = await rpc(page, "books_get_book_row", [
-        String(system.id),
-        String(book.id),
-        book.last_updated,
-      ]);
-      if (!row || row.__error) throw new Error(row?.__error ?? `fetch of ${book.name} failed`);
-      const content = JSON.parse(row.content);
-      bookCache.set(book.id, content);
-      return content;
-    }
+    const { system, books, fetchBook, catalogueWithLinks } = await openLibrary(
+      page,
+      SYSTEM_SHORT,
+      log,
+    );
 
     const stratBook = books.find((b) => b.name === BOOK_NAME);
     if (!stratBook) {
@@ -249,27 +192,6 @@ async function main() {
     const coreBook = books.find((b) => b.name === CORE_BOOK_NAME);
     const core = coreBook ? bookRoot(await fetchBook(coreBook)) : null;
     if (!core) log(`  note: no "${CORE_BOOK_NAME}" book; linked core rules will be skipped`);
-
-    /** A catalogue plus everything it links, transitively, in link order. */
-    async function catalogueWithLinks(book) {
-      const roots = [];
-      const seen = new Set();
-      async function visit(b) {
-        if (seen.has(b.id)) return;
-        seen.add(b.id);
-        const root = bookRoot(await fetchBook(b));
-        if (!root) return;
-        roots.push(root);
-        for (const link of root.catalogueLinks ?? []) {
-          const target =
-            books.find((x) => x.bsid === link.targetId) ?? books.find((x) => x.name === link.name);
-          if (target) await visit(target);
-          else log(`  note: ${b.name} links to unknown catalogue "${link.name}"`);
-        }
-      }
-      await visit(book);
-      return roots;
-    }
 
     for (const name of factionNames) {
       const book = books.find((b) => b.name === name);

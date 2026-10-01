@@ -10,11 +10,11 @@
 // loaded army, then handed to the browser as a download. So this drives the real
 // app with Playwright, clicks Export -> json on each list and captures the file.
 
-import { chromium } from "playwright";
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { launchBrowser, rpc } from "./lib/nrSession.mjs";
 import {
   exportMatchesList,
   listsForSystem,
@@ -41,19 +41,6 @@ const log = (...m) => console.log(...m);
  * Prefer the Chromium bundled with Playwright; fall back to an installed
  * Google Chrome or Edge when that build has not been downloaded.
  */
-async function launchBrowser(headless) {
-  const attempts = [{}, { channel: "chrome" }, { channel: "msedge" }];
-  let lastErr;
-  for (const opts of attempts) {
-    try {
-      return await chromium.launch({ headless, ...opts });
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-  throw lastErr;
-}
-
 async function login() {
   const browser = await launchBrowser(false);
   const context = await browser.newContext({ viewport: VIEWPORT });
@@ -69,41 +56,6 @@ async function login() {
   await context.storageState({ path: SESSION_FILE });
   log(`Session saved to ${path.relative(ROOT, SESSION_FILE)}. You can close the window.`);
   await browser.close();
-}
-
-/** Same call the app makes: POST /api/rpc?m=<method> with the access token. */
-async function rpc(page, method, params = []) {
-  return page.evaluate(
-    async ({ method, params }) => {
-      const call = () =>
-        fetch(`/api/rpc?m=${encodeURIComponent(method)}`, {
-          method: "POST",
-          body: JSON.stringify({ method, params }),
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            "Content-Type": "application/json",
-            Authorization: localStorage.getItem("access") || "",
-          },
-        });
-      let res = await call();
-      if (res.status === 403 && localStorage.getItem("refresh")) {
-        const t = await fetch("/api/token", {
-          method: "POST",
-          body: JSON.stringify({ token: localStorage.getItem("refresh") }),
-          headers: { "Content-Type": "application/json" },
-        });
-        if (t.ok) {
-          localStorage.setItem("access", (await t.json()).token);
-          res = await call();
-        }
-      }
-      if (!res.ok) return { __error: `rpc ${method} failed (${res.status})` };
-      const body = await res.json();
-      if (body && body.obfuscated) return JSON.parse(atob(body.data));
-      return body;
-    },
-    { method, params },
-  );
 }
 
 export { launchBrowser };
