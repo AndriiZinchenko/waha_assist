@@ -35,6 +35,60 @@ function summary(p: WeaponOptionProfile): string {
 const buttonClass =
   "min-h-[44px] px-[12px] rounded-[var(--r-control)] text-[15px] font-semibold";
 
+interface WeaponPickerProps {
+  title: string;
+  options: UnitOptionsResult;
+  /** Names of the weapons the group already carries; picking one of them
+   * adds another copy per model, so they are marked. */
+  taken: string[];
+  onPick: (optionName: string) => void;
+  onCancel: () => void;
+}
+
+/** The unit's weapon options, with each one's stat lines, to add or swap in. */
+export function WeaponPicker({ title, options, taken, onPick, onCancel }: WeaponPickerProps) {
+  const takenKeys = new Set(taken.map((n) => n.trim().toLowerCase()));
+  return (
+    <div
+      className="rounded-[var(--r-control)] overflow-hidden"
+      style={{ background: "var(--panel)", border: "1px solid var(--rule)" }}
+    >
+      <div className="caption px-[12px] pt-[10px] pb-[6px]">{title}</div>
+      {options.weapons.map((option) => (
+        <button
+          key={option.name}
+          type="button"
+          onClick={() => onPick(option.name)}
+          className="w-full min-h-[44px] px-[12px] py-[8px] text-left"
+          style={{ borderTop: "1px solid var(--rule-soft)" }}
+        >
+          <span className="flex items-baseline justify-between gap-[8px]">
+            <span className="text-[16px] font-semibold">{option.name}</span>
+            {takenKeys.has(option.name.trim().toLowerCase()) && (
+              <span className="caption caption-sm shrink-0" style={{ color: "var(--ink-2)" }}>
+                In this group
+              </span>
+            )}
+          </span>
+          {option.profiles.map((p) => (
+            <span key={p.id} className="mono block text-[12px]" style={{ color: "var(--ink-soft)" }}>
+              {summary(p)}
+            </span>
+          ))}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={onCancel}
+        className="w-full min-h-[44px] px-[12px] text-left text-[15px] font-semibold"
+        style={{ borderTop: "1px solid var(--rule-soft)", color: "var(--ink-2)" }}
+      >
+        Cancel
+      </button>
+    </div>
+  );
+}
+
 /**
  * Edits which weapons a unit's models carry. Replaces the weapon table on
  * the configuration screen. Nothing here is checked against the datasheet
@@ -49,9 +103,21 @@ export function WeaponEditor({ unit, override, options, onChange, onClose }: Wea
         <p className="prose m-0">
           No weapon options for this unit. Run <code>npm run sync:options</code>.
         </p>
-        <button type="button" onClick={onClose} className={buttonClass} style={{ border: "1px solid var(--rule)" }}>
-          Done
-        </button>
+        <div className="flex gap-[8px] flex-wrap">
+          {override !== null && (
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className={buttonClass}
+              style={{ border: "1px solid var(--rule)", color: "var(--ink-2)" }}
+            >
+              Reset to roster
+            </button>
+          )}
+          <button type="button" onClick={onClose} className={`${buttonClass} selected ml-auto`}>
+            Done
+          </button>
+        </div>
       </div>
     );
   }
@@ -163,42 +229,13 @@ export function WeaponEditor({ unit, override, options, onChange, onClose }: Wea
           })}
 
           {picker?.groupKey === group.key ? (
-            <div
-              className="rounded-[var(--r-control)] overflow-hidden"
-              style={{ background: "var(--panel)", border: "1px solid var(--rule)" }}
-            >
-              <div className="caption px-[12px] pt-[10px] pb-[6px]">
-                {picker.replace === null ? "Add a weapon" : `Replace ${picker.replace}`}
-              </div>
-              {options.weapons.map((option) => (
-                <button
-                  key={option.name}
-                  type="button"
-                  onClick={() => pick(option.name)}
-                  className="w-full min-h-[44px] px-[12px] py-[8px] text-left"
-                  style={{ borderTop: "1px solid var(--rule-soft)" }}
-                >
-                  <span className="block text-[16px] font-semibold">{option.name}</span>
-                  {option.profiles.map((p) => (
-                    <span
-                      key={p.id}
-                      className="mono block text-[12px]"
-                      style={{ color: "var(--ink-soft)" }}
-                    >
-                      {summary(p)}
-                    </span>
-                  ))}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setPicker(null)}
-                className="w-full min-h-[44px] px-[12px] text-left text-[15px] font-semibold"
-                style={{ borderTop: "1px solid var(--rule-soft)", color: "var(--ink-2)" }}
-              >
-                Cancel
-              </button>
-            </div>
+            <WeaponPicker
+              title={picker.replace === null ? "Add a weapon" : `Replace ${picker.replace}`}
+              options={options}
+              taken={group.weapons.map((w) => w.name)}
+              onPick={pick}
+              onCancel={() => setPicker(null)}
+            />
           ) : (
             <div className="flex gap-[8px] flex-wrap">
               <button
