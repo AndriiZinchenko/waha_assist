@@ -30,6 +30,10 @@ const base: AttackRow = {
   halfRangeBonus: null,
   halfRangeApplied: false,
   conditionalInvulnAvailable: null,
+  blastBonus: 0,
+  heavyApplied: false,
+  twinLinked: false,
+  hazardous: false,
 };
 
 describe("rowTones: hit", () => {
@@ -141,5 +145,15 @@ describe("rangeLabel", () => {
 
   it("returns nothing when a ranged weapon is marked melee-range", () => {
     expect(rangeLabel({ ...base, range: "Melee" })).toBeNull();
+  });
+});
+
+describe("rowTones: Blast and Heavy", () => {
+  it("boosts attacks when Blast added some", () => {
+    expect(rowTones({ ...base, blastBonus: 2 }).attacks).toBe("boost");
+  });
+
+  it("boosts the hit roll when Heavy applied, through appliedHitMod", () => {
+    expect(rowTones({ ...base, heavyApplied: true, appliedHitMod: 1 }).hit).toBe("boost");
   });
 });

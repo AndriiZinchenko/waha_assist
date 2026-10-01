@@ -35,7 +35,8 @@ function directional(mod: number): StatTone {
 export function rowTones(row: AttackRow): RowTones {
   const attacksBoosted =
     (row.halfRangeApplied && row.halfRangeBonus?.kind === "rapidFire") ||
-    row.leaderMods.length > 0;
+    row.leaderMods.length > 0 ||
+    row.blastBonus > 0;
 
   return {
     attacks: attacksBoosted ? "boost" : null,

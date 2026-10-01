@@ -12,6 +12,7 @@ const STRINGS = {
   "overflow.wake": { en: "Keep screen awake", uk: "Не вимикати екран" },
   "calc.halfRange": { en: "Half range", uk: "Пів дальності" },
   "calc.apWorsened": { en: "AP worsened by 1", uk: "БП гірше на 1" },
+  "calc.stationary": { en: "Stationary (Heavy)", uk: "Не рухався (Heavy)" },
   "voice.notUnderstood": {
     en: "Didn't catch that — try “3 against 7”",
     uk: "Не розчув — спробуйте «3 проти 7»",

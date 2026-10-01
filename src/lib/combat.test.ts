@@ -557,3 +557,148 @@ describe("computeAttackTable — live counts", () => {
     expect(afterCasualties[0].totalAttacks).toBe(6);
   });
 });
+
+function makeTargetWithModels(models: number, overrides: Partial<ParsedUnit> = {}): ParsedUnit {
+  return makeUnit({
+    id: "target",
+    modelCount: models,
+    loadouts: [{ key: "all", modelCount: models, weapons: [], wargear: [] }],
+    ...overrides,
+  });
+}
+
+describe("computeAttackTable — Blast", () => {
+  it("adds 1 attack per full 5 models in the target unit", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Blast"], attacks: { dice: 1, sides: 6, flat: 0, raw: "D6", avg: 3.5 } }),
+      {},
+      makeTargetWithModels(12),
+    );
+    expect(row.blastBonus).toBe(2);
+    expect(row.attacksRaw).toBe("D6+2");
+    expect(row.totalAttacks).toBe(5.5);
+  });
+
+  it("folds the bonus into an existing flat part (D6+3 becomes D6+5, not D6+3+2)", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Blast"], attacks: { dice: 1, sides: 6, flat: 3, raw: "D6+3", avg: 6.5 } }),
+      {},
+      makeTargetWithModels(10),
+    );
+    expect(row.attacksRaw).toBe("D6+5");
+    expect(row.totalAttacks).toBe(8.5);
+  });
+
+  it("uses the target's live count, after casualties", () => {
+    const target = makeTargetWithModels(10);
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Blast"] }),
+      { "target:all": 4 },
+      target,
+    );
+    expect(row.blastBonus).toBe(0);
+    expect(row.attacksRaw).toBe("2");
+  });
+
+  it("does nothing for a weapon without Blast", () => {
+    const [row] = computeAttackTable(makeAttacker(), {}, makeTargetWithModels(20));
+    expect(row.blastBonus).toBe(0);
+    expect(row.attacksRaw).toBe("2");
+  });
+
+  it("stacks with Rapid Fire at half range", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Blast", "Rapid Fire 1"] }),
+      {},
+      makeTargetWithModels(5),
+      modifiers({ halfRange: true }),
+    );
+    expect(row.attacksRaw).toBe("4");
+  });
+});
+
+describe("computeAttackTable — Heavy", () => {
+  it("gives Heavy weapons +1 to hit when the attacker was stationary", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Heavy"] }),
+      {},
+      makeUnit(),
+      modifiers({ stationary: true }),
+    );
+    expect(row.hitTarget).toBe(2);
+    expect(row.appliedHitMod).toBe(1);
+    expect(row.heavyApplied).toBe(true);
+  });
+
+  it("does not affect Heavy weapons when the attacker moved", () => {
+    const [row] = computeAttackTable(makeAttacker({ keywords: ["Heavy"] }), {}, makeUnit());
+    expect(row.hitTarget).toBe(3);
+    expect(row.heavyApplied).toBe(false);
+  });
+
+  it("does not affect non-Heavy weapons when stationary", () => {
+    const [row] = computeAttackTable(
+      makeAttacker(),
+      {},
+      makeUnit(),
+      modifiers({ stationary: true }),
+    );
+    expect(row.hitTarget).toBe(3);
+    expect(row.appliedHitMod).toBe(0);
+  });
+});
+
+describe("computeAttackTable — net hit modifier cap", () => {
+  it("caps Heavy plus a manual +1 at a net +1", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Heavy"], skill: 4, skillRaw: "4+" }),
+      {},
+      makeUnit(),
+      modifiers({ stationary: true, hitMod: 1 }),
+    );
+    expect(row.appliedHitMod).toBe(1);
+    expect(row.hitTarget).toBe(3);
+  });
+
+  it("caps a manual -1 plus a leader penalty at a net -1", () => {
+    const [row] = computeAttackTable(
+      makeAttacker(),
+      {},
+      makeUnit(),
+      modifiers({ hitMod: -1 }),
+      -1,
+    );
+    expect(row.appliedHitMod).toBe(-1);
+    expect(row.hitTarget).toBe(4);
+  });
+
+  it("lets a +1 and a -1 cancel out", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Heavy"] }),
+      {},
+      makeUnit(),
+      modifiers({ stationary: true }),
+      -1,
+    );
+    expect(row.appliedHitMod).toBe(0);
+    expect(row.hitTarget).toBe(3);
+  });
+});
+
+describe("computeAttackTable — reminder keywords", () => {
+  it("flags Twin-linked and Hazardous, case-insensitively", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["Twin-Linked", "hazardous"] }),
+      {},
+      makeUnit(),
+    );
+    expect(row.twinLinked).toBe(true);
+    expect(row.hazardous).toBe(true);
+  });
+
+  it("leaves them off for other weapons", () => {
+    const [row] = computeAttackTable(makeAttacker(), {}, makeUnit());
+    expect(row.twinLinked).toBe(false);
+    expect(row.hazardous).toBe(false);
+  });
+});

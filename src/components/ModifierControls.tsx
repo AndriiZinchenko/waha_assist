@@ -133,6 +133,11 @@ export function ModifierControls({
         checked={modifiers.halfRange}
         onToggle={() => onChange({ ...modifiers, halfRange: !modifiers.halfRange })}
       />
+      <CheckToggle
+        label={ui("calc.stationary")}
+        checked={modifiers.stationary}
+        onToggle={() => onChange({ ...modifiers, stationary: !modifiers.stationary })}
+      />
       <button
         type="button"
         onClick={onClose}

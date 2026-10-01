@@ -1,5 +1,6 @@
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import { computeAttackTable, type DirectionModifiers } from "../lib/combat";
+import { getUnitLiveTotal } from "../lib/loadouts";
 import {
   leaderHitPenaltyAgainst,
   leaderHitPenaltySources,
@@ -11,6 +12,7 @@ import { SideMark } from "./SideMark";
 
 interface AttackTableProps {
   attacker: ParsedUnit;
+  /** Live model counts for both units. */
   attackerCounts: Record<string, number>;
   target: ParsedUnit;
   /** Every unit on the target's side, for resolving whether the target has
@@ -60,6 +62,7 @@ export function AttackTable({
     autoHitPenaltySources,
   );
   const filtered = rows.filter((row) => row.type === weaponFilter);
+  const targetModels = getUnitLiveTotal(attackerCounts, target.id, target);
 
   return (
     <section className="pt-[14px]">
@@ -83,7 +86,12 @@ export function AttackTable({
       ) : (
         <div className="flex flex-col gap-[16px]">
           {filtered.map((row) => (
-            <AttackRow key={row.profileId} row={row} targetToughness={target.profile.T} />
+            <AttackRow
+              key={row.profileId}
+              row={row}
+              targetToughness={target.profile.T}
+              targetModels={targetModels}
+            />
           ))}
         </div>
       )}

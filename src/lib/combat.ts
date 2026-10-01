@@ -1,5 +1,5 @@
 import type { DiceExpr, ParsedUnit, RuleRef } from "../../parseRoster.mjs";
-import { getLiveWeaponCount } from "./loadouts";
+import { getLiveWeaponCount, getUnitLiveTotal } from "./loadouts";
 import { mergeByProfileId } from "./weapons";
 
 export interface DirectionModifiers {
@@ -8,6 +8,8 @@ export interface DirectionModifiers {
   invulnOverride: number | null;
   apWorsened: boolean;
   halfRange: boolean;
+  /** The attacking unit did not move this turn: Heavy weapons get +1 to hit. */
+  stationary: boolean;
 }
 
 export function emptyModifiers(): DirectionModifiers {
@@ -17,6 +19,7 @@ export function emptyModifiers(): DirectionModifiers {
     invulnOverride: null,
     apWorsened: false,
     halfRange: false,
+    stationary: false,
   };
 }
 
@@ -61,6 +64,14 @@ export interface AttackRow {
   halfRangeBonus: HalfRangeBonus | null;
   halfRangeApplied: boolean;
   conditionalInvulnAvailable: number | null;
+  /** Extra attacks from Blast: one per full five models in the target. */
+  blastBonus: number;
+  /** Heavy weapon fired by a stationary unit: +1 to hit was applied. */
+  heavyApplied: boolean;
+  /** Reminders that change no number here: re-roll wound rolls / roll for
+   * Hazardous after attacking. */
+  twinLinked: boolean;
+  hazardous: boolean;
 }
 
 function baseWoundTarget(strength: number, toughness: number): number {
@@ -109,18 +120,29 @@ function findHalfRangeBonus(weaponKeywords: string[]): HalfRangeBonus | null {
   return null;
 }
 
+function hasKeyword(weaponKeywords: string[], name: string): boolean {
+  const wanted = name.toLowerCase();
+  return weaponKeywords.some((kw) => kw.trim().toLowerCase() === wanted);
+}
+
+/** Core rules: the net modifier to a Hit roll never exceeds +1 or -1. */
+function capHitMod(total: number): number {
+  return Math.max(-1, Math.min(1, total));
+}
+
+/** `base` with `bonus` added to its flat part, re-rendered as one
+ * expression ("D6+3" + 2 -> "D6+5", not "D6+3+2"). */
 function applyBonus(base: DiceExpr, bonus: number): DiceExpr {
-  return {
-    ...base,
-    flat: base.flat + bonus,
-    avg: base.avg != null ? base.avg + bonus : base.avg,
-    raw: /[Dd]/.test(base.raw) ? `${base.raw}+${bonus}` : String(base.flat + bonus),
-  };
+  const flat = base.flat + bonus;
+  const dice = base.dice > 0 ? `${base.dice === 1 ? "" : base.dice}D${base.sides}` : "";
+  const raw = dice ? (flat > 0 ? `${dice}+${flat}` : dice) : String(flat);
+  return { ...base, flat, avg: base.avg != null ? base.avg + bonus : base.avg, raw };
 }
 
 export function computeAttackTable(
   attacker: ParsedUnit,
-  attackerCounts: Record<string, number>,
+  /** Live model counts for both units (the app keeps one map for all). */
+  counts: Record<string, number>,
   target: ParsedUnit,
   modifiers: DirectionModifiers = emptyModifiers(),
   /** Automatic hit-roll modifier from the target's own leader (e.g. Grand
@@ -133,15 +155,13 @@ export function computeAttackTable(
   autoHitPenaltySources: RuleRef[] = [],
 ): AttackRow[] {
   const merged = mergeByProfileId(attacker.weapons);
-  const totalHitMod = modifiers.hitMod + autoHitMod;
+  const targetModels = getUnitLiveTotal(counts, target.id, target);
 
   return merged.map((weapon) => {
-    const count = getLiveWeaponCount(
-      attackerCounts,
-      attacker.id,
-      attacker,
-      weapon.profileId,
-    );
+    const count = getLiveWeaponCount(counts, attacker.id, attacker, weapon.profileId);
+    const heavyApplied = modifiers.stationary && hasKeyword(weapon.keywords, "Heavy");
+    const totalHitMod = capHitMod(modifiers.hitMod + autoHitMod + (heavyApplied ? 1 : 0));
+    const blastBonus = hasKeyword(weapon.keywords, "Blast") ? Math.floor(targetModels / 5) : 0;
 
     const effectiveAp = modifiers.apWorsened
       ? Math.min(weapon.ap + 1, 0)
@@ -208,10 +228,10 @@ export function computeAttackTable(
 
     const baseAttacks =
       weapon.attacks ?? { dice: 0, sides: 0, flat: 0, raw: "—", avg: 0 };
-    const attacksExpr =
-      halfRangeApplied && halfRangeBonus!.kind === "rapidFire"
-        ? applyBonus(baseAttacks, halfRangeBonus!.value)
-        : baseAttacks;
+    const rapidFireBonus =
+      halfRangeApplied && halfRangeBonus!.kind === "rapidFire" ? halfRangeBonus!.value : 0;
+    const attackBonus = rapidFireBonus + blastBonus;
+    const attacksExpr = attackBonus > 0 ? applyBonus(baseAttacks, attackBonus) : baseAttacks;
 
     return {
       profileId: weapon.profileId,
@@ -241,6 +261,10 @@ export function computeAttackTable(
       halfRangeBonus,
       halfRangeApplied,
       conditionalInvulnAvailable,
+      blastBonus,
+      heavyApplied: weapon.skill === null ? false : heavyApplied,
+      twinLinked: hasKeyword(weapon.keywords, "Twin-linked"),
+      hazardous: hasKeyword(weapon.keywords, "Hazardous"),
     };
   });
 }

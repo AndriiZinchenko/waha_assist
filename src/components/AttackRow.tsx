@@ -10,6 +10,8 @@ interface AttackRowProps {
   row: AttackRowData;
   /** The target's Toughness, for the "S4 vs T6" line. */
   targetToughness: number | null;
+  /** The target's live model count, for the Blast note. */
+  targetModels: number;
 }
 
 const MINUS = "−";
@@ -77,7 +79,7 @@ function ResultCell({ label, value, tone }: { label: string; value: string; tone
   );
 }
 
-export function AttackRow({ row, targetToughness }: AttackRowProps) {
+export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps) {
   const [openLabel, setOpenLabel] = useState<string | null>(null);
   const t = useTranslate();
   const showAttacksDice = /[Dd]/.test(row.attacksRaw);
@@ -138,7 +140,17 @@ export function AttackRow({ row, targetToughness }: AttackRowProps) {
         text: `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value} applied (half range)`,
         kind: "positive",
       },
+    row.blastBonus > 0 && {
+      text: `Blast +${row.blastBonus} attack${row.blastBonus === 1 ? "" : "s"} (${targetModels} model${targetModels === 1 ? "" : "s"})`,
+      kind: "positive",
+    },
+    row.heavyApplied && { text: "Heavy +1 to hit (stationary)", kind: "positive" },
     halfRangeHint && { text: halfRangeHint, kind: "neutral" },
+    row.twinLinked && { text: "Twin-linked: re-roll wound rolls", kind: "positive" },
+    row.hazardous && {
+      text: "Hazardous: after attacking, roll a D6 per model that used it; each 1 destroys a model (3 mortal wounds to a Character, Monster or Vehicle)",
+      kind: "negative",
+    },
     { text: matchup, kind: "neutral" },
   ].filter((n): n is Note => Boolean(n));
 
