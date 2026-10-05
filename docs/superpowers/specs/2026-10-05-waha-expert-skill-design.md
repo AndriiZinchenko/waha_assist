@@ -43,22 +43,47 @@ from, and says "not in sources" instead of guessing.
 .claude/skills/waha-expert/
   SKILL.md                  how to answer, source order, citation format
   references/
-    10e/  core-rules.md  faq-errata.md  munitorum.md
-    11e/  core-rules.md  faq-errata.md  munitorum.md
+    10e/  core-rules.md                      (+ errata, munitorum when obtained)
+    11e/  core-rules.md  universal-rules-updates.md   (+ more when obtained)
   data/
-    10e/  datasheets, abilities, stratagems (queryable files)
-    11e/  same, as far as sources allow
+    10e/  Wahapedia CSVs (datasheets, abilities, stratagems, ...)
+    11e/  same
   scripts/
-    pdf-to-md.mjs           PDFs -> markdown split by section, with anchors
+    pdf-to-md.mjs           PDF -> markdown split into citable sections
     sync-wahapedia.mjs      Wahapedia CSV export -> data/<edition>/
+    lookup.mjs              readable unit / stratagem / detachment cards
+    lib/                    pure helpers (section splitting, CSV parsing, cards)
 ```
 
-Source PDFs go in `docs/rules-source/<edition>/` (not inside the skill) and
-are the input to `pdf-to-md.mjs`. Whether they are committed is decided at
-implementation time based on size and licence comfort.
+Source files go in `docs/rules-source/<edition>/` (not inside the skill) and
+are the input to `pdf-to-md.mjs`. The PDFs are not committed (52 MB, free
+to re-download); `docs/rules-source/README.md` records the exact files by
+checksum and what was found when they were checked.
 
 Each edition folder holds only what could actually be obtained. A missing
 file is listed in the skill's coverage note, not stubbed.
+
+## Sources as found (2026-10-05)
+
+- `10th.pdf` is the launch-era 10th Core Rules (created 2023-05-31). Later
+  changes were published in a separate "Core rules updates and errata"
+  document that is not yet in hand, so 10e core-rules answers carry a
+  caveat until it is added.
+- `11th.pdf` is the 11th Core Rules (modified 2026-06-01) with numbered rule
+  references. It is **older than the current rules**: the Universal Rules
+  Updates v1.1 (legal 2026-08-26, supplied by the user as text) cite rules
+  18.06 and 18.07, which the PDF lacks. The expanded FAQs live in the
+  Warhammer 40,000 app and are not in the PDF.
+- Wahapedia exports exist for both editions. 10ed was last updated
+  2026-06-13 (final state); 11ed on 2026-09-28. Files are pipe-delimited,
+  start with a BOM, end every line with `|`, and hold HTML in descriptions.
+
+## Citable sections
+
+- **11e** PDFs are split by printed rule reference (`§09.07`). A reference
+  that appears twice (a stratagem card printed twice) gets a `-2` suffix.
+- **10e** PDFs carry no reference numbers and their columns interleave, so
+  they are split by PDF page and cited as `p.<n>`.
 
 ## How the skill answers
 
@@ -66,10 +91,12 @@ file is listed in the skill's coverage note, not stubbed.
    user does not say, questions about their armies default to 10th (the
    edition of `armies/`); other questions are answered for both editions
    when they differ, and for one when they agree.
-2. **Source order.** Errata/FAQ, then core rules, then datasheet or codex
-   data. A conflict between sources is stated, not smoothed over.
+2. **Source order.** Rules updates/errata/FAQ (for 11e, the Universal Rules
+   Updates), then core rules, then datasheet or codex data. A conflict
+   between sources is stated, not smoothed over. Where a source is known to
+   be older than the current rules (see Sources as found), the answer says so.
 3. **Citations.** Each claim cites a file and section, for example
-   `10e/core-rules.md §Fall Back`. If the search finds nothing, the answer
+   `11e/core-rules.md §09.07` or `10e/core-rules.md p.20`. If the search finds nothing, the answer
    says "not in sources" and does not fill the gap from memory.
 4. **Search, don't load.** `SKILL.md` tells Claude to grep the reference and
    data folders for the relevant section rather than read whole files.

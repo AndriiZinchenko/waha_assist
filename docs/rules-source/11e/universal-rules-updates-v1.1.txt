@@ -1,0 +1,37 @@
+UNIVERSAL RULES UPDATES
+VERSION 1.1
+Legal for matched play from 26th August 2026
+This document presents rules updates with a broader scope than the individual Faction Packs, designed to improve the way certain
+core mechanics or Codex rules function across all factions.
+MODIFYING A STRATAGEM’S CP COST
+Rules that enable you to target a friendly unit with a stratagem for 0CP,
+but that do not specify the name of the stratagem, instead reduce the
+CP cost of that use of that stratagem by 1CP.
+STRATAGEMS THAT CAN BE USED
+MORE THAN ONCE PER PHASE/TURN
+Parts of a rule that allow a player to use a stratagem even if they have
+already targeted another unit with that stratagem in the same phase
+can only be used if the name of the stratagem is specified in that rule.
+Similarly, if a stratagem is limited to one use per player per turn, per
+battle round or per battle, such parts of that rule can only be used if the
+name of the stratagem is specified in that rule.
+STRATAGEMS THAT PREVENT UNITS FROM BEING TARGETED
+If a stratagem has an effect that says the target unit ‘can only be
+selected as the target of a ranged attack if the attacking model is within
+12"’, or ‘cannot be targeted by ranged attacks unless the attacking model
+is within 12"’, that effect is changed to say ‘can only be selected as the
+target of a ranged attack if the attacking model is within 18".’
+STRATAGEMS THAT ADD NEW UNITS TO YOUR ARMY
+If a stratagem has the effect of adding ‘a new unit to your army that
+is identical to your destroyed unit’, add the following Restriction to
+that stratagem: ‘RESTRICTIONS: You can only use this stratagem once
+per battle.’
+MOVE TYPES FOR DISEMBARKING UNITS
+▪ If a rule allows a unit to be eligible to declare a charge after
+disembarking from a TRANSPORT model that made a normal move
+that turn, that unit makes an assault disembark move (18.06) for that
+disembarkation (instead of a disembark move).
+▪ If a rule allows a unit to disembark from a TRANSPORT model
+that made an advance move that turn, that unit makes a shock
+disembark move (18.07) for that disembarkation (instead of a
+disembark move).
