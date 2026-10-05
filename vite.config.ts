@@ -39,5 +39,8 @@ export default defineConfig({
   ],
   server: {
     host: true,
+    // The preview tool assigns a free port through PORT when 5173 is taken;
+    // Vite ignores that variable on its own. Without PORT nothing changes.
+    ...(process.env.PORT ? { port: Number(process.env.PORT), strictPort: true } : {}),
   },
 });
