@@ -99,7 +99,17 @@ function parseInvuln(profileName, text) {
  * bare keyword strings in a weapon's `Keywords` characteristic.
  */
 function collectRules(sel) {
-  return (sel.rules ?? []).map((r) => ({ name: r.name, text: r.description ?? null }));
+  // New Recruit sometimes attaches the same rule to a selection twice.
+  const seen = new Set();
+  const out = [];
+  for (const r of sel.rules ?? []) {
+    const text = r.description ?? null;
+    const key = `${r.name}|${text}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ name: r.name, text });
+  }
+  return out;
 }
 
 /** Recursively yield every selection node under `node` (inclusive). */

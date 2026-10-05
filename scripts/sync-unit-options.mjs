@@ -1,4 +1,4 @@
-// Regenerate src/data/unit-options/* from New Recruit.
+// Regenerate src/data/unit-options/* and src/data/core-abilities.ts from New Recruit.
 //
 //   npm run sync:options              rewrite every faction file
 //   npm run sync:options -- --dry-run report what would change, write nothing
@@ -8,7 +8,9 @@
 // its faction's catalogue book (the BattleScribe data the list builder runs
 // on, fetched through the same library calls as sync:stratagems) and records
 // every weapon that datasheet offers, with its stat lines and rule text.
-// The app uses it to let you swap a unit's weapons. It uses the session
+// The app uses it to let you swap a unit's weapons. It also saves the core-book
+// definitions of the unit abilities a datasheet can mention (Lone Operative,
+// Stealth...), shown in a unit's Rules. It uses the session
 // saved by `sync:armies -- --login` and handles no credentials of its own.
 
 import { readdir, readFile, unlink, writeFile } from "node:fs/promises";
@@ -18,6 +20,9 @@ import { openLibrary, openSession } from "./lib/nrSession.mjs";
 import { camelCase, slugify } from "./lib/stratagems.mjs";
 import {
   buildFactionOptions,
+  collectRuleTexts,
+  pickCoreAbilities,
+  renderCoreAbilities,
   renderFactionFile,
   renderFactionsIndex,
   unitEntriesFromRoster,
@@ -26,6 +31,7 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ARMIES_DIR = path.join(ROOT, "armies");
 const OUT_DIR = path.join(ROOT, "src", "data", "unit-options");
+const CORE_ABILITIES_FILE = path.join(ROOT, "src", "data", "core-abilities.ts");
 const SESSION_FILE = path.join(ROOT, ".newrecruit-session.json");
 // Only this system is ever read, so nothing from another edition can leak in.
 const SYSTEM_SHORT = "wh40k-10e";
@@ -60,11 +66,17 @@ async function main() {
 
   const { browser, page } = await openSession({ sessionFile: SESSION_FILE, headed: HEADED });
   const built = [];
+  let coreAbilities = null;
   try {
     const library = await openLibrary(page, SYSTEM_SHORT, log);
     const coreBook = library.books.find((b) => b.name === CORE_BOOK_NAME);
     const coreRoot = coreBook ? ((await library.fetchBook(coreBook)).gameSystem ?? null) : null;
     if (!coreRoot) log(`  note: no "${CORE_BOOK_NAME}" book; core rule texts will be missing`);
+    if (coreRoot) {
+      const { found, missing } = pickCoreAbilities(collectRuleTexts([coreRoot]));
+      coreAbilities = found;
+      if (missing.length) log(`    warn  not in the core book: ${missing.join(", ")}`);
+    }
 
     for (const [name, entries] of entriesByFaction) {
       const book = library.books.find((b) => b.name === name);
@@ -104,6 +116,7 @@ async function main() {
     log("Dry run, nothing written. Would write:");
     for (const b of built) log(`  src/data/unit-options/${b.stem}.ts`);
     log("  src/data/unit-options/factions.ts");
+    if (coreAbilities) log("  src/data/core-abilities.ts");
     if (stale.length) log(`Would delete:\n  ${stale.join("\n  ")}`);
     return;
   }
@@ -120,10 +133,13 @@ async function main() {
     renderFactionsIndex(built.map(({ constName, stem }) => ({ constName, stem }))),
     "utf8",
   );
+  if (coreAbilities) {
+    await writeFile(CORE_ABILITIES_FILE, renderCoreAbilities(coreAbilities), "utf8");
+  }
   for (const f of stale) await unlink(path.join(OUT_DIR, f));
 
   log("");
-  log(`Wrote ${built.length} faction file(s) plus factions.ts.`);
+  log(`Wrote ${built.length} faction file(s) plus factions.ts${coreAbilities ? " and core-abilities.ts" : ""}.`);
   if (stale.length) log(`Deleted (no longer generated):\n  ${stale.join("\n  ")}`);
 }
 

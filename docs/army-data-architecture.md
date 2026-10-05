@@ -173,3 +173,7 @@ npm run sync:armies -- --dry-run   # show what would be written
 - `.newrecruit-session.json` holds the login tokens and is gitignored.
 - The pure helpers (`scripts/lib/syncArmies.mjs`) are unit-tested; the browser
   flow uses the bundled Chromium, falling back to installed Chrome or Edge.
+
+## Core abilities in a unit's Rules
+
+A roster attaches the definition of only some core abilities to a unit (Deep Strike, Deadly Demise), not others (a Techmarine "has the Lone Operative ability"). `npm run sync:options` also writes `src/data/core-abilities.ts` from the core book, and `referencedCoreRules` (`src/lib/coreRules.ts`) adds to a unit's Rules the definition of any core ability its abilities mention that the roster did not already attach. The parser lists a rule once when New Recruit attaches it twice.
