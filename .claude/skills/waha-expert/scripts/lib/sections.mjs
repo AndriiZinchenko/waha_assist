@@ -1,6 +1,7 @@
 // Pure helpers that turn pdftotext output into citable markdown sections.
 
-const REF_HEADING = /^((?:\d+\.\s+)?[A-Z][A-Z0-9 ,'/&()-]*?)\s+(\d{2}\.\d{2})$/;
+// Headings are upper case, optionally numbered ("1. HIT ROLLS") or bracketed ("[LETHAL HITS]").
+const REF_HEADING = /^((?:\d+\.\s+)?[A-Z[][A-Z0-9 ,'/&()[\]-]*?)\s+(\d{2}\.\d{2})$/;
 
 // pdftotext separates pages with a form feed.
 export function splitPages(text) {

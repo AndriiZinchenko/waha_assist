@@ -30,6 +30,21 @@ describe("splitByReference", () => {
     expect(sections[4].body).toBe("second\nSee also\nFlying Models 21.03");
   });
 
+  it("treats bracketed weapon-ability headings as their own sections", () => {
+    const abilities = splitByReference([
+      "SUPER-HEAVY WALKER 24.35\nwalker text\n[SUSTAINED HITS] 24.36\nThis ability always takes the form X.\n[TORRENT] 24.37\nAutomatically hits.",
+    ]);
+    expect(abilities.map((s) => s.id)).toEqual(["24.35", "24.36", "24.37"]);
+    expect(abilities[1]).toMatchObject({ title: "[SUSTAINED HITS]", body: "This ability always takes the form X." });
+    expect(abilities[0].body).toBe("walker text");
+  });
+
+  it("keeps a two-reference cross-reference label in the body, not as a heading", () => {
+    const attached = splitByReference(["ATTACHED UNITS 19.01\ntext\nLEADER 24.22 / SUPPORT 24.34\nmore"]);
+    expect(attached.map((s) => s.id)).toEqual(["19.01"]);
+    expect(attached[0].body).toContain("LEADER 24.22 / SUPPORT 24.34");
+  });
+
   it("returns no front section when the text starts with a heading", () => {
     expect(splitByReference(["DICE 01.05\nroll"]).map((s) => s.id)).toEqual(["01.05"]);
   });

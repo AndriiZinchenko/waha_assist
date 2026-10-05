@@ -2233,20 +2233,30 @@ Multiple instances of the same core ability or weapon ability are not cumulative
  Multiple instances of weapon abilities that include a keyword are duplicated even if that keyword varies (e.g. the controlling player would have to select between [ANTIVEHICLE 4+] and [ANTIINFANTRY 2+]).
 ++ ZEAL IS ITS OWN EXCUSE ++
 
-[ANTI] 24.03
+## [ANTI] (§24.03)
+<!-- id: 24.03, pdf page 79 -->
+
 Certain weapons are the bane of particular foes.
 This ability always takes the form [ANTIX Y+]. Each time an attack is made with an [ANTI] weapon, if the target unit has the keyword denoted by X, an unmodified wound roll of Y+ is a critical wound.
 Example: An attack made with an [ANTIVEHICLE 4+] weapon against a VEHICLE unit will result in a critical wound on an unmodified wound roll of 4+, while an attack made with an [ANTIPSYKER 2+] weapon against a PSYKER unit will result in a critical wound on an unmodified wound roll of 2+.
-[ASSAULT] 24.04
+
+## [ASSAULT] (§24.04)
+<!-- id: 24.04, pdf page 79 -->
+
 Folding stocks, shortened barrels or lightweight construction enable some weapons to be easily fired on the move.
 Units containing one or more models with an [ASSAULT] weapon can shoot using assault shooting (10.05).
 
-[BLAST] 24.05
+## [BLAST] (§24.05)
+<!-- id: 24.05, pdf page 79 -->
+
 Highexplosive rounds can fell several warriors in a single blast, but firing them too close to comrades is unwise.
 Each time you gather attack dice for a [BLAST] weapon, add one additional attack dice for every five models that were in the target unit in the Select Targets step (rounding down).
 If this ability takes the form [BLAST X], each time you gather attack dice for such a weapon, add X additional attack dice for every five models that were in the target unit in the Select Targets step (rounding down) instead.
 Example: If a [BLAST 2] weapon with an A characteristic of 3 targets a unit containing 12 models, you would gather four additional attack dice for that weapon (for a total of seven for that weapon).
-[CLEAVE] 24.06
+
+## [CLEAVE] (§24.06)
+<!-- id: 24.06, pdf page 79 -->
+
 With sufficient might or skill, warriors may sweep blades or talons through their foes in long lethal arcs.
 This ability always takes the form [CLEAVE X]. Each time you gather attack dice for a [CLEAVE] weapon, if you only selected one target for all of that weapon's attacks, add X additional attack dice for every five models that were in the target unit in the Select Targets step (rounding down).
 Example: If a [CLEAVE 1] weapon with an A characteristic of 3 targets one unit containing 16 models, you would gather three additional attack dice for that weapon (for a total of six for that weapon).
@@ -2258,7 +2268,9 @@ CORE ABILITIES
 24
 80
 
-[CLOSEQUARTERS] 24.07
+## [CLOSEQUARTERS] (§24.07)
+<!-- id: 24.07, pdf page 80 -->
+
 Weapons designed for closequarters fighting can be wielded effectively even in the press of melee combat.
 Units containing one or more models with a [CLOSEQUARTERS] weapon can shoot using closequarters shooting (10.06).
 When using another shooting type, for each model in that unit (excluding MONSTER/VEHICLE models), you can only select one of the following to make attacks with:
@@ -2277,7 +2289,10 @@ Example: An Impulsor with a unit of Intercessors embarked within it is destroyed
 
 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation.
 Each time this unit makes an ingress move (20.04), if every model in this unit has this ability, it can be set up anywhere on the battlefield that is more than 8" horizontally from all enemy units, even if that is within your opponent's deployment zone.
-[DEVASTATING WOUNDS] 24.10
+
+## [DEVASTATING WOUNDS] (§24.10)
+<!-- id: 24.10, pdf page 80 -->
+
 The most potent weapons strike with such power that they make a mockery of armour and can cleave through several foes.
 Each time an attack made with a [DEVASTATING WOUNDS] weapon results in a critical wound, the attack sequence for that attack ends and the target unit suffers a number of mortal wounds equal to the D characteristic of that weapon. These are inflicted after resolving any normal damage inflicted by those attacks.
 Mortal wounds inflicted by [DEVASTATING WOUNDS] weapons can damage a maximum of one model for each critical wound; any remaining mortal wounds inflicted by that attack are lost.
@@ -2285,7 +2300,9 @@ Example: An attack made with a [DEVASTATING WOUNDS] weapon with a D characterist
 
 ++ BEREFT OF ALL HOPE IS HE WHO SPURNS THE EMPEROR'S BLESSING ++
 
-[EXTRA ATTACKS] 24.11
+## [EXTRA ATTACKS] (§24.11)
+<!-- id: 24.11, pdf page 81 -->
+
 Some warriors ride to battle atop trusty mounts that gore and trample nearby foes. Others wield combat weapons that deliver a frenzy of additional blows.
 Each time a unit containing one or more models with an [EXTRA ATTACKS] weapon fights, those models will make attacks with those weapons in addition to any others. In the Select Weapons step (04.01), for each of those models, you must select:
  All of that model's [EXTRA ATTACKS] weapons.
@@ -2313,7 +2330,10 @@ This ability always takes the form Firing Deck X. In your Shooting phase, each t
 2. For each selected model, select one of its ranged weapons (excluding [ONE SHOT] weapons).
 3. Until this TRANSPORT has resolved all of its attacks, it has all of those selected weapons in addition to its other weapons.
 4. Until the end of the turn, units embarked within this TRANSPORT are not eligible to shoot.
-[HAZARDOUS] 24.15
+
+## [HAZARDOUS] (§24.15)
+<!-- id: 24.15, pdf page 81 -->
+
 Weapons powered by unstable and dangerous energy sources pose a substantial risk to the wielder and those that stand beside them.
 Each time a unit is selected to shoot or selected to fight, after that unit has resolved all of its attacks, make a number of hazard rolls (06.03) for that unit equal to the number of [HAZARDOUS] weapons you selected in the Select Weapons step.
 
@@ -2324,7 +2344,9 @@ CORE ABILITIES
 24
 82
 
-[HEAVY] 24.16
+## [HEAVY] (§24.16)
+<!-- id: 24.16, pdf page 82 -->
+
 Heavy weapons are amongst the biggest guns on the battlefield, but require bracing to fire at full effect.
 In your Shooting phase, each time an attack is made with a [HEAVY] weapon, add 1 to the hit roll if all of the following apply to the attacking unit:
  That unit is unengaged.  That unit was not set up on the
@@ -2336,10 +2358,16 @@ than 3" this turn.
 
 Some airborne vehicles can use vectored thrusters or anti-gravity technology to hover and skim over the battlefield, the better to hunt their prey or deploy embarked troops.
 Each time this unit takes to the skies (21.03), do not subtract 2" from the maximum distance.
-[IGNORES COVER] 24.18
+
+## [IGNORES COVER] (§24.18)
+<!-- id: 24.18, pdf page 82 -->
+
 Some weapons are designed to root enemy formations out of entrenched positions.
 Each time an attack is made with an [IGNORES COVER] weapon, the target cannot have the benefit of cover against that attack (13.08), including from rules that give a model or unit the benefit of cover (e.g. Stealth).
-[INDIRECT FIRE] 24.19
+
+## [INDIRECT FIRE] (§24.19)
+<!-- id: 24.19, pdf page 82 -->
+
 Indirect fire weapons launch munitions over or around intervening obstacles - nowhere is safe from their fury.
 Units containing one or more models with an [INDIRECT FIRE] weapon can shoot using indirect shooting (10.07).
 
@@ -2348,7 +2376,10 @@ Units containing one or more models with an [INDIRECT FIRE] weapon can shoot usi
 
 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike.
 During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8" horizontally from your opponent's deployment zone and all enemy units.
-[LANCE] 24.21
+
+## [LANCE] (§24.21)
+<!-- id: 24.21, pdf page 82 -->
+
 With the momentum of a warrior at fulltilt, lance weapons are deadly on the charge.
 Each time an attack is made with a [LANCE] weapon, if the attacking model's unit made a charge move this turn, add 1 to the wound roll.
 
@@ -2357,7 +2388,10 @@ Each time an attack is made with a [LANCE] weapon, if the attacking model's unit
 
 Mighty heroes fight at the forefront of battle.
 See Attached Units (19).
-[LETHAL HITS] 24.23
+
+## [LETHAL HITS] (§24.23)
+<!-- id: 24.23, pdf page 82 -->
+
 Many deadly weapons can inflict fatal injuries on any foe, no matter their resilience.
 Each time an attack made with a [LETHAL HITS] weapon results in a critical hit, you can choose for that attack to automatically wound the target.
 Designer's Note: Choosing to automatically wound the target means that no wound roll is made for that attack. You may decide against this, as it means that attack cannot result in a critical wound and so cannot trigger other abilities such as [DEVASTATING WOUNDS].
@@ -2370,17 +2404,25 @@ Designer's Note: Choosing to automatically wound the target means that no wound 
 Assassins and other covert agents are difficult to pinpoint in the storm of battle.
 Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model is within 12" of this unit.
 If this ability takes the form Lone Operative X", unless part of an attached unit, this unit is not visible to enemy models unless they are within X" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model is within X" of this unit.
-[MELTA] 24.25
+
+## [MELTA] (§24.25)
+<!-- id: 24.25, pdf page 83 -->
+
 Melta weapons are powerful heat rays whose fury is magnified at close range.
 This ability always takes the form [MELTA X]. Each time a model makes an attack with a [MELTA] weapon, if the target unit was within half range of that weapon in the Select Targets step, until the attacking unit's attacks have been resolved, add X to that weapon's D characteristic.
 Example: A model targets a unit that is within half range of a [MELTA 2] weapon with a D characteristic of D6. While resolving those attacks, that weapon has a D characteristic of D6+2.
 
-[ONE SHOT] 24.26
+## [ONE SHOT] (§24.26)
+<!-- id: 24.26, pdf page 83 -->
+
 Some weapons are so rare, or so complex and slow to reload, that they can only be used once.
 Each weapon with this ability can only be selected to make attacks with once per battle.
 If a destroyed model is returned to a unit, all of its [ONE SHOT] weapons that have already been selected to make attacks with during the battle cannot be selected to make attacks with again.
 If a new unit is added to an army, all [ONE SHOT] weapons in that unit can be selected to make attacks with once per battle.
-[PISTOL] 24.27
+
+## [PISTOL] (§24.27)
+<!-- id: 24.27, pdf page 83 -->
+
 Pistols can be wielded even at pointblank range.
 [PISTOL] and [CLOSEQUARTERS] are identical for all rules purposes. See [CLOSEQUARTERS].
 Designer's Note: [PISTOL] is a pre-existing ability that will be superseded by [CLOSE-QUARTERS] as this edition of Warhammer 40,000 progresses. Both are functionally the same, but the latter is a more suitable term for weapons that function in this way.
@@ -2392,13 +2434,21 @@ CORE ABILITIES
 24
 84
 
-[PRECISION] 24.28
+## [PRECISION] (§24.28)
+<!-- id: 24.28, pdf page 84 -->
+
 Precision attacks can pick highvalue targets out in a crowd.
 While resolving attacks made with one or more [PRECISION] weapons, at the start of the Allocation Order step (05.03), if the target unit contains one or more CHARACTER models visible to one or more of the attacking models, the active player can select one allocation group that contains one of those visible CHARACTER models. If they do, until those attacks are resolved, or until that CHARACTER group is destroyed (whichever happens first), that CHARACTER group is the current allocation group.
-[PSYCHIC] 24.29
+
+## [PSYCHIC] (§24.29)
+<!-- id: 24.29, pdf page 84 -->
+
 Some weapons can channel the bearer's psychic might to empower their blows.
 Each time an attack is made with a [PSYCHIC] weapon, you can ignore any or all modifiers to that attack's BS or WS characteristic and any or all modifiers to the hit roll. Attacks made with [PSYCHIC] weapons are known as psychic attacks (this can be important for the triggering of other rules).
-[RAPID FIRE] 24.30
+
+## [RAPID FIRE] (§24.30)
+<!-- id: 24.30, pdf page 84 -->
+
 Rapid fire weapons are capable of longranged precision shots or controlled bursts at nearby targets.
 This ability always takes the form [RAPID FIRE X]. Each time you gather attack dice for a [RAPID FIRE] weapon, add X additional attack dice if the target unit was within half range of that weapon in the Select Targets step.
 Example: If a [RAPID FIRE 1] weapon with an A characteristic of 1 targets a unit that is within half range, you would gather one additional attack dice for that weapon (for a total of two for that weapon).
@@ -2441,14 +2491,22 @@ Each time a unit with this ability makes a normal, advance or fall-back move:
  Before moving that unit, you can select for all models in that unit to have the MOBILE keyword until that move ends. If you do, when that move ends, roll one D6: on a 1, that unit is battle-shocked.
 Designer's Note: Gaining the MOBILE keyword for the duration of a move will enable models in that unit to move horizontally through dense terrain features (13.06).
 
-[SUSTAINED HITS] 24.36
+## [SUSTAINED HITS] (§24.36)
+<!-- id: 24.36, pdf page 85 -->
+
 Some weapons possess a punishing rate of fire, or can land devastating flurries of blows, tearing the foe apart with relentless ferocity.
 This ability always takes the form [SUSTAINED HITS X]. Each time an attack made with a [SUSTAINED HITS] weapon results in a critical hit, that attack results in a number of additional hits on the target as denoted by X.
 Example: An attack made with a [SUSTAINED HITS 2] weapon results in a critical hit. That attack therefore hits the target three times (once from the critical hit, and twice more from the [SUSTAINED HITS 2] ability).
-[TORRENT] 24.37
+
+## [TORRENT] (§24.37)
+<!-- id: 24.37, pdf page 85 -->
+
 Torrent weapons project clouds of fire, gas or other lethal substances that few foes can hope to evade.
 Each time an attack is made with a [TORRENT] weapon, that attack automatically hits the target.
-[TWINLINKED] 24.38
+
+## [TWINLINKED] (§24.38)
+<!-- id: 24.38, pdf page 85 -->
+
 Dual weapons are often grafted to the same targeting system for greater lethality.
 Each time an attack is made with a [TWINLINKED] weapon, you can reroll the wound roll.
 

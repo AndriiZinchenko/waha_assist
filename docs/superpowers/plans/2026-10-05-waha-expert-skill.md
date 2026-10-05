@@ -297,7 +297,7 @@ Run:
 node .claude/skills/waha-expert/scripts/pdf-to-md.mjs docs/rules-source/11e/11th.pdf 11e core-rules
 node .claude/skills/waha-expert/scripts/pdf-to-md.mjs docs/rules-source/10e/10th.pdf 10e core-rules
 ```
-Expected: `11e/core-rules.md: 136 sections from 88 pages` and `10e/core-rules.md: 60 sections from 60 pages`.
+Expected: `11e/core-rules.md: 158 sections from 88 pages` and `10e/core-rules.md: 60 sections from 60 pages`.
 
 - [ ] **Step 3: Verify the output by eye (the spec requires this for core rules)**
 
@@ -309,7 +309,7 @@ grep -c "^## " .claude/skills/waha-expert/references/11e/core-rules.md
 grep -n "^## .*(§15.11" .claude/skills/waha-expert/references/11e/core-rules.md
 grep -n "Fall Back" .claude/skills/waha-expert/references/10e/core-rules.md | head
 ```
-Expected: `FALL-BACK MOVE (§09.07)` shows "Ordered Retreat" and "Desperate Escape" modes with a hazard roll per model; the heading count is exactly 136; `15.11` and `15.11-2` both present, the `-2` copy being the clean text on PDF page 57; the 10e file mentions Fall Back on the movement pages. If a section looks garbled, record it in the skill's coverage note (Task 6) rather than editing generated files.
+Expected: `FALL-BACK MOVE (§09.07)` shows "Ordered Retreat" and "Desperate Escape" modes with a hazard roll per model; the heading count is exactly 158; `15.11` and `15.11-2` both present, the `-2` copy being the clean text on PDF page 57; the 10e file mentions Fall Back on the movement pages. If a section looks garbled, record it in the skill's coverage note (Task 6) rather than editing generated files.
 
 - [ ] **Step 4: Re-run to confirm idempotence**
 
