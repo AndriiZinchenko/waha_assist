@@ -16,6 +16,7 @@ import { readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { rosterEdition } from "../rosterEdition.mjs";
 import { bookRoot, launchBrowser, openLibrary } from "./lib/nrSession.mjs";
 import { camelCase, detachmentFromRoster, slugify, toStratagem } from "./lib/stratagems.mjs";
 import {
@@ -139,6 +140,11 @@ async function main() {
   const rosterPicks = [];
   for (const file of (await readdir(ARMIES_DIR)).filter((f) => f.endsWith(".json"))) {
     const json = JSON.parse(await readFile(path.join(ARMIES_DIR, file), "utf8"));
+    // Detachments and stratagems are read from the 10th edition books only.
+    if (rosterEdition(json) !== 10) {
+      log(`  skip  ${file}: not a 10th edition roster`);
+      continue;
+    }
     const catalogue = json?.roster?.forces?.[0]?.catalogueName;
     if (!catalogue) {
       log(`  skip  ${file}: no catalogue in the roster`);

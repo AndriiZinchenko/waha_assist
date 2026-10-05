@@ -177,3 +177,7 @@ npm run sync:armies -- --dry-run   # show what would be written
 ## Core abilities in a unit's Rules
 
 A roster attaches the definition of only some core abilities to a unit (Deep Strike, Deadly Demise), not others (a Techmarine "has the Lone Operative ability"). `npm run sync:options` also writes `src/data/core-abilities.ts` from the core book, and `referencedCoreRules` (`src/lib/coreRules.ts`) adds to a unit's Rules the definition of any core ability its abilities mention that the roster did not already attach. The parser lists a rule once when New Recruit attaches it twice.
+
+## Editions
+
+Each roster export names its game system, and `rosterEdition` (`rosterEdition.mjs`) reads 10 or 11 from it; an export that names none counts as 10th, and one for any other edition is skipped. Every army entry carries its `edition`, and the home screen's 10th | 11th switch filters the list by it (the choice is kept in this browser, and a battle never mixes editions). `sync:armies` fetches the lists of both New Recruit systems (`wh40k-10e`, `wh40k-11e`) into `armies/`; `sync:options` and `sync:stratagems` read only the 10th edition rosters. The rules data (detachments, stratagems, glossary, calculator behaviour) is still 10th edition for every army.

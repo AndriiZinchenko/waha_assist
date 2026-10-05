@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { armies } from "./lib/armies";
 import { assignArmy, type Slot } from "./lib/armySetup";
+import {
+  armiesForEdition,
+  dropOtherEdition,
+  loadEdition,
+  saveEdition,
+  type Edition,
+} from "./lib/edition";
 import { useHashRoute } from "./lib/useHashRoute";
 import { visibleUnits } from "./lib/armyPoints";
 import { applyLeaderWeaponBonuses } from "./lib/leaderEffects";
@@ -45,6 +52,11 @@ function App() {
   const [state, setState] = useState<StoredState>(initialState);
   const [route, navigate] = useHashRoute();
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  // A link to a battle opens on its armies' edition; otherwise the one last
+  // chosen on this device.
+  const [edition, setEdition] = useState<Edition>(
+    () => armies.find((a) => a.id === route.a)?.edition ?? loadEdition(),
+  );
   const sync = useSync(state, setState);
   const wakeLock = useWakeLock();
 
@@ -79,6 +91,24 @@ function App() {
     : [];
   const unitA = unitsA.find((u) => u.id === selectedUnitId.a) ?? null;
   const unitB = unitsB.find((u) => u.id === selectedUnitId.b) ?? null;
+
+  function handleChangeEdition(next: Edition) {
+    setEdition(next);
+    saveEdition(next);
+    // A battle never mixes editions, so a side holding the other edition's
+    // army is cleared.
+    const selection = dropOtherEdition({ a: route.a, b: route.b }, armies, next);
+    navigate(
+      {
+        ...route,
+        a: selection.a,
+        b: selection.b,
+        ua: selection.a === route.a ? route.ua : null,
+        ub: selection.b === route.b ? route.ub : null,
+      },
+      { replace: true },
+    );
+  }
 
   function handleAssignArmy(slot: Slot, armyId: string) {
     const selection = assignArmy({ a: route.a, b: route.b }, slot, armyId);
@@ -396,7 +426,13 @@ function App() {
           />
         ) : (
           <ArmySetupScreen
-            armies={armies}
+            armies={armiesForEdition(armies, edition)}
+            edition={edition}
+            editionCounts={{
+              10: armiesForEdition(armies, 10).length,
+              11: armiesForEdition(armies, 11).length,
+            }}
+            onChangeEdition={handleChangeEdition}
             selection={{ a: route.a, b: route.b }}
             detachmentOverrides={state.detachmentOverrides}
             onAssign={handleAssignArmy}

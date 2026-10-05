@@ -59,3 +59,42 @@ describe("buildArmyEntries", () => {
     errorSpy.mockRestore();
   });
 });
+
+describe("buildArmyEntries: edition", () => {
+  const roster = (gameSystemName?: string) => ({
+    default: {
+      roster: {
+        name: "Test Army",
+        ...(gameSystemName === undefined ? {} : { gameSystemName }),
+        generatedBy: "test",
+        costs: [],
+        costLimits: [],
+        forces: [
+          { name: "Army Roster", catalogueName: "Test Catalogue", catalogueRevision: 1, selections: [] },
+        ],
+      },
+    },
+  });
+
+  it("tags each army with its edition", () => {
+    const entries = buildArmyEntries({
+      "/armies/ten.json": roster("Warhammer 40,000 10th Edition"),
+      "/armies/eleven.json": roster("Warhammer 40,000 11th Edition"),
+    });
+    expect(Object.fromEntries(entries.map((e) => [e.id, e.edition]))).toEqual({
+      eleven: 11,
+      ten: 10,
+    });
+  });
+
+  it("takes a file that names no system as 10th, and skips one for an edition it cannot read", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const entries = buildArmyEntries({
+      "/armies/old.json": roster(undefined),
+      "/armies/nine.json": roster("Warhammer 40,000 9th Edition"),
+    });
+    expect(entries.map((e) => [e.id, e.edition])).toEqual([["old", 10]]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+});

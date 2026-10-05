@@ -2,6 +2,7 @@
 // unit-tested without a browser or filesystem.
 
 import { parseRoster } from "../../parseRoster.mjs";
+import { rosterEdition } from "../../rosterEdition.mjs";
 
 /** New Recruit list name -> safe file stem for armies/<stem>.json */
 export function sanitizeFileName(name) {
@@ -39,6 +40,9 @@ export function planWrites(lists, existingFiles) {
  * replaces a good file. Returns { ok, catalogue } or { ok: false, error }.
  */
 export function validateRoster(json) {
+  if (rosterEdition(json) === null) {
+    return { ok: false, error: "not a 40k 10th or 11th edition roster" };
+  }
   try {
     const parsed = parseRoster(json);
     if (!parsed || !parsed.units || parsed.units.length === 0) {

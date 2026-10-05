@@ -26,6 +26,10 @@ const STRINGS = {
     en: "Assign an army to {side} to start.",
     uk: "Призначте армію стороні {side}, щоб почати.",
   },
+  "setup.noEdition": {
+    en: "No {edition} edition armies yet. Build a list in New Recruit's {edition} Edition, then run",
+    uk: "Армій {edition} редакції ще немає. Створіть список у New Recruit для {edition} Edition, потім запустіть",
+  },
   "det.roster": { en: "ROSTER DETACHMENT", uk: "ЗАГІН РОСТЕРА" },
   "strat.when": { en: "WHEN", uk: "КОЛИ" },
   "phase.filtered": { en: "Filtered to {phase} phase", uk: "Фільтр: {phase} phase" },

@@ -122,3 +122,12 @@ describe("exportMatchesList", () => {
     expect(exportMatchesList(grey, { name: "Grey", catalogue: null })).toEqual({ ok: true });
   });
 });
+
+import { validateRoster } from "./syncArmies.mjs";
+
+describe("validateRoster: edition", () => {
+  it("rejects an export for an edition the app cannot read, before parsing it", () => {
+    const result = validateRoster({ roster: { gameSystemName: "Warhammer 40,000 9th Edition" } });
+    expect(result).toEqual({ ok: false, error: "not a 40k 10th or 11th edition roster" });
+  });
+});

@@ -1,12 +1,19 @@
 import type { ArmyEntry } from "../lib/armies";
 import { canStart, type ArmySelection, type Slot } from "../lib/armySetup";
 import { effectiveDetachment } from "../lib/detachment";
+import type { Edition } from "../lib/edition";
 import { useUi } from "../lib/uiStrings";
 import { MARK_GLYPH } from "../lib/sides";
+import { EditionToggle } from "./EditionToggle";
 import { SideMark } from "./SideMark";
 
 interface ArmySetupScreenProps {
+  /** The armies of the chosen edition. */
   armies: ArmyEntry[];
+  edition: Edition;
+  /** How many armies each edition has in all. */
+  editionCounts: Record<Edition, number>;
+  onChangeEdition: (next: Edition) => void;
   selection: ArmySelection;
   detachmentOverrides: Record<string, string>;
   /** Put `armyId` on `slot`, or clear the slot if it already holds it. */
@@ -30,6 +37,9 @@ function shortName(catalogue: string): string {
 
 export function ArmySetupScreen({
   armies,
+  edition,
+  editionCounts,
+  onChangeEdition,
   selection,
   detachmentOverrides,
   onAssign,
@@ -38,7 +48,7 @@ export function ArmySetupScreen({
 }: ArmySetupScreenProps) {
   const ui = useUi();
 
-  if (armies.length === 0) {
+  if (editionCounts[10] + editionCounts[11] === 0) {
     return (
       <div className="p-[16px]">
         <div
@@ -62,9 +72,17 @@ export function ArmySetupScreen({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 max-w-[920px] w-full mx-auto">
+      <div className="shrink-0 px-[16px] pt-[12px]">
+        <EditionToggle edition={edition} counts={editionCounts} onChange={onChangeEdition} />
+      </div>
       <p className="hint shrink-0 m-0 px-[16px] py-[12px]">
         Tap an army to configure it. Use A | B to assign it to a side.
       </p>
+      {armies.length === 0 && (
+        <p className="prose flex-1 min-h-0 m-0 px-[16px]">
+          {ui("setup.noEdition", { edition: `${edition}th` })} <code>npm run sync:armies</code>.
+        </p>
+      )}
       <ul className="flex-1 min-h-0 overflow-y-auto overscroll-contain m-0 p-0 list-none">
         {armies.map((army) => {
           const onA = selection.a === army.id;

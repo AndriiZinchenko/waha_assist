@@ -22,8 +22,8 @@ import {
   validateRoster,
 } from "./lib/syncArmies.mjs";
 
-// Only 40k 10th Edition lists are rosters the app can read.
-const SYSTEM_SHORT = "wh40k-10e";
+// The 40k editions the app can read; lists of any other game are ignored.
+const SYSTEM_SHORTS = ["wh40k-10e", "wh40k-11e"];
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ARMIES_DIR = path.join(ROOT, "armies");
 const SESSION_FILE = path.join(ROOT, ".newrecruit-session.json");
@@ -126,27 +126,39 @@ async function sync() {
       throw new Error(data?.__error ?? "user_get_data returned nothing");
     }
     // The account can hold lists for other games too (Horus Heresy, ...).
-    // Only 40k 10th Edition rosters are readable by the app.
+    // Only the 40k editions in SYSTEM_SHORTS are rosters the app can read.
     const library = await rpc(page, "get_library");
     if (!library || library.__error) {
       throw new Error(library?.__error ?? "get_library returned nothing");
     }
-    const system = (library.systems ?? library).find((s) => s.short === SYSTEM_SHORT);
-    if (!system) throw new Error(`game system ${SYSTEM_SHORT} not found in the library`);
-    const bookName = (id) =>
-      (system.books ?? []).find((b) => String(b.id) === String(id))?.name ?? null;
+    const allSystems = library.systems ?? library;
+    const systems = SYSTEM_SHORTS.map((short) => {
+      const found = allSystems.find((s) => s.short === short);
+      if (!found) log(`  note: game system ${short} not found in the library, skipping it`);
+      return found;
+    }).filter(Boolean);
+    if (systems.length === 0) {
+      throw new Error(`none of the game systems ${SYSTEM_SHORTS.join(", ")} is in the library`);
+    }
 
     const allRows = data.lists ?? [];
-    const rows = listsForSystem(allRows, system.id);
-    const lists = rows.map((l) => ({
-      key: l.list_key,
-      name: l.name ?? l.list_key,
-      catalogue: bookName(l.id_book),
-      raw: l,
-    }));
-    log(`Found ${lists.length} ${system.name} list(s) on New Recruit.`);
-    if (allRows.length > rows.length) {
-      log(`  (ignoring ${allRows.length - rows.length} list(s) from other game systems)`);
+    const lists = [];
+    for (const system of systems) {
+      const bookName = (id) =>
+        (system.books ?? []).find((b) => String(b.id) === String(id))?.name ?? null;
+      const rows = listsForSystem(allRows, system.id);
+      log(`Found ${rows.length} ${system.name} list(s) on New Recruit.`);
+      for (const l of rows) {
+        lists.push({
+          key: l.list_key,
+          name: l.name ?? l.list_key,
+          catalogue: bookName(l.id_book),
+          raw: l,
+        });
+      }
+    }
+    if (allRows.length > lists.length) {
+      log(`  (ignoring ${allRows.length - lists.length} list(s) from other game systems)`);
     }
     if (lists.length && DRY_RUN) {
       log("First list metadata:", JSON.stringify(lists[0].raw, null, 2));
