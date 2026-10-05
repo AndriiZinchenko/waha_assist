@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { DirectionModifiers } from "../lib/combat";
 import { useUi } from "../lib/uiStrings";
 import { Stepper } from "./Stepper";
@@ -8,6 +9,9 @@ interface ModifierControlsProps {
   /** Deselect both units so another pair can be compared. The calculator
    * itself stays open; the modifiers are not saved and reset with it. */
   onClose: () => void;
+  /** Offer the Engaged toggle (Big Guns Never Tire): while shooting, when a
+   * Monster or Vehicle is in the matchup. */
+  showEngaged?: boolean;
 }
 
 const MINUS = "−";
@@ -19,10 +23,13 @@ function formatMod(mod: number): string {
 
 function CheckToggle({
   label,
+  title,
   checked,
   onToggle,
 }: {
-  label: string;
+  label: ReactNode;
+  /** Full name, when the label is a short form. */
+  title?: string;
   checked: boolean;
   onToggle: () => void;
 }) {
@@ -31,8 +38,10 @@ function CheckToggle({
       type="button"
       role="checkbox"
       aria-checked={checked}
+      title={title}
+      aria-label={title}
       onClick={onToggle}
-      className="h-[46px] px-[12px] flex items-center gap-[10px] rounded-[var(--r-control)] whitespace-nowrap text-[15px] font-semibold"
+      className="h-[46px] min-w-0 px-[12px] flex items-center gap-[10px] rounded-[var(--r-control)] whitespace-nowrap text-[15px] font-semibold"
       style={{
         flex: "1 1 130px",
         border: `1px solid ${checked ? "var(--ink)" : "var(--rule)"}`,
@@ -51,7 +60,7 @@ function CheckToggle({
       >
         {checked ? "✓" : ""}
       </span>
-      {label}
+      <span className="min-w-0 flex items-center gap-[7px]">{label}</span>
     </button>
   );
 }
@@ -60,6 +69,7 @@ export function ModifierControls({
   modifiers,
   onChange,
   onClose,
+  showEngaged = false,
 }: ModifierControlsProps) {
   const ui = useUi();
   const stepperStyle = { flex: "1 1 130px" };
@@ -138,6 +148,14 @@ export function ModifierControls({
         checked={modifiers.stationary}
         onToggle={() => onChange({ ...modifiers, stationary: !modifiers.stationary })}
       />
+      {showEngaged && (
+        <CheckToggle
+          title={ui("calc.engaged")}
+          label={ui("calc.engagedShort")}
+          checked={modifiers.engaged}
+          onToggle={() => onChange({ ...modifiers, engaged: !modifiers.engaged })}
+        />
+      )}
       <button
         type="button"
         onClick={onClose}

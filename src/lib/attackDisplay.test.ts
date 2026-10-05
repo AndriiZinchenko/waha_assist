@@ -32,6 +32,7 @@ const base: AttackRow = {
   conditionalInvulnAvailable: null,
   blastBonus: 0,
   heavyApplied: false,
+  engagedApplied: false,
   twinLinked: false,
   hazardous: false,
   edited: false,

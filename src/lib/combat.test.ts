@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ParsedUnit, WeaponEntry } from "../../parseRoster.mjs";
 import {
+  bigGunsApplies,
   computeAttackTable,
   emptyModifiers,
+  canBeEngaged,
+  isMonsterOrVehicle,
   type DirectionModifiers,
 } from "./combat";
 
@@ -709,5 +712,118 @@ describe("computeAttackTable — edited weapons", () => {
     expect(edited.edited).toBe(true);
     const [plain] = computeAttackTable(makeAttacker(), {}, makeUnit());
     expect(plain.edited).toBe(false);
+  });
+});
+
+describe("Big Guns Never Tire", () => {
+  const vehicle = makeUnit({ id: "v", keywords: ["Vehicle", "Transport"] });
+  const monster = makeUnit({ id: "m", keywords: ["Monster"] });
+  const infantry = makeUnit({ id: "i", keywords: ["Infantry"] });
+
+  it("recognises Monsters and Vehicles, whatever the keyword casing", () => {
+    expect(isMonsterOrVehicle(vehicle)).toBe(true);
+    expect(isMonsterOrVehicle(monster)).toBe(true);
+    expect(isMonsterOrVehicle(makeUnit({ keywords: ["MONSTER"] }))).toBe(true);
+    expect(isMonsterOrVehicle(infantry)).toBe(false);
+  });
+
+  it("applies, in both directions, when the matchup is engaged and a Monster or Vehicle is in it", () => {
+    expect(bigGunsApplies(true, vehicle, infantry)).toBe(true);
+    // Shooting at an engaged Vehicle is penalised too.
+    expect(bigGunsApplies(true, infantry, vehicle)).toBe(true);
+    expect(bigGunsApplies(true, vehicle, monster)).toBe(true);
+  });
+
+  it("does not apply when not marked engaged, or when neither unit is a Monster or Vehicle", () => {
+    expect(bigGunsApplies(false, vehicle, monster)).toBe(false);
+    expect(bigGunsApplies(true, infantry, infantry)).toBe(false);
+  });
+
+  it("takes 1 off the Hit roll of ranged weapons and says so", () => {
+    const [row] = computeAttackTable(makeAttacker(), {}, makeUnit(), modifiers(), 0, [], true);
+    expect(row.hitTarget).toBe(4);
+    expect(row.appliedHitMod).toBe(-1);
+    expect(row.engagedApplied).toBe(true);
+  });
+
+  it("leaves Pistols, melee weapons and auto-hit weapons alone", () => {
+    const pistol = computeAttackTable(
+      makeAttacker({ keywords: ["Pistol"] }),
+      {},
+      makeUnit(),
+      modifiers(),
+      0,
+      [],
+      true,
+    )[0];
+    expect(pistol.hitTarget).toBe(3);
+    expect(pistol.engagedApplied).toBe(false);
+
+    const melee = computeAttackTable(
+      makeAttacker({ type: "melee" }),
+      {},
+      makeUnit(),
+      modifiers(),
+      0,
+      [],
+      true,
+    )[0];
+    expect(melee.hitTarget).toBe(3);
+    expect(melee.engagedApplied).toBe(false);
+
+    const torrent = computeAttackTable(
+      makeAttacker({ skill: null, skillRaw: "N/A" }),
+      {},
+      makeUnit(),
+      modifiers(),
+      0,
+      [],
+      true,
+    )[0];
+    expect(torrent.hitTarget).toBeNull();
+    expect(torrent.engagedApplied).toBe(false);
+  });
+
+  it("stays inside the -1 cap with other penalties, and Heavy cancels it", () => {
+    const capped = computeAttackTable(
+      makeAttacker(),
+      {},
+      makeUnit(),
+      modifiers({ hitMod: -1 }),
+      0,
+      [],
+      true,
+    )[0];
+    expect(capped.appliedHitMod).toBe(-1);
+
+    const heavy = computeAttackTable(
+      makeAttacker({ keywords: ["Heavy"] }),
+      {},
+      makeUnit(),
+      modifiers({ stationary: true }),
+      0,
+      [],
+      true,
+    )[0];
+    expect(heavy.appliedHitMod).toBe(0);
+    expect(heavy.hitTarget).toBe(3);
+  });
+
+  it("changes nothing when the penalty is not asked for", () => {
+    const [row] = computeAttackTable(makeAttacker(), {}, makeUnit(), modifiers());
+    expect(row.hitTarget).toBe(3);
+    expect(row.engagedApplied).toBe(false);
+  });
+});
+
+describe("canBeEngaged", () => {
+  const vehicle = makeUnit({ keywords: ["Vehicle"] });
+  const infantry = makeUnit({ keywords: ["Infantry"] });
+
+  it("is true when either unit is a Monster or Vehicle", () => {
+    expect(canBeEngaged(vehicle, infantry)).toBe(true);
+    expect(canBeEngaged(infantry, vehicle)).toBe(true);
+    expect(canBeEngaged(vehicle, vehicle)).toBe(true);
+    expect(canBeEngaged(infantry, infantry)).toBe(false);
   });
 });

@@ -10,6 +10,9 @@ export interface DirectionModifiers {
   halfRange: boolean;
   /** The attacking unit did not move this turn: Heavy weapons get +1 to hit. */
   stationary: boolean;
+  /** A Monster or Vehicle in this matchup is within Engagement Range of an
+   * enemy (Big Guns Never Tire). */
+  engaged: boolean;
 }
 
 export function emptyModifiers(): DirectionModifiers {
@@ -20,7 +23,36 @@ export function emptyModifiers(): DirectionModifiers {
     apWorsened: false,
     halfRange: false,
     stationary: false,
+    engaged: false,
   };
+}
+
+/** Units the Big Guns Never Tire rule is about. */
+export function isMonsterOrVehicle(unit: ParsedUnit): boolean {
+  return unit.keywords.some((k) => {
+    const keyword = k.toLowerCase();
+    return keyword === "monster" || keyword === "vehicle";
+  });
+}
+
+/** Whether either unit is one, so the matchup can be marked engaged. */
+export function canBeEngaged(unitA: ParsedUnit, unitB: ParsedUnit): boolean {
+  return isMonsterOrVehicle(unitA) || isMonsterOrVehicle(unitB);
+}
+
+/**
+ * Big Guns Never Tire: a Monster or Vehicle within Engagement Range of an
+ * enemy shoots at -1 to Hit whoever it targets, and so does anyone shooting
+ * at an engaged Monster or Vehicle. One flag covers both: with two Monsters
+ * or Vehicles, either being engaged penalises shots in both directions.
+ * Pistols are exempt (see computeAttackTable).
+ */
+export function bigGunsApplies(
+  engaged: boolean,
+  attacker: ParsedUnit,
+  target: ParsedUnit,
+): boolean {
+  return engaged && canBeEngaged(attacker, target);
 }
 
 export interface HalfRangeBonus {
@@ -68,6 +100,8 @@ export interface AttackRow {
   blastBonus: number;
   /** Heavy weapon fired by a stationary unit: +1 to hit was applied. */
   heavyApplied: boolean;
+  /** Big Guns Never Tire: -1 to hit was applied to this ranged weapon. */
+  engagedApplied: boolean;
   /** Reminders that change no number here: re-roll wound rolls / roll for
    * Hazardous after attacking. */
   twinLinked: boolean;
@@ -155,6 +189,8 @@ export function computeAttackTable(
   /** The abilities behind `autoHitMod`, echoed onto each row so the UI can
    * name them. */
   autoHitPenaltySources: RuleRef[] = [],
+  /** Big Guns Never Tire applies to this attack (see bigGunsApplies). */
+  engagedPenalty = false,
 ): AttackRow[] {
   const merged = mergeByProfileId(attacker.weapons);
   const targetModels = getUnitLiveTotal(counts, target.id, target);
@@ -162,7 +198,14 @@ export function computeAttackTable(
   return merged.map((weapon) => {
     const count = getLiveWeaponCount(counts, attacker.id, attacker, weapon.profileId);
     const heavyApplied = modifiers.stationary && hasKeyword(weapon.keywords, "Heavy");
-    const totalHitMod = capHitMod(modifiers.hitMod + autoHitMod + (heavyApplied ? 1 : 0));
+    const engagedApplied =
+      engagedPenalty &&
+      weapon.type === "ranged" &&
+      weapon.skill !== null &&
+      !hasKeyword(weapon.keywords, "Pistol");
+    const totalHitMod = capHitMod(
+      modifiers.hitMod + autoHitMod + (heavyApplied ? 1 : 0) - (engagedApplied ? 1 : 0),
+    );
     const blastBonus = hasKeyword(weapon.keywords, "Blast") ? Math.floor(targetModels / 5) : 0;
 
     const effectiveAp = modifiers.apWorsened
@@ -265,6 +308,7 @@ export function computeAttackTable(
       conditionalInvulnAvailable,
       blastBonus,
       heavyApplied: weapon.skill === null ? false : heavyApplied,
+      engagedApplied,
       twinLinked: hasKeyword(weapon.keywords, "Twin-linked"),
       hazardous: hasKeyword(weapon.keywords, "Hazardous"),
       edited: weapon.edited === true,

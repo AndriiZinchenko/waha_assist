@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from "react";
 import type { ParsedUnit } from "../../parseRoster.mjs";
-import { emptyModifiers, type DirectionModifiers } from "../lib/combat";
+import {
+  emptyModifiers,
+  canBeEngaged,
+  type DirectionModifiers,
+} from "../lib/combat";
 import { AttackTable } from "./AttackTable";
 import type { WeaponMode } from "../lib/route";
 import { ModifierControls } from "./ModifierControls";
@@ -108,6 +112,7 @@ function CombatResults({
           modifiers={modifiers}
           onChange={setModifiers}
           onClose={onClose}
+          showEngaged={weapons === "ranged" && canBeEngaged(unitA, unitB)}
         />
       </div>
       <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-x-[24px] px-[12px] pb-[16px]">

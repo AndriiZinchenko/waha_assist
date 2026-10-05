@@ -1,5 +1,5 @@
 import type { ParsedUnit } from "../../parseRoster.mjs";
-import { computeAttackTable, type DirectionModifiers } from "../lib/combat";
+import { bigGunsApplies, computeAttackTable, type DirectionModifiers } from "../lib/combat";
 import { getUnitLiveTotal } from "../lib/loadouts";
 import {
   leaderHitPenaltyAgainst,
@@ -60,6 +60,7 @@ export function AttackTable({
     modifiers,
     autoHitMod,
     autoHitPenaltySources,
+    bigGunsApplies(modifiers.engaged, attacker, target),
   );
   const filtered = rows.filter((row) => row.type === weaponFilter);
   const targetModels = getUnitLiveTotal(attackerCounts, target.id, target);

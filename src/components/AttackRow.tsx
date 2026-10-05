@@ -146,6 +146,10 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       kind: "positive",
     },
     row.heavyApplied && { text: "Heavy +1 to hit (stationary)", kind: "positive" },
+    row.engagedApplied && {
+      text: "Big Guns Never Tire: -1 to hit while engaged (Pistols exempt)",
+      kind: "negative",
+    },
     halfRangeHint && { text: halfRangeHint, kind: "neutral" },
     row.twinLinked && { text: "Twin-linked: re-roll wound rolls", kind: "positive" },
     row.hazardous && {
