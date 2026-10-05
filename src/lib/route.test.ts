@@ -8,7 +8,7 @@ const base: RouteState = {
   b: null,
   ua: null,
   ub: null,
-  weapons: "ranged",
+  phase: "shooting",
   side: "a",
 };
 
@@ -33,14 +33,14 @@ describe("parseRoute", () => {
   });
 
   it("reads a full battle route", () => {
-    expect(parseRoute("#/battle?a=Orks&b=Ultramar&ua=oll0fu&ub=x1&w=melee&side=b")).toEqual({
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&ua=oll0fu&ub=x1&p=fight&side=b")).toEqual({
       screen: "battle",
       configArmyId: null,
       a: "Orks",
       b: "Ultramar",
       ua: "oll0fu",
       ub: "x1",
-      weapons: "melee",
+      phase: "fight",
       side: "b",
     });
   });
@@ -58,14 +58,24 @@ describe("parseRoute", () => {
     expect(parseRoute("#/battle?a=Orks&b=Ultramar&side=c").side).toBe("a");
   });
 
-  it("defaults the weapon type to ranged, ignoring unknown values and the old calc flag", () => {
-    expect(parseRoute("#/battle?a=Orks&b=Ultramar&w=psychic").weapons).toBe("ranged");
+  it("defaults to the Shooting phase, ignoring unknown values and the old calc flag", () => {
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&p=psychic").phase).toBe("shooting");
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&w=psychic").phase).toBe("shooting");
     expect(parseRoute("#/battle?a=Orks&b=Ultramar&calc=1")).toEqual({
       ...base,
       screen: "battle",
       a: "Orks",
       b: "Ultramar",
     });
+  });
+
+  it("reads every phase, and the older w=melee as Fight", () => {
+    for (const phase of ["command", "movement", "shooting", "charge", "fight"]) {
+      expect(parseRoute(`#/battle?a=Orks&b=Ultramar&p=${phase}`).phase).toBe(phase);
+    }
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&w=melee").phase).toBe("fight");
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&w=ranged").phase).toBe("shooting");
+    expect(parseRoute("#/battle?a=Orks&b=Ultramar&p=charge&w=melee").phase).toBe("charge");
   });
 });
 
@@ -83,8 +93,11 @@ describe("formatRoute", () => {
 
   it("writes only the battle fields that are set", () => {
     expect(
-      formatRoute({ ...base, screen: "battle", a: "Orks", b: "Ultramar", ua: "oll0fu", weapons: "melee" }),
-    ).toBe("#/battle?a=Orks&b=Ultramar&ua=oll0fu&w=melee");
+      formatRoute({ ...base, screen: "battle", a: "Orks", b: "Ultramar", ua: "oll0fu", phase: "fight" }),
+    ).toBe("#/battle?a=Orks&b=Ultramar&ua=oll0fu&p=fight");
+    expect(formatRoute({ ...base, screen: "battle", a: "Orks", b: "Ultramar", phase: "shooting" })).toBe(
+      "#/battle?a=Orks&b=Ultramar",
+    );
     expect(formatRoute({ ...base, screen: "battle", a: "Orks", b: "Ultramar", side: "b" })).toBe(
       "#/battle?a=Orks&b=Ultramar&side=b",
     );
@@ -98,7 +111,7 @@ describe("formatRoute", () => {
       b: "Grey",
       ua: "abc",
       ub: null,
-      weapons: "melee",
+      phase: "fight",
       side: "b",
     };
     expect(parseRoute(formatRoute(route))).toEqual(route);

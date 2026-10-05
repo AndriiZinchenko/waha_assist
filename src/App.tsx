@@ -26,8 +26,9 @@ import { ResultDrawer } from "./components/ResultDrawer";
 import { SideSwitcher } from "./components/SideSwitcher";
 import { VoiceCommander, type VoiceFeedback } from "./components/VoiceCommander";
 import { VoiceToggle } from "./components/VoiceToggle";
-import { WeaponModeToggle } from "./components/WeaponModeToggle";
-import type { WeaponMode } from "./lib/route";
+import { PhaseSelector } from "./components/PhaseSelector";
+import { PhaseFilterProvider } from "./lib/phaseFilter";
+import { weaponModeFor, type Phase } from "./lib/phases";
 import { WakeLockToggle } from "./components/WakeLockToggle";
 
 // Storage holds the army-list-level state (model counts, leader
@@ -111,8 +112,8 @@ function App() {
     navigate({ ...route, side }, { replace: true });
   }
 
-  function handleSetWeapons(weapons: WeaponMode) {
-    navigate({ ...route, weapons }, { replace: true });
+  function handleSetPhase(phase: Phase) {
+    navigate({ ...route, phase }, { replace: true });
   }
 
   /**
@@ -236,6 +237,8 @@ function App() {
   }
 
   const showPanels = route.screen === "battle" && armyA !== null && armyB !== null;
+  // Only Shooting and Fight have attacks to calculate.
+  const weaponMode = weaponModeFor(route.phase);
   const configArmy =
     route.screen === "config"
       ? (armies.find((a) => a.id === route.configArmyId) ?? null)
@@ -255,7 +258,7 @@ function App() {
           className="shrink-0 pt-[env(safe-area-inset-top)]"
           style={{ background: "var(--header-bg)", borderBottom: "1px solid var(--rule)" }}
         >
-          <div className="h-[52px] px-[6px] flex items-center gap-[4px]">
+          <div className="relative h-[52px] px-[6px] flex items-center gap-[4px]">
             {route.screen === "list" ? (
               <span className="px-[8px] flex items-baseline gap-[6px] whitespace-nowrap">
                 <span className="display font-extrabold text-[17px] tracking-[0.06em]">
@@ -269,16 +272,26 @@ function App() {
               <button
                 type="button"
                 onClick={handleOpenSetup}
+                aria-label="Armies"
                 className="display min-h-[44px] px-[8px] flex items-center gap-[6px] rounded-[var(--r-control)] text-[18px] font-bold"
               >
                 <span aria-hidden="true" className="text-[22px] leading-none">
                   ‹
                 </span>
-                Armies
+                <span className={showPanels ? "hidden min-[900px]:inline" : undefined}>Armies</span>
               </button>
             )}
             <SyncStatus status={sync.status} />
             <span className="flex-1" />
+            {showPanels && (
+              <>
+                {/* Centered in the header from 900px; between the two groups below. */}
+                <span className="min-[900px]:absolute min-[900px]:left-1/2 min-[900px]:-translate-x-1/2">
+                  <PhaseSelector phase={route.phase} onChange={handleSetPhase} />
+                </span>
+                <span className="flex-1 min-[900px]:hidden" />
+              </>
+            )}
             <span className="hidden min-[900px]:flex items-center gap-[8px] mr-[4px]">
               <LangToggle lang={state.lang} onChange={handleChangeLang} />
               <WakeLockToggle enabled={wakeLock.enabled} onToggle={wakeLock.toggle} />
@@ -288,9 +301,6 @@ function App() {
                 enabled={voiceEnabled}
                 onToggle={() => setVoiceEnabled((v) => !v)}
               />
-            )}
-            {showPanels && (
-              <WeaponModeToggle mode={route.weapons} onChange={handleSetWeapons} />
             )}
             <span className="min-[900px]:hidden">
               <HeaderOverflow
@@ -303,6 +313,7 @@ function App() {
           </div>
         </header>
         {showPanels && armyA && armyB ? (
+          <PhaseFilterProvider phase={route.phase}>
           <div className="flex-1 min-h-0 flex flex-col">
             {voiceEnabled && (
               <VoiceCommander
@@ -353,17 +364,20 @@ function App() {
                 showNumbers={voiceEnabled}
               />
             </div>
-            <ResultDrawer
-              unitA={unitA}
-              unitB={unitB}
-              unitsA={unitsA}
-              unitsB={unitsB}
-              leaderAssignments={state.leaderAssignments}
-              counts={state.modelCounts}
-              weapons={route.weapons}
-              onClose={handleCloseUnits}
-            />
+            {weaponMode && (
+              <ResultDrawer
+                unitA={unitA}
+                unitB={unitB}
+                unitsA={unitsA}
+                unitsB={unitsB}
+                leaderAssignments={state.leaderAssignments}
+                counts={state.modelCounts}
+                weapons={weaponMode}
+                onClose={handleCloseUnits}
+              />
+            )}
           </div>
+          </PhaseFilterProvider>
         ) : configArmy ? (
           <ArmyConfigScreen
             army={configArmy}

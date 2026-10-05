@@ -1,8 +1,9 @@
 import type { Side } from "../components/ArmyPanel";
+import { isPhase, type Phase } from "./phases";
 
 export type Screen = "list" | "config" | "battle";
 
-/** Which weapons the calculator resolves: the phase being played. */
+/** Which weapons the calculator resolves; follows the phase (see phases.ts). */
 export type WeaponMode = "ranged" | "melee";
 
 /**
@@ -13,7 +14,7 @@ export type WeaponMode = "ranged" | "melee";
  *
  *   #/                                   army list
  *   #/config/<armyId>                    configuration for one army
- *   #/battle?a=&b=&ua=&ub=&w=melee&side=b the two panels
+ *   #/battle?a=&b=&ua=&ub=&p=fight&side=b the two panels
  *
  * The side assignments `a`/`b` ride along on every screen so picks made
  * on the list survive a detour into configuration.
@@ -26,9 +27,9 @@ export interface RouteState {
   /** Unit expanded on side A / B (battle screen only). */
   ua: string | null;
   ub: string | null;
-  /** Weapon type the calculator shows (battle screen only). Kept in the
-   * URL so a reload stays in the phase being played. */
-  weapons: WeaponMode;
+  /** The phase being played (battle screen only). Kept in the URL so a
+   * reload stays in it. */
+  phase: Phase;
   /** Panel shown on narrow screens (battle screen only). */
   side: Side;
 }
@@ -40,9 +41,16 @@ export const LIST_ROUTE: RouteState = {
   b: null,
   ua: null,
   ub: null,
-  weapons: "ranged",
+  phase: "shooting",
   side: "a",
 };
+
+/** `p=`, or the older `w=melee` (Fight); Shooting when neither says. */
+function parsePhase(params: URLSearchParams): Phase {
+  const p = params.get("p");
+  if (isPhase(p)) return p;
+  return params.get("w") === "melee" ? "fight" : "shooting";
+}
 
 export function parseRoute(hash: string): RouteState {
   const raw = hash.replace(/^#/, "");
@@ -68,7 +76,7 @@ export function parseRoute(hash: string): RouteState {
       screen: "battle",
       ua: params.get("ua"),
       ub: params.get("ub"),
-      weapons: params.get("w") === "melee" ? "melee" : "ranged",
+      phase: parsePhase(params),
       side: side === "b" ? "b" : "a",
     };
   }
@@ -88,7 +96,7 @@ export function formatRoute(route: RouteState): string {
     path = "/battle";
     if (route.ua) params.set("ua", route.ua);
     if (route.ub) params.set("ub", route.ub);
-    if (route.weapons === "melee") params.set("w", "melee");
+    if (route.phase !== "shooting") params.set("p", route.phase);
     if (route.side === "b") params.set("side", "b");
   }
 

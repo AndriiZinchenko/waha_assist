@@ -5,6 +5,7 @@ import { EditedNotice } from "./EditedTag";
 import { ModelCounter } from "./ModelCounter";
 import { StatStrip, UnitKeywords } from "./StatStrip";
 import { UnitInfo } from "./UnitInfo";
+import { PhaseFilterBar } from "./PhaseFilterBar";
 import { UnitRules } from "./UnitRules";
 import { UnitStratagems } from "./UnitStratagems";
 import { WeaponTable } from "./WeaponTable";
@@ -67,6 +68,7 @@ export function UnitDetails({
           </div>
         )
       )}
+      <PhaseFilterBar />
       <UnitInfo unit={unit} />
       <UnitRules unit={unit} />
       <UnitStratagems unit={unit} detachmentData={detachmentData} />

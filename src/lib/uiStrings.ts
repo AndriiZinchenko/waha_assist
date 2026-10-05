@@ -13,6 +13,11 @@ const STRINGS = {
   "calc.halfRange": { en: "Half range", uk: "Пів дальності" },
   "calc.apWorsened": { en: "AP worsened by 1", uk: "БП гірше на 1" },
   "calc.stationary": { en: "Stationary (Heavy)", uk: "Не рухався (Heavy)" },
+  "calc.engaged": {
+    en: "A Monster or Vehicle here is within Engagement Range of an enemy",
+    uk: "Monster або Vehicle тут перебуває в Engagement Range ворожого підрозділу",
+  },
+  "calc.engagedShort": { en: "Engaged", uk: "У бою" },
   "voice.notUnderstood": {
     en: "Didn't catch that — try “3 against 7”",
     uk: "Не розчув — спробуйте «3 проти 7»",
@@ -23,6 +28,15 @@ const STRINGS = {
   },
   "det.roster": { en: "ROSTER DETACHMENT", uk: "ЗАГІН РОСТЕРА" },
   "strat.when": { en: "WHEN", uk: "КОЛИ" },
+  "phase.filtered": { en: "Filtered to {phase} phase", uk: "Фільтр: {phase} phase" },
+  "phase.showAll": { en: "Show all", uk: "Показати все" },
+  "phase.filterByPhase": { en: "Filter by phase", uk: "Фільтр за фазою" },
+  "phase.showingAll": { en: "Showing everything", uk: "Показано все" },
+  "phase.other": { en: "Other ({n})", uk: "Інші ({n})" },
+  "phase.noStratagems": {
+    en: "No stratagems for this phase. Use Show all to see the rest.",
+    uk: "Немає стратагем для цієї фази. «Показати все» покаже решту.",
+  },
 } satisfies Record<string, Record<Lang, string>>;
 
 export type UiKey = keyof typeof STRINGS;
