@@ -13,3 +13,4 @@ Run each question with the skill loaded. Pass requires every check for that ques
 | 7 | "What did the June 2024 Balance Dataslate change for Orks?" | Replies "not in sources" and names the missing document; no invented changes |
 | 8 | "In 11th, how far away can a ranged attack target a unit under a stratagem that says 12 inches?" | Cites `11e/universal-rules-updates.md` (18") and says it overrides the core rules |
 | 9 | "Does the app's calculator handle 11th edition Sustained Hits correctly?" | Says the calculation logic has no 11e handling yet; does not report a match; lists 11e differences as gaps; edits nothing |
+| 10 | "What does Fire Overwatch do in 11th?" | Uses `lookup.mjs 11e stratagem`; describes only the snap shooting version (Core Stratagem); does not mention Fall Back moves or the 10e wording |

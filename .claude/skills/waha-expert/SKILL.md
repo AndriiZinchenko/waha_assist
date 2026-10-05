@@ -21,7 +21,9 @@ Answer from the files below, never from memory. Every answer names its edition a
 
 - **10e core rules are the launch version (PDF dated 2023-05-31).** The later "Core rules updates and errata" are not in the sources, so a 10e core-rules answer must end with: "Based on the launch Core Rules; later errata are not in my sources."
 - **11e core rules PDF is older than the current rules.** It lacks rules 18.06 and 18.07 cited by the Universal Rules Updates. Where the updates conflict with the core rules, the updates win. For anything touching disembarking, say the core text may be out of date.
-- **FAQs:** only the selection printed in the 11e PDF appendix (§24.xx). The full FAQs live in the Warhammer 40,000 app.
+- **FAQs:** only the selection printed at the very end of the 11e PDF. It has no rule numbers, so it sits at the tail of the `[TWINLINKED] (§24.38)` section: cite it as "11e FAQ appendix" with the PDF page from that section's comment, never as `§24.38`. The full FAQs live in the Warhammer 40,000 app.
+- **Lost hyphens in the 11e text.** The PDF extraction drops some hyphens, so grep for both spellings: `twin-linked`/`twinlinked`, `close-quarters`/`closequarters`, `anti-infantry`/`antiinfantry`. A grep with only the hyphen finds nothing here even though the rule is present; do not answer "not in sources" until you tried both.
+- **The 11e Wahapedia stratagem table also holds the old 10th edition core stratagems.** `lookup.mjs` drops those rows (type starts with "Core – ") for 11e. If you read `data/11e/Stratagems.csv` directly, ignore them.
 - **Not available:** the Munitorum Field Manual (Wahapedia's points tables stand in for unit costs), balance dataslates, faction pack errata.
 - **Wahapedia is fan-compiled.** Datasheet and stratagem text may differ from the printed books; credit it ("powered by Wahapedia"). 10e data is final as of 2026-06-13; 11e data is refreshed with the sync script.
 - **Section bodies can run on.** A reference section ends only at the next numbered heading, so its text may include the unnumbered intro of the following chapter. Quote only the part that belongs to the rule.

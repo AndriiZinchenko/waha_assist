@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findByName, unitCard, stratagemCard, detachmentCard, lookup } from "./cards.mjs";
+import { findByName, forEdition, unitCard, stratagemCard, detachmentCard, lookup } from "./cards.mjs";
 
 const t = {
   Factions: [{ id: "AC", name: "Adeptus Custodes" }],
@@ -43,6 +43,42 @@ describe("findByName", () => {
     const rows = [{ name: "Guard" }, { name: "Custodian Guard" }];
     expect(findByName(rows, "guard")).toEqual([{ name: "Guard" }]);
     expect(findByName(rows, "custodian").map((r) => r.name)).toEqual(["Custodian Guard"]);
+  });
+});
+
+describe("findByName with apostrophes", () => {
+  it("finds a name stored without the leading apostrophe", () => {
+    expect(findByName([{ name: "ERE WE GO" }], "'Ere We Go")).toEqual([{ name: "ERE WE GO" }]);
+  });
+
+  it("matches straight and curly apostrophes interchangeably", () => {
+    const rows = [{ name: "THE EMPEROR’S AUSPICE" }];
+    expect(findByName(rows, "Emperor's Auspice")).toEqual(rows);
+    expect(findByName([{ name: "Emperor's Auspice" }], "EMPEROR’S AUSPICE")).toHaveLength(1);
+  });
+});
+
+describe("forEdition", () => {
+  const legacy = { ...t.Stratagems[0], id: "old", type: "Core – Strategic Ploy Stratagem", description: "Fall Back move text" };
+  const current = { ...t.Stratagems[0], id: "new", type: "Core Stratagem", description: "snap shooting text" };
+  const tables = { ...t, Stratagems: [legacy, current, t.Stratagems[1]] };
+
+  it("drops the legacy 10th edition core stratagem rows from the 11e tables", () => {
+    const e11 = forEdition(tables, "11e");
+    expect(e11.Stratagems.map((s) => s.id)).toEqual(["new", "s2"]);
+    const out = lookup(e11, "stratagem", "heroic intervention");
+    expect(out).toContain("snap shooting text");
+    expect(out).not.toContain("Fall Back move text");
+  });
+
+  it("keeps every row for 10e and does not change the input", () => {
+    expect(forEdition(tables, "10e").Stratagems).toHaveLength(3);
+    forEdition(tables, "11e");
+    expect(tables.Stratagems).toHaveLength(3);
+  });
+
+  it("passes tables without stratagems through unchanged", () => {
+    expect(forEdition({ Datasheets: [] }, "11e")).toEqual({ Datasheets: [] });
   });
 });
 
@@ -104,6 +140,12 @@ describe("unitCard with the shapes the real export uses", () => {
   it("groups tiered points under their headings", () => {
     const card = withCosts([["YOUR 1ST TO 3RD UNITS COST", ""], ["4 models", "170"], ["YOUR 4TH + UNIT COSTS", ""], ["4 models", "180"]]);
     expect(card).toContain("Points: YOUR 1ST TO 3RD UNITS COST: 4 models 170; YOUR 4TH + UNIT COSTS: 4 models 180");
+  });
+
+  it("strips HTML and decodes entities in the points descriptions", () => {
+    const card = withCosts([["1 model (<ky>AGENTS OF THE IMPERIUM</ky> Detachment)", "110"], ["per T&#x27;au flamer", "5"]]);
+    expect(card).toContain("Points: 1 model (AGENTS OF THE IMPERIUM Detachment) 110, per T'au flamer 5");
+    expect(card).not.toMatch(/<ky>|&#x27;/);
   });
 
   it("lists several model counts in one tier together", () => {

@@ -34,6 +34,16 @@ describe("htmlToText", () => {
   });
 });
 
+describe("htmlToText numeric entities", () => {
+  it("decodes decimal and hexadecimal character references", () => {
+    expect(htmlToText("T&#x27;au &#39;x&#39; &#8217; &#x2019;")).toBe("T'au 'x' ’ ’");
+  });
+
+  it("leaves an out-of-range reference as written instead of throwing", () => {
+    expect(htmlToText("a &#99999999; b")).toBe("a &#99999999; b");
+  });
+});
+
 describe("validateTable", () => {
   it("accepts a normal table", () => {
     expect(validateTable("Datasheets", "id|name|\n1|a|\n")).toBeNull();

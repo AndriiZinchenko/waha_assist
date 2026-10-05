@@ -37,6 +37,10 @@ export function htmlToText(html) {
     .replace(/<\/(p|ul|ol|div)>/gi, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&(?:amp|lt|gt|quot|#39|nbsp);/g, (e) => ENTITIES[e])
+    .replace(/&#(x?)([0-9a-f]+);/gi, (match, hex, digits) => {
+      const code = parseInt(digits, hex ? 16 : 10);
+      return code <= 0x10ffff ? String.fromCodePoint(code) : match;
+    })
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();

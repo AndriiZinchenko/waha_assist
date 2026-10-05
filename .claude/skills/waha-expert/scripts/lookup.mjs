@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCsv } from "./lib/wahapedia.mjs";
-import { lookup } from "./lib/cards.mjs";
+import { forEdition, lookup } from "./lib/cards.mjs";
 
 const SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NEEDED = {
@@ -31,4 +31,4 @@ for (const name of NEEDED[kind]) {
   }
   t[name] = parseCsv(readFileSync(file, "utf8")).rows;
 }
-console.log(lookup(t, kind, query));
+console.log(lookup(forEdition(t, edition), kind, query));

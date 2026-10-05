@@ -3,12 +3,22 @@
 import { htmlToText } from "./wahapedia.mjs";
 
 const plus = (v) => (/^\d+$/.test(v) ? `${v}+` : v);
-const norm = (s) => s.toLowerCase();
+// Case-insensitive, and apostrophes (straight or curly) are ignored so "'Ere We Go"
+// finds ERE WE GO and "Emperor's Auspice" finds THE EMPEROR’S AUSPICE.
+const norm = (s) => s.toLowerCase().replace(/['‘’`]/g, "");
 
 export function findByName(rows, query, key = "name") {
   const q = norm(query);
   const exact = rows.filter((r) => norm(r[key]) === q);
   return exact.length ? exact : rows.filter((r) => norm(r[key]).includes(q));
+}
+
+// The 11th edition Wahapedia table still carries the 10th edition core stratagems
+// (type "Core – <kind> Stratagem") beside the real 11th edition ones (type
+// "Core Stratagem"). Drop the legacy rows so 10th wording is never served as 11th.
+export function forEdition(t, edition) {
+  if (edition !== "11e" || !t.Stratagems) return t;
+  return { ...t, Stratagems: t.Stratagems.filter((s) => !s.type.startsWith("Core – ")) };
 }
 
 const factionName = (t, id) => t.Factions.find((f) => f.id === id)?.name ?? id;
@@ -31,10 +41,10 @@ export function unitCard(t, sheet) {
   const tiers = [];
   for (const c of t.Datasheets_models_cost.filter((x) => x.datasheet_id === sheet.id)) {
     if (!c.cost) {
-      tiers.push({ label: c.description, items: [] });
+      tiers.push({ label: htmlToText(c.description), items: [] });
     } else {
       if (!tiers.length) tiers.push({ label: "", items: [] });
-      tiers[tiers.length - 1].items.push(`${c.description} ${c.cost}`);
+      tiers[tiers.length - 1].items.push(`${htmlToText(c.description)} ${c.cost}`);
     }
   }
   const priced = tiers.filter((tier) => tier.items.length);
