@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { DirectionModifiers } from "../lib/combat";
+import { activeModifierChips } from "../lib/modifierPanel";
 import { useUi } from "../lib/uiStrings";
 import { Stepper } from "./Stepper";
 
@@ -12,6 +13,13 @@ interface ModifierControlsProps {
   /** Offer the Engaged toggle (Big Guns Never Tire): while shooting, when a
    * Monster or Vehicle is in the matchup. */
   showEngaged?: boolean;
+  /** Offer the Waaagh! toggle: a unit with the Waaagh! ability is in the
+   * matchup. */
+  showWaaagh?: boolean;
+  /** Fold the panel to one line listing the active modifiers. Without
+   * `onToggleCollapsed` the panel cannot be folded. */
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 const MINUS = "−";
@@ -70,9 +78,57 @@ export function ModifierControls({
   onChange,
   onClose,
   showEngaged = false,
+  showWaaagh = false,
+  collapsed = false,
+  onToggleCollapsed,
 }: ModifierControlsProps) {
   const ui = useUi();
   const stepperStyle = { flex: "1 1 130px" };
+
+  const closeButton = (
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Close both units"
+      className="w-[46px] h-[46px] shrink-0 flex items-center justify-center rounded-[var(--r-control)] text-[20px]"
+      style={{ border: "1px solid var(--rule)", color: "var(--ink-2)" }}
+    >
+      ✕
+    </button>
+  );
+
+  if (collapsed && onToggleCollapsed) {
+    const chips = activeModifierChips(modifiers, {
+      halfRange: ui("calc.halfRange"),
+      stationary: ui("calc.stationary"),
+      engaged: ui("calc.engagedShort"),
+      waaagh: ui("calc.waaagh"),
+    });
+    return (
+      <div className="px-[12px] py-[6px] flex items-center gap-[8px]">
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-expanded={false}
+          aria-label={ui("calc.showModifiers")}
+          className="flex-1 min-w-0 min-h-[46px] px-[12px] flex items-center gap-[10px] text-left rounded-[var(--r-control)]"
+          style={{ border: "1px solid var(--rule)" }}
+        >
+          <span className="caption shrink-0">{ui("calc.modifiers")}</span>
+          <span
+            className="min-w-0 truncate text-[15px] font-semibold"
+            style={{ color: chips.length ? "var(--ink)" : "var(--ink-soft)" }}
+          >
+            {chips.length ? chips.join(" · ") : ui("calc.noModifiers")}
+          </span>
+          <span aria-hidden="true" className="ml-auto text-[14px]" style={{ color: "var(--ink-soft)" }}>
+            ▾
+          </span>
+        </button>
+        {closeButton}
+      </div>
+    );
+  }
 
   return (
     <div className="px-[12px] py-[10px] flex flex-wrap gap-[8px]">
@@ -107,6 +163,21 @@ export function ModifierControls({
         }
       />
       <Stepper
+        caption="AP"
+        value={formatMod(modifiers.apMod)}
+        style={stepperStyle}
+        decrementLabel="AP modifier down"
+        incrementLabel="AP modifier up"
+        decrementDisabled={modifiers.apMod <= -1}
+        incrementDisabled={modifiers.apMod >= 1}
+        onDecrement={() =>
+          onChange({ ...modifiers, apMod: (modifiers.apMod - 1) as -1 | 0 | 1 })
+        }
+        onIncrement={() =>
+          onChange({ ...modifiers, apMod: (modifiers.apMod + 1) as -1 | 0 | 1 })
+        }
+      />
+      <Stepper
         caption="Invuln"
         value={modifiers.invulnOverride === null ? "None" : `${modifiers.invulnOverride}++`}
         style={stepperStyle}
@@ -134,11 +205,6 @@ export function ModifierControls({
         }
       />
       <CheckToggle
-        label={ui("calc.apWorsened")}
-        checked={modifiers.apWorsened}
-        onToggle={() => onChange({ ...modifiers, apWorsened: !modifiers.apWorsened })}
-      />
-      <CheckToggle
         label={ui("calc.halfRange")}
         checked={modifiers.halfRange}
         onToggle={() => onChange({ ...modifiers, halfRange: !modifiers.halfRange })}
@@ -156,15 +222,26 @@ export function ModifierControls({
           onToggle={() => onChange({ ...modifiers, engaged: !modifiers.engaged })}
         />
       )}
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Close both units"
-        className="w-[46px] h-[46px] shrink-0 flex items-center justify-center rounded-[var(--r-control)] text-[20px]"
-        style={{ border: "1px solid var(--rule)", color: "var(--ink-2)" }}
-      >
-        ✕
-      </button>
+      {showWaaagh && (
+        <CheckToggle
+          label={ui("calc.waaagh")}
+          checked={modifiers.waaagh}
+          onToggle={() => onChange({ ...modifiers, waaagh: !modifiers.waaagh })}
+        />
+      )}
+      {onToggleCollapsed && (
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-expanded={true}
+          aria-label={ui("calc.hideModifiers")}
+          className="w-[46px] h-[46px] shrink-0 flex items-center justify-center rounded-[var(--r-control)] text-[14px]"
+          style={{ border: "1px solid var(--rule)", color: "var(--ink-2)" }}
+        >
+          ▴
+        </button>
+      )}
+      {closeButton}
     </div>
   );
 }

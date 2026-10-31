@@ -11,7 +11,11 @@ const STRINGS = {
   "overflow.language": { en: "Language", uk: "Мова" },
   "overflow.wake": { en: "Keep screen awake", uk: "Не вимикати екран" },
   "calc.halfRange": { en: "Half range", uk: "Пів дальності" },
-  "calc.apWorsened": { en: "AP worsened by 1", uk: "БП гірше на 1" },
+  "calc.waaagh": { en: "Waaagh!", uk: "Waaagh!" },
+  "calc.modifiers": { en: "Modifiers", uk: "Модифікатори" },
+  "calc.noModifiers": { en: "none", uk: "немає" },
+  "calc.showModifiers": { en: "Show modifiers", uk: "Показати модифікатори" },
+  "calc.hideModifiers": { en: "Hide modifiers", uk: "Сховати модифікатори" },
   "calc.stationary": { en: "Stationary (Heavy)", uk: "Не рухався (Heavy)" },
   "calc.engaged": {
     en: "A Monster or Vehicle here is within Engagement Range of an enemy",

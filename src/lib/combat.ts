@@ -1,18 +1,23 @@
 import type { DiceExpr, ParsedUnit, RuleRef } from "../../parseRoster.mjs";
 import { getLiveWeaponCount, getUnitLiveTotal } from "./loadouts";
 import { mergeByProfileId } from "./weapons";
+import type { Edition } from "./edition";
 
 export interface DirectionModifiers {
   hitMod: -1 | 0 | 1;
   woundMod: -1 | 0 | 1;
   invulnOverride: number | null;
-  apWorsened: boolean;
+  /** +1 improves every weapon's AP by 1 (e.g. a Crusade weapon upgrade),
+   * -1 worsens it (e.g. Armour of Contempt). */
+  apMod: -1 | 0 | 1;
   halfRange: boolean;
   /** The attacking unit did not move this turn: Heavy weapons get +1 to hit. */
   stationary: boolean;
   /** A Monster or Vehicle in this matchup is within Engagement Range of an
    * enemy (Big Guns Never Tire). */
   engaged: boolean;
+  /** The Waaagh! is active: changes only units with the Waaagh! ability. */
+  waaagh: boolean;
 }
 
 export function emptyModifiers(): DirectionModifiers {
@@ -20,10 +25,11 @@ export function emptyModifiers(): DirectionModifiers {
     hitMod: 0,
     woundMod: 0,
     invulnOverride: null,
-    apWorsened: false,
+    apMod: 0,
     halfRange: false,
     stationary: false,
     engaged: false,
+    waaagh: false,
   };
 }
 
@@ -54,6 +60,14 @@ export function bigGunsApplies(
 ): boolean {
   return engaged && canBeEngaged(attacker, target);
 }
+
+/** Orks units whose datasheet carries the Waaagh! army rule. */
+export function hasWaaagh(unit: ParsedUnit): boolean {
+  return unit.rules.some((r) => r.name.trim().toLowerCase() === "waaagh!");
+}
+
+/** The invulnerable save the Waaagh! grants in both editions. */
+const WAAAGH_INVULN = 5;
 
 export interface HalfRangeBonus {
   kind: "melta" | "rapidFire";
@@ -93,6 +107,13 @@ export interface AttackRow {
   appliedHitMod: number;
   appliedWoundMod: number;
   apWorsened: boolean;
+  apImproved: boolean;
+  /** 10th edition Waaagh!: +1 Strength and Attacks were applied (melee). */
+  waaaghAttack: boolean;
+  /** 11th edition Waaagh!: reminder that ranged attacks have [ASSAULT]. */
+  waaaghAssault: boolean;
+  /** The target's 5+ invuln comes from the Waaagh!. */
+  waaaghInvuln: boolean;
   halfRangeBonus: HalfRangeBonus | null;
   halfRangeApplied: boolean;
   conditionalInvulnAvailable: number | null;
@@ -191,9 +212,13 @@ export function computeAttackTable(
   autoHitPenaltySources: RuleRef[] = [],
   /** Big Guns Never Tire applies to this attack (see bigGunsApplies). */
   engagedPenalty = false,
+  /** Decides what the Waaagh! does (see hasWaaagh). */
+  edition: Edition = 10,
 ): AttackRow[] {
   const merged = mergeByProfileId(attacker.weapons);
   const targetModels = getUnitLiveTotal(counts, target.id, target);
+  const attackerWaaagh = modifiers.waaagh && hasWaaagh(attacker);
+  const targetWaaagh = modifiers.waaagh && hasWaaagh(target);
 
   return merged.map((weapon) => {
     const count = getLiveWeaponCount(counts, attacker.id, attacker, weapon.profileId);
@@ -208,9 +233,11 @@ export function computeAttackTable(
     );
     const blastBonus = hasKeyword(weapon.keywords, "Blast") ? Math.floor(targetModels / 5) : 0;
 
-    const effectiveAp = modifiers.apWorsened
-      ? Math.min(weapon.ap + 1, 0)
-      : weapon.ap;
+    // AP is negative: improving it subtracts, and worsening never makes it
+    // a bonus to the save.
+    const effectiveAp = Math.min(weapon.ap - modifiers.apMod, 0);
+    const waaaghAttack = attackerWaaagh && edition === 10 && weapon.type === "melee";
+    const strength = weapon.strength + (waaaghAttack ? 1 : 0);
 
     const sv = target.profile.SV;
     const armorTarget = sv != null ? sv - effectiveAp : null;
@@ -220,8 +247,11 @@ export function computeAttackTable(
     // exists — so it only counts toward the save when the user has manually
     // confirmed it applies via the Invuln override.
     const targetInvuln = target.invuln;
-    const autoInvulnValue =
+    const ownInvulnValue =
       targetInvuln != null && !targetInvuln.conditional ? targetInvuln.value : null;
+    const waaaghInvuln =
+      targetWaaagh && (ownInvulnValue == null || ownInvulnValue > WAAAGH_INVULN);
+    const autoInvulnValue = waaaghInvuln ? WAAAGH_INVULN : ownInvulnValue;
     const invulnValue = modifiers.invulnOverride ?? autoInvulnValue;
     const conditionalInvulnAvailable =
       modifiers.invulnOverride == null && targetInvuln?.conditional
@@ -252,7 +282,7 @@ export function computeAttackTable(
     const baseWound =
       target.profile.T != null
         ? Math.min(
-            baseWoundTarget(weapon.strength, target.profile.T),
+            baseWoundTarget(strength, target.profile.T),
             antiX?.threshold ?? 6,
           )
         : 6;
@@ -275,7 +305,7 @@ export function computeAttackTable(
       weapon.attacks ?? { dice: 0, sides: 0, flat: 0, raw: "—", avg: 0 };
     const rapidFireBonus =
       halfRangeApplied && halfRangeBonus!.kind === "rapidFire" ? halfRangeBonus!.value : 0;
-    const attackBonus = rapidFireBonus + blastBonus;
+    const attackBonus = rapidFireBonus + blastBonus + (waaaghAttack ? 1 : 0);
     const attacksExpr = attackBonus > 0 ? applyBonus(baseAttacks, attackBonus) : baseAttacks;
 
     return {
@@ -293,7 +323,7 @@ export function computeAttackTable(
       saveTarget,
       isInvulnFallback,
       ap: effectiveAp,
-      strength: weapon.strength,
+      strength,
       damage,
       range: weapon.range ?? null,
       keywords: weapon.keywords,
@@ -302,7 +332,11 @@ export function computeAttackTable(
       autoHitPenaltySources: weapon.skill === null ? [] : autoHitPenaltySources,
       appliedHitMod: weapon.skill === null ? 0 : totalHitMod,
       appliedWoundMod: modifiers.woundMod,
-      apWorsened: modifiers.apWorsened,
+      apWorsened: modifiers.apMod < 0,
+      apImproved: modifiers.apMod > 0,
+      waaaghAttack,
+      waaaghAssault: attackerWaaagh && edition === 11 && weapon.type === "ranged",
+      waaaghInvuln: waaaghInvuln && modifiers.invulnOverride == null,
       halfRangeBonus,
       halfRangeApplied,
       conditionalInvulnAvailable,

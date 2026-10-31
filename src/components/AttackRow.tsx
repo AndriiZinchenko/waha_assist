@@ -136,6 +136,10 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       text: "AP worsened by 1 (Armour of Contempt)",
       kind: "positive",
     },
+    row.apImproved && { text: "AP improved by 1", kind: "positive" },
+    row.waaaghAttack && { text: "Waaagh! +1 Strength and +1 Attacks", kind: "positive" },
+    row.waaaghAssault && { text: "Waaagh!: ranged attacks have [ASSAULT]", kind: "neutral" },
+    row.waaaghInvuln && { text: "Waaagh!: target has a 5+ invuln", kind: "negative" },
     row.halfRangeApplied &&
       row.halfRangeBonus && {
         text: `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value} applied (half range)`,

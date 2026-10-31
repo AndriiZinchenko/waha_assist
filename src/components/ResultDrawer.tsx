@@ -2,12 +2,15 @@ import { useState, type ReactNode } from "react";
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import {
   emptyModifiers,
+  hasWaaagh,
   canBeEngaged,
   type DirectionModifiers,
 } from "../lib/combat";
 import { AttackTable } from "./AttackTable";
 import type { WeaponMode } from "../lib/route";
+import type { Edition } from "../lib/edition";
 import { ModifierControls } from "./ModifierControls";
+import { loadModifiersCollapsed, saveModifiersCollapsed } from "../lib/modifierPanel";
 
 interface ResultDrawerProps {
   unitA: ParsedUnit | null;
@@ -18,6 +21,7 @@ interface ResultDrawerProps {
   counts: Record<string, number>;
   /** Ranged or melee, chosen in the header for the phase being played. */
   weapons: WeaponMode;
+  edition: Edition;
   onClose: () => void;
 }
 
@@ -52,6 +56,7 @@ export function ResultDrawer({
   leaderAssignments,
   counts,
   weapons,
+  edition,
   onClose,
 }: ResultDrawerProps) {
   if (!unitA || !unitB) {
@@ -74,6 +79,7 @@ export function ResultDrawer({
       leaderAssignments={leaderAssignments}
       counts={counts}
       weapons={weapons}
+      edition={edition}
       onClose={onClose}
     />
   );
@@ -87,6 +93,7 @@ interface CombatResultsProps {
   leaderAssignments: Record<string, string>;
   counts: Record<string, number>;
   weapons: WeaponMode;
+  edition: Edition;
   onClose: () => void;
 }
 
@@ -98,9 +105,16 @@ function CombatResults({
   leaderAssignments,
   counts,
   weapons,
+  edition,
   onClose,
 }: CombatResultsProps) {
   const [modifiers, setModifiers] = useState<DirectionModifiers>(emptyModifiers());
+  const [collapsed, setCollapsed] = useState(() => loadModifiersCollapsed());
+
+  function toggleCollapsed() {
+    setCollapsed(!collapsed);
+    saveModifiersCollapsed(!collapsed);
+  }
 
   return (
     <Drawer>
@@ -113,6 +127,9 @@ function CombatResults({
           onChange={setModifiers}
           onClose={onClose}
           showEngaged={weapons === "ranged" && canBeEngaged(unitA, unitB)}
+          showWaaagh={hasWaaagh(unitA) || hasWaaagh(unitB)}
+          collapsed={collapsed}
+          onToggleCollapsed={toggleCollapsed}
         />
       </div>
       <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-x-[24px] px-[12px] pb-[16px]">
@@ -125,6 +142,7 @@ function CombatResults({
           side="a"
           modifiers={modifiers}
           weaponFilter={weapons}
+          edition={edition}
         />
         <AttackTable
           attacker={unitB}
@@ -135,6 +153,7 @@ function CombatResults({
           side="b"
           modifiers={modifiers}
           weaponFilter={weapons}
+          edition={edition}
         />
       </div>
     </Drawer>

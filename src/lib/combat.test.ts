@@ -262,7 +262,7 @@ describe("computeAttackTable — AP worsened by 1", () => {
       makeAttacker({ ap: -2 }),
       {},
       makeUnit(),
-      modifiers({ apWorsened: true }),
+      modifiers({ apMod: -1 }),
     );
     expect(row.ap).toBe(-1);
     expect(row.saveTarget).toBe(4); // SV3 - AP-1 = 4+
@@ -274,7 +274,7 @@ describe("computeAttackTable — AP worsened by 1", () => {
       makeAttacker({ ap: 0 }),
       {},
       makeUnit(),
-      modifiers({ apWorsened: true }),
+      modifiers({ apMod: -1 }),
     );
     expect(row.ap).toBe(0);
     expect(row.saveTarget).toBe(3);
@@ -286,7 +286,7 @@ describe("computeAttackTable — AP worsened by 1", () => {
       makeAttacker({ ap: -3 }),
       {},
       target,
-      modifiers({ apWorsened: true }),
+      modifiers({ apMod: -1 }),
     );
     // effective AP -2, armor = 3 - (-2) = 5, invuln 4 is better -> fallback
     expect(row.ap).toBe(-2);
@@ -825,5 +825,144 @@ describe("canBeEngaged", () => {
     expect(canBeEngaged(infantry, vehicle)).toBe(true);
     expect(canBeEngaged(vehicle, vehicle)).toBe(true);
     expect(canBeEngaged(infantry, infantry)).toBe(false);
+  });
+});
+
+describe("computeAttackTable — AP improved by 1", () => {
+  it("improves AP-1 to AP-2 for ranged and melee weapons alike", () => {
+    for (const type of ["ranged", "melee"] as const) {
+      const [row] = computeAttackTable(
+        makeAttacker({ type, ap: -1 }),
+        {},
+        makeUnit(),
+        modifiers({ apMod: 1 }),
+      );
+      expect(row.ap).toBe(-2);
+      expect(row.saveTarget).toBe(5); // SV3 - AP-2 = 5+
+      expect(row.apImproved).toBe(true);
+    }
+  });
+
+
+  it("gives an AP0 weapon AP-1", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ ap: 0 }),
+      {},
+      makeUnit(),
+      modifiers({ apMod: 1 }),
+    );
+    expect(row.ap).toBe(-1);
+  });
+});
+
+describe("computeAttackTable — Waaagh!", () => {
+  const WAAAGH = { name: "Waaagh!", text: "" };
+
+  function orkAttacker(weaponOverrides: Partial<WeaponEntry> = {}): ParsedUnit {
+    return { ...makeAttacker(weaponOverrides), rules: [WAAAGH] };
+  }
+
+  it("10th: adds 1 to Strength and Attacks of melee weapons", () => {
+    const [row] = computeAttackTable(
+      orkAttacker({ type: "melee", strength: 4 }),
+      {},
+      makeUnit(),
+      modifiers({ waaagh: true }),
+      0,
+      [],
+      false,
+      10,
+    );
+    expect(row.strength).toBe(5);
+    expect(row.attacksRaw).toBe("3");
+    expect(row.woundTarget).toBe(3); // S5 vs T4
+    expect(row.waaaghAttack).toBe(true);
+  });
+
+  it("10th: leaves ranged weapons alone", () => {
+    const [row] = computeAttackTable(
+      orkAttacker({ type: "ranged", strength: 4 }),
+      {},
+      makeUnit(),
+      modifiers({ waaagh: true }),
+      0,
+      [],
+      false,
+      10,
+    );
+    expect(row.strength).toBe(4);
+    expect(row.attacksRaw).toBe("2");
+    expect(row.waaaghAttack).toBe(false);
+  });
+
+  it("11th: no Strength or Attacks bonus, ranged attacks get an Assault reminder", () => {
+    const [melee] = computeAttackTable(
+      orkAttacker({ type: "melee", strength: 4 }),
+      {},
+      makeUnit(),
+      modifiers({ waaagh: true }),
+      0,
+      [],
+      false,
+      11,
+    );
+    expect(melee.strength).toBe(4);
+    expect(melee.attacksRaw).toBe("2");
+    const [ranged] = computeAttackTable(
+      orkAttacker({ type: "ranged" }),
+      {},
+      makeUnit(),
+      modifiers({ waaagh: true }),
+      0,
+      [],
+      false,
+      11,
+    );
+    expect(ranged.waaaghAssault).toBe(true);
+  });
+
+  it("does nothing for a unit without the Waaagh! ability", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ type: "melee", strength: 4 }),
+      {},
+      makeUnit({ invuln: null }),
+      modifiers({ waaagh: true }),
+      0,
+      [],
+      false,
+      10,
+    );
+    expect(row.strength).toBe(4);
+    expect(row.saveTarget).toBe(3);
+    expect(row.waaaghInvuln).toBe(false);
+  });
+
+  it("gives an Ork target a 5+ invuln in both editions", () => {
+    for (const edition of [10, 11] as const) {
+      const [row] = computeAttackTable(
+        makeAttacker({ ap: -3 }),
+        {},
+        makeUnit({ rules: [WAAAGH], profile: { M: '6"', T: 5, SV: 4, W: 2, LD: "7+", OC: 1 } }),
+        modifiers({ waaagh: true }),
+        0,
+        [],
+        false,
+        edition,
+      );
+      expect(row.saveTarget).toBe(5); // armour 7+ -> invuln 5+
+      expect(row.isInvulnFallback).toBe(true);
+      expect(row.waaaghInvuln).toBe(true);
+    }
+  });
+
+  it("keeps a better invuln the target already has", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ ap: -4 }),
+      {},
+      makeUnit({ rules: [WAAAGH], invuln: { value: 4, conditional: false } }),
+      modifiers({ waaagh: true }),
+    );
+    expect(row.saveTarget).toBe(4);
+    expect(row.waaaghInvuln).toBe(false);
   });
 });

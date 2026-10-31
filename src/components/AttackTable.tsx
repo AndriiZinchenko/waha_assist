@@ -7,6 +7,7 @@ import {
 } from "../lib/leaderEffects";
 import type { Side } from "./ArmyPanel";
 import type { WeaponMode } from "../lib/route";
+import type { Edition } from "../lib/edition";
 import { AttackRow } from "./AttackRow";
 import { SideMark } from "./SideMark";
 
@@ -23,6 +24,7 @@ interface AttackTableProps {
   side: Side;
   modifiers: DirectionModifiers;
   weaponFilter: WeaponMode;
+  edition: Edition;
 }
 
 const COLOR: Record<Side, string> = {
@@ -41,6 +43,7 @@ export function AttackTable({
   side,
   modifiers,
   weaponFilter,
+  edition,
 }: AttackTableProps) {
   const targetSide: Side = side === "a" ? "b" : "a";
   const autoHitMod = leaderHitPenaltyAgainst(
@@ -61,6 +64,7 @@ export function AttackTable({
     autoHitMod,
     autoHitPenaltySources,
     bigGunsApplies(modifiers.engaged, attacker, target),
+    edition,
   );
   const filtered = rows.filter((row) => row.type === weaponFilter);
   const targetModels = getUnitLiveTotal(attackerCounts, target.id, target);

@@ -403,6 +403,7 @@ function App() {
                 leaderAssignments={state.leaderAssignments}
                 counts={state.modelCounts}
                 weapons={weaponMode}
+                edition={edition}
                 onClose={handleCloseUnits}
               />
             )}
