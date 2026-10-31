@@ -60,6 +60,24 @@ async function login() {
 
 export { launchBrowser };
 
+/**
+ * Switch the app's game-system picker. A list page only opens lists of the
+ * selected system; any other list key silently shows the last list opened.
+ */
+export async function selectGameSystem(page, systemId) {
+  await page.goto(`${BASE}/app/MyLists`, { waitUntil: "domcontentloaded" });
+  const picker = page.locator("select", {
+    has: page.locator(`option[value^="${systemId}----"]`),
+  });
+  await picker.waitFor({ state: "attached", timeout: 60_000 });
+  const value = await picker.evaluate(
+    (el, prefix) => [...el.options].find((o) => o.value.startsWith(prefix)).value,
+    `${systemId}----`,
+  );
+  await picker.selectOption(value);
+  await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
+}
+
 export async function exportList(page, list) {
   await page.goto(`${BASE}/app/Lists/${list.key}`, { waitUntil: "domcontentloaded" });
   const exportBtn = page.locator(".listOptions .imgBt", { hasText: "Export" }).first();
@@ -153,6 +171,7 @@ async function sync() {
           key: l.list_key,
           name: l.name ?? l.list_key,
           catalogue: bookName(l.id_book),
+          systemId: system.id,
           raw: l,
         });
       }
@@ -170,14 +189,19 @@ async function sync() {
 
     let written = 0;
     const skipped = [];
+    let selectedSystem = null;
     for (const w of plan.writes) {
       if (DRY_RUN) {
         log(`  would write armies/${w.file}  <- "${w.name}"`);
         continue;
       }
       try {
-        const json = await exportList(page, w);
         const list = lists.find((l) => l.key === w.key);
+        if (list && list.systemId !== selectedSystem) {
+          await selectGameSystem(page, list.systemId);
+          selectedSystem = list.systemId;
+        }
+        const json = await exportList(page, w);
         const match = exportMatchesList(json, { name: w.name, catalogue: list?.catalogue ?? null });
         if (!match.ok) {
           skipped.push(`${w.name}: ${match.error}`);
