@@ -140,11 +140,14 @@ collectStratagems(Object.values(coreMod)[0], "core");
 
 // ---- Per-detachment translations (uk-detachments/*.mjs next to this
 // script). Each module exports any of RULES / STRATAGEMS (keyed
-// "<file stem>/<name>") and PHASES (keyed by the exact English timing line).
-// They are looked up before the name-keyed tables below. ----
+// "<file stem>/<name>"), PHASES (keyed by the exact English timing line)
+// and TEXTS (unit ability and rule text, keyed by the exact English text,
+// for datasheets the name-keyed tables below do not cover). They are
+// looked up before the name-keyed tables. ----
 const RULE_KEY_UK = {};
 const STRATAGEM_KEY_UK = {};
 const PHASE_TEXT_UK = {};
+const UNIT_TEXT_UK = {};
 const ukDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "uk-detachments");
 if (fs.existsSync(ukDir)) {
   for (const f of fs.readdirSync(ukDir).filter((x) => x.endsWith(".mjs")).sort()) {
@@ -152,6 +155,8 @@ if (fs.existsSync(ukDir)) {
     Object.assign(RULE_KEY_UK, mod.RULES ?? {});
     Object.assign(STRATAGEM_KEY_UK, mod.STRATAGEMS ?? {});
     Object.assign(PHASE_TEXT_UK, mod.PHASES ?? {});
+    // Keyed as written; normalized (NBSP) once `normalize` is defined below.
+    Object.assign(UNIT_TEXT_UK, mod.TEXTS ?? {});
   }
 }
 
@@ -821,6 +826,13 @@ const NBSP = String.fromCharCode(160);
 function normalize(s) {
   return s.split(NBSP).join(" ");
 }
+for (const en of Object.keys(UNIT_TEXT_UK)) {
+  const key = normalize(en);
+  if (key !== en) {
+    UNIT_TEXT_UK[key] = UNIT_TEXT_UK[en];
+    delete UNIT_TEXT_UK[en];
+  }
+}
 
 // ---- Build the final dictionary using EXACT text extracted from the real
 // rosters as keys, so there is zero risk of hand-transcription drift. ----
@@ -834,7 +846,7 @@ function reportMissing(kind, key, name, text) {
 for (const [name, texts] of ruleTexts) {
   for (const rawText of texts) {
     const text = normalize(rawText);
-    let uk = RULE_UK[name];
+    let uk = UNIT_TEXT_UK[text] || RULE_UK[name];
     if (uk === "__DEADLY_DEMISE__") uk = DEADLY_DEMISE;
     if (uk === "__FEEL_NO_PAIN__") uk = FEEL_NO_PAIN;
     if (uk === "__LEADER__") {
@@ -842,7 +854,7 @@ for (const [name, texts] of ruleTexts) {
       uk = variant?.[1];
     }
     if (!uk) {
-      console.error("MISSING RULE TRANSLATION:", name, "|", text.slice(0, 60));
+      reportMissing("RULE", name, name, text);
       continue;
     }
     dict[text] = uk;
@@ -852,16 +864,16 @@ for (const [name, texts] of ruleTexts) {
 for (const [name, texts] of abilityTexts) {
   for (const rawText of texts) {
     const text = normalize(rawText);
-    let uk = ABILITY_UK[name] ?? ABILITY_UK[text];
+    let uk = UNIT_TEXT_UK[text] || ABILITY_UK[name] || ABILITY_UK[text];
     if (uk === "__STRATAGEM_CP__") uk = STRATAGEM_CP;
-    if (name.startsWith("Invulnerable Save") || name === "Leader") {
+    if (!UNIT_TEXT_UK[text] && (name.startsWith("Invulnerable Save") || name === "Leader")) {
       const variants = name === "Leader" ? LEADER_VARIANTS : INVULN_VARIANTS;
       const variant = variants.find(([snippet]) => text.includes(snippet));
       uk = variant?.[1];
     }
     if (name === "Feel No Pain") continue; // "5+" only, nothing to translate
     if (!uk) {
-      console.error("MISSING ABILITY TRANSLATION:", JSON.stringify(name), "|", text.slice(0, 60));
+      reportMissing("ABILITY", name, name, text);
       continue;
     }
     dict[text] = uk;
