@@ -41,6 +41,15 @@ describe("planWrites", () => {
     expect(plan.writes.map((w) => w.file)).toEqual(["Chaos.json", "Chaos (k2).json"]);
   });
 
+  it("suffixes a list whose name differs only in case, as the file system does not tell them apart", () => {
+    const plan = planWrites(
+      [{ key: "k1", name: "Chaos Knights" }, { key: "k2", name: "Chaos knights" }],
+      ["chaos knights.json"],
+    );
+    expect(plan.writes.map((w) => w.file)).toEqual(["Chaos Knights.json", "Chaos knights (k2).json"]);
+    expect(plan.orphans).toEqual([]);
+  });
+
   it("reports existing files that no current list would write as orphans", () => {
     const plan = planWrites(
       [{ key: "k1", name: "Chaos" }],

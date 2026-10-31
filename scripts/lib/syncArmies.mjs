@@ -21,16 +21,19 @@ export function sanitizeFileName(name) {
  * @param {string[]} existingFiles  file names currently in armies/
  */
 export function planWrites(lists, existingFiles) {
+  // Compared without case: on Windows and macOS "Chaos Knights.json" and
+  // "Chaos knights.json" are the same file, so the second would overwrite
+  // the first.
   const taken = new Set();
   const writes = lists.map(({ key, name }) => {
     const stem = sanitizeFileName(name);
-    const file = taken.has(stem) ? `${stem} (${key}).json` : `${stem}.json`;
-    taken.add(stem);
+    const file = taken.has(stem.toLowerCase()) ? `${stem} (${key}).json` : `${stem}.json`;
+    taken.add(stem.toLowerCase());
     return { key, name, file };
   });
-  const written = new Set(writes.map((w) => w.file));
+  const written = new Set(writes.map((w) => w.file.toLowerCase()));
   const orphans = existingFiles.filter(
-    (f) => f.endsWith(".json") && !written.has(f),
+    (f) => f.endsWith(".json") && !written.has(f.toLowerCase()),
   );
   return { writes, orphans };
 }
