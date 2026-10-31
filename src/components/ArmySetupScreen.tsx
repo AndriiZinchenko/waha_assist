@@ -20,6 +20,8 @@ interface ArmySetupScreenProps {
   onAssign: (slot: Slot, armyId: string) => void;
   onStart: () => void;
   onConfigure: (armyId: string) => void;
+  /** Open the co-op Crusade campaign. */
+  onOpenCrusade?: () => void;
 }
 
 const SLOTS: Slot[] = ["a", "b"];
@@ -45,6 +47,7 @@ export function ArmySetupScreen({
   onAssign,
   onStart,
   onConfigure,
+  onOpenCrusade,
 }: ArmySetupScreenProps) {
   const ui = useUi();
 
@@ -72,8 +75,18 @@ export function ArmySetupScreen({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 max-w-[920px] w-full mx-auto">
-      <div className="shrink-0 px-[16px] pt-[12px]">
+      <div className="shrink-0 px-[16px] pt-[12px] flex flex-wrap items-center justify-between gap-[8px]">
         <EditionToggle edition={edition} counts={editionCounts} onChange={onChangeEdition} />
+        {onOpenCrusade && (
+          <button
+            type="button"
+            onClick={onOpenCrusade}
+            className="display h-[46px] px-[14px] rounded-[var(--r-control)] text-[16px] font-extrabold tracking-[0.06em]"
+            style={{ border: "1px solid var(--rule)" }}
+          >
+            КАМПАНІЯ ›
+          </button>
+        )}
       </div>
       <p className="hint shrink-0 m-0 px-[16px] py-[12px]">
         Tap an army to configure it. Use A | B to assign it to a side.

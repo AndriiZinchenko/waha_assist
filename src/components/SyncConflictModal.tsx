@@ -23,6 +23,7 @@ function summary(data: SyncedState): Array<[string, number]> {
     ["Hidden units", Object.keys(data.hiddenUnitIds ?? {}).length],
     ["Detachment picks", Object.keys(data.detachmentOverrides ?? {}).length],
     ["Edited units", Object.keys(data.weaponOverrides ?? {}).length],
+    ["Crusade units", data.crusade?.units.length ?? 0],
   ];
 }
 

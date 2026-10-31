@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ArmyEntry } from "../lib/armies";
 import { computeVisiblePoints, visibleUnits } from "../lib/armyPoints";
 import { applyLeaderWeaponBonuses } from "../lib/leaderEffects";
-import { optionsLookup } from "../data/unit-options";
+import { optionsLookupForArmy } from "../data/unit-options";
 import { applyWeaponOverrides, type UnitWeaponOverride } from "../lib/weaponOverrides";
 import { getDetachmentData } from "../data/detachments";
 import { DetachmentModal } from "./DetachmentModal";
@@ -58,7 +58,7 @@ export function ArmyPanel({
   // Purifying Flame) resolved against the visible list, so a hidden leader
   // doesn't still buff a unit that's effectively not in the game.
   const units = applyLeaderWeaponBonuses(
-    applyWeaponOverrides(visible, weaponOverrides, optionsLookup(army.parsed.catalogue)),
+    applyWeaponOverrides(visible, weaponOverrides, optionsLookupForArmy(army)),
     leaderAssignments,
   );
 

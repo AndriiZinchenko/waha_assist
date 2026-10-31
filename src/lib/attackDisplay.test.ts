@@ -23,6 +23,7 @@ const base: AttackRow = {
   keywords: [],
   rules: [],
   leaderMods: [],
+  crusadeMods: [],
   autoHitPenaltySources: [],
   appliedHitMod: 0,
   appliedWoundMod: 0,

@@ -100,6 +100,8 @@ export interface AttackRow {
   /** Leader-attachment bonuses baked into this weapon's stats (e.g. +1
    * Attacks from Castellan Crowe), for the UI to flag as modified. */
   leaderMods: RuleRef[];
+  /** Crusade honours and scars that changed this weapon (see WeaponEntry). */
+  crusadeMods: Array<{ ref: RuleRef; tone: "positive" | "negative" }>;
   /** Abilities behind the target's automatic hit penalty (e.g. Grand
    * Master Voldus's Sanctuary), separate from the plain numeric total in
    * `appliedHitMod` so the UI can name the source. */
@@ -229,7 +231,11 @@ export function computeAttackTable(
       weapon.skill !== null &&
       !hasKeyword(weapon.keywords, "Pistol");
     const totalHitMod = capHitMod(
-      modifiers.hitMod + autoHitMod + (heavyApplied ? 1 : 0) - (engagedApplied ? 1 : 0),
+      modifiers.hitMod +
+        autoHitMod +
+        (weapon.crusadeHitMod ?? 0) +
+        (heavyApplied ? 1 : 0) -
+        (engagedApplied ? 1 : 0),
     );
     const blastBonus = hasKeyword(weapon.keywords, "Blast") ? Math.floor(targetModels / 5) : 0;
 
@@ -329,6 +335,7 @@ export function computeAttackTable(
       keywords: weapon.keywords,
       rules: weapon.rules,
       leaderMods: weapon.leaderMods ?? [],
+      crusadeMods: weapon.crusadeMods ?? [],
       autoHitPenaltySources: weapon.skill === null ? [] : autoHitPenaltySources,
       appliedHitMod: weapon.skill === null ? 0 : totalHitMod,
       appliedWoundMod: modifiers.woundMod,

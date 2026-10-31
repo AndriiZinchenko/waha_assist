@@ -24,6 +24,22 @@ export function unitOptions(
   return { ...unit, rules: faction.rules };
 }
 
+/** `unitOptions` for an army whose units may come from several catalogues
+ * (the campaign's allied side): the first catalogue that knows the entry. */
+export function optionsLookupForArmy(army: {
+  parsed: { catalogue: string };
+  sourceCatalogues?: string[];
+}) {
+  const catalogues = army.sourceCatalogues ?? [army.parsed.catalogue];
+  return (entryId: string | null | undefined): UnitOptionsResult | null => {
+    for (const catalogue of catalogues) {
+      const found = unitOptions(catalogue, entryId);
+      if (found) return found;
+    }
+    return null;
+  };
+}
+
 /** `unitOptions` bound to one catalogue, for passing around. */
 export function optionsLookup(catalogue: string | null | undefined) {
   return (entryId: string | null | undefined): UnitOptionsResult | null =>

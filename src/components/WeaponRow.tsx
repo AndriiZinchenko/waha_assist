@@ -28,6 +28,7 @@ export function WeaponRow({ weapon, indent = false }: WeaponRowProps) {
   const t = useTranslate();
 
   const leaderMods = weapon.leaderMods ?? [];
+  const crusadeMods = weapon.crusadeMods ?? [];
   const attacksModified = leaderMods.length > 0;
   const range = weapon.type === "melee" || !weapon.range || weapon.range === "Melee"
     ? "—"
@@ -37,6 +38,7 @@ export function WeaponRow({ weapon, indent = false }: WeaponRowProps) {
     return (
       matchRule(label, weapon.rules)?.text ??
       leaderMods.find((m) => m.name === label)?.text ??
+      crusadeMods.find((m) => m.ref.name === label)?.ref.text ??
       null
     );
   }
@@ -55,7 +57,7 @@ export function WeaponRow({ weapon, indent = false }: WeaponRowProps) {
   ];
 
   const openText = openLabel ? expandedText(openLabel) : null;
-  const hasChips = weapon.keywords.length > 0 || attacksModified;
+  const hasChips = weapon.keywords.length > 0 || attacksModified || crusadeMods.length > 0;
 
   return (
     <div
@@ -120,6 +122,18 @@ export function WeaponRow({ weapon, indent = false }: WeaponRowProps) {
               style={{ background: "var(--positive-fill)", color: "var(--positive)" }}
             >
               ▲ {mod.name}
+            </button>
+          ))}
+          {crusadeMods.map(({ ref, tone }) => (
+            <button
+              key={ref.name}
+              type="button"
+              aria-expanded={openLabel === ref.name}
+              onClick={() => toggle(ref.name)}
+              className="hit-44 min-h-[32px] px-[10px] flex items-center gap-[4px] rounded-[15px] text-[13px] font-semibold"
+              style={{ background: `var(--${tone}-fill)`, color: `var(--${tone})` }}
+            >
+              {tone === "positive" ? "▲" : "▼"} {ref.name}
             </button>
           ))}
         </span>

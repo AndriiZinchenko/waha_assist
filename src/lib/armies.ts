@@ -8,6 +8,12 @@ export interface ArmyEntry {
   /** The 40k edition the roster was built for. */
   edition: Edition;
   parsed: ParsedArmy;
+  /** Built from the Crusade campaign (see crusadeBattle.ts), not a roster
+   * file: hidden-unit marks from army configuration do not apply. */
+  fromCrusade?: boolean;
+  /** The catalogues its units come from when there is more than one (the
+   * campaign's allied side); weapon options are looked up in each. */
+  sourceCatalogues?: string[];
 }
 
 export function buildArmyEntries(

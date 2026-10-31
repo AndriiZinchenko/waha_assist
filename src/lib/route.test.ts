@@ -32,6 +32,12 @@ describe("parseRoute", () => {
     });
   });
 
+  it("reads the crusade screen and writes it back, keeping side picks", () => {
+    const route = parseRoute("#/crusade?a=Grey");
+    expect(route).toEqual({ ...base, screen: "crusade", a: "Grey" });
+    expect(formatRoute(route)).toBe("#/crusade?a=Grey");
+  });
+
   it("reads a full battle route", () => {
     expect(parseRoute("#/battle?a=Orks&b=Ultramar&ua=oll0fu&ub=x1&p=fight&side=b")).toEqual({
       screen: "battle",

@@ -96,6 +96,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
     return (
       matchRule(label, row.rules)?.text ??
       row.leaderMods.find((m) => m.name === label)?.text ??
+      row.crusadeMods.find((m) => m.ref.name === label)?.ref.text ??
       row.autoHitPenaltySources.find((m) => m.name === label)?.text ??
       null
     );
@@ -165,6 +166,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
 
   const sourcePills: Array<{ ref: RuleRef; tone: "positive" | "negative" }> = [
     ...row.leaderMods.map((ref) => ({ ref, tone: "positive" as const })),
+    ...row.crusadeMods,
     ...row.autoHitPenaltySources.map((ref) => ({ ref, tone: "negative" as const })),
   ];
   const openText = openLabel ? expandedText(openLabel) : null;

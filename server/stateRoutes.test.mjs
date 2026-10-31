@@ -29,7 +29,13 @@ describe("handleStateRequest", () => {
     expect(res.json).toEqual({
       rev: 0,
       updatedAt: null,
-      data: { leaderAssignments: {}, hiddenUnitIds: {}, detachmentOverrides: {}, weaponOverrides: {} },
+      data: {
+        leaderAssignments: {},
+        hiddenUnitIds: {},
+        detachmentOverrides: {},
+        weaponOverrides: {},
+        crusade: null,
+      },
     });
   });
 

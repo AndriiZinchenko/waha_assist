@@ -36,6 +36,7 @@ describe("persistence", () => {
       hiddenUnitIds: { u2: true },
       detachmentOverrides: { Grey: "Hallowed Conclave" },
       weaponOverrides: {},
+      crusade: null,
       lang: "uk",
       syncedBaseRev: 3,
       syncDirty: false,
@@ -119,6 +120,7 @@ describe("sync bookkeeping", () => {
       hiddenUnitIds: { u2: true },
       detachmentOverrides: {},
       weaponOverrides: {},
+      crusade: null,
     });
   });
 
@@ -140,6 +142,7 @@ describe("sync bookkeeping", () => {
         hiddenUnitIds: {},
         detachmentOverrides: { Orks: "Green Tide" },
         weaponOverrides: { u9: override },
+        crusade: null,
       },
       7,
       false,
@@ -159,6 +162,7 @@ describe("sync bookkeeping", () => {
       hiddenUnitIds: {},
       detachmentOverrides: {},
       weaponOverrides: {},
+      crusade: null,
     };
     expect(isEmptySynced(none)).toBe(true);
     expect(isEmptySynced({ ...none, leaderAssignments: { l1: "u1" } })).toBe(false);
@@ -166,6 +170,9 @@ describe("sync bookkeeping", () => {
     expect(isEmptySynced({ ...none, detachmentOverrides: { Orks: "Green Tide" } })).toBe(false);
     expect(
       isEmptySynced({ ...none, weaponOverrides: { u1: { groups: [], rosterSignature: "" } } }),
+    ).toBe(false);
+    expect(
+      isEmptySynced({ ...none, crusade: { name: "", players: [], units: [], missions: [] } }),
     ).toBe(false);
   });
 

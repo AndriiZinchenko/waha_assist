@@ -11,7 +11,7 @@ import {
 import { useHashRoute } from "./lib/useHashRoute";
 import { visibleUnits } from "./lib/armyPoints";
 import { applyLeaderWeaponBonuses } from "./lib/leaderEffects";
-import { optionsLookup } from "./data/unit-options";
+import { optionsLookupForArmy } from "./data/unit-options";
 import { clearUnitCounts } from "./lib/loadouts";
 import { applyWeaponOverrides, type UnitWeaponOverride } from "./lib/weaponOverrides";
 import { effectiveDetachment } from "./lib/detachment";
@@ -25,6 +25,18 @@ import { LangProvider, type Lang } from "./lib/i18n";
 import { ArmyConfigScreen } from "./components/ArmyConfigScreen";
 import { ArmyPanel, type Side } from "./components/ArmyPanel";
 import { ArmySetupScreen } from "./components/ArmySetupScreen";
+import { CrusadeScreen } from "./components/CrusadeScreen";
+import { ASHES_OF_ARMAGEDDON, BOOK_ENEMIES } from "./data/crusade-seed";
+import type { CrusadeState } from "./lib/crusade";
+import {
+  CRUSADE_ALLIES_ID,
+  crusadeBattleArmies,
+  crusadeEnemyId,
+  crusadeLeaderAssignments,
+  isCrusadeArmyId,
+  missionOfArmyId,
+} from "./lib/crusadeBattle";
+import type { ArmyEntry } from "./lib/armies";
 import { SyncConflictModal } from "./components/SyncConflictModal";
 import { SyncStatus } from "./components/SyncStatus";
 import { HeaderOverflow } from "./components/HeaderOverflow";
@@ -60,8 +72,32 @@ function App() {
   const sync = useSync(state, setState);
   const wakeLock = useWakeLock();
 
-  const armyA = armies.find((a) => a.id === route.a) ?? null;
-  const armyB = armies.find((a) => a.id === route.b) ?? null;
+  // The campaign's two sides sit next to the real armies, so a campaign
+  // battle is an ordinary battle route (a=crusade-allies&b=crusade-enemy).
+  const tenthEdition = armiesForEdition(armies, 10);
+  const battleArmies = [
+    ...armies,
+    ...crusadeBattleArmies(state.crusade, tenthEdition, state.detachmentOverrides, BOOK_ENEMIES),
+  ];
+  const armyA = battleArmies.find((a) => a.id === route.a) ?? null;
+  const armyB = battleArmies.find((a) => a.id === route.b) ?? null;
+  const inCrusadeBattle =
+    route.screen === "battle" && (isCrusadeArmyId(route.a) || isCrusadeArmyId(route.b));
+  // In a campaign battle leaders are attached as the campaign and the
+  // mission say, not as the armies are configured.
+  const leaderAssignments = inCrusadeBattle
+    ? crusadeLeaderAssignments(
+        state.crusade,
+        tenthEdition,
+        missionOfArmyId(route.b) ?? missionOfArmyId(route.a),
+        BOOK_ENEMIES,
+      )
+    : state.leaderAssignments;
+  // A campaign side holds exactly its campaign units; units hidden in army
+  // configuration (to trim a list) still take part.
+  const hiddenFor = (army: ArmyEntry): Record<string, boolean> =>
+    army.fromCrusade ? {} : state.hiddenUnitIds;
+  const battleEdition: Edition = inCrusadeBattle ? 10 : edition;
   const selectedUnitId: Record<Side, string | null> = { a: route.ua, b: route.ub };
   const activeSide = route.side;
 
@@ -72,21 +108,21 @@ function App() {
   const unitsA = armyA
     ? applyLeaderWeaponBonuses(
         applyWeaponOverrides(
-          visibleUnits(armyA.parsed.units, state.hiddenUnitIds),
+          visibleUnits(armyA.parsed.units, hiddenFor(armyA)),
           state.weaponOverrides,
-          optionsLookup(armyA.parsed.catalogue),
+          optionsLookupForArmy(armyA),
         ),
-        state.leaderAssignments,
+        leaderAssignments,
       )
     : [];
   const unitsB = armyB
     ? applyLeaderWeaponBonuses(
         applyWeaponOverrides(
-          visibleUnits(armyB.parsed.units, state.hiddenUnitIds),
+          visibleUnits(armyB.parsed.units, hiddenFor(armyB)),
           state.weaponOverrides,
-          optionsLookup(armyB.parsed.catalogue),
+          optionsLookupForArmy(armyB),
         ),
-        state.leaderAssignments,
+        leaderAssignments,
       )
     : [];
   const unitA = unitsA.find((u) => u.id === selectedUnitId.a) ?? null;
@@ -131,7 +167,31 @@ function App() {
   }
 
   function handleOpenSetup() {
-    navigate({ ...route, screen: "list", configArmyId: null });
+    // A campaign battle goes back to the campaign; the campaign sides are
+    // not armies to pick on the list, so they are dropped there.
+    if (inCrusadeBattle) {
+      navigate({ ...route, screen: "crusade", configArmyId: null });
+      return;
+    }
+    navigate({
+      ...route,
+      screen: "list",
+      configArmyId: null,
+      a: isCrusadeArmyId(route.a) ? null : route.a,
+      b: isCrusadeArmyId(route.b) ? null : route.b,
+    });
+  }
+
+  function handleStartCrusadeBattle(missionNumber: number) {
+    navigate({
+      ...route,
+      screen: "battle",
+      a: CRUSADE_ALLIES_ID,
+      b: crusadeEnemyId(missionNumber),
+      ua: null,
+      ub: null,
+      side: "a",
+    });
   }
 
   function handleSelectUnit(side: Side, unitId: string | null) {
@@ -154,8 +214,8 @@ function App() {
   function handleVoiceSelect(
     command: Extract<VoiceCommand, { type: "select" }>,
   ): VoiceFeedback {
-    const listA = orderedUnits(unitsA, state.leaderAssignments);
-    const listB = orderedUnits(unitsB, state.leaderAssignments);
+    const listA = orderedUnits(unitsA, leaderAssignments);
+    const listB = orderedUnits(unitsB, leaderAssignments);
     const attacker = listA[command.attacker - 1];
     const target = listB[command.target - 1];
     if (!attacker || !target) {
@@ -258,6 +318,19 @@ function App() {
     sync.noteLocalEdit();
   }
 
+  function handleOpenCrusade() {
+    navigate({ ...route, screen: "crusade", configArmyId: null });
+  }
+
+  function handleSetCrusade(crusade: CrusadeState) {
+    setState((prev) => {
+      const nextState: StoredState = { ...prev, crusade, syncDirty: true };
+      saveState(nextState);
+      return nextState;
+    });
+    sync.noteLocalEdit();
+  }
+
   function handleChangeLang(lang: Lang) {
     setState((prev) => {
       const nextState: StoredState = { ...prev, lang };
@@ -302,13 +375,15 @@ function App() {
               <button
                 type="button"
                 onClick={handleOpenSetup}
-                aria-label="Armies"
+                aria-label={inCrusadeBattle ? "Кампанія" : "Armies"}
                 className="display min-h-[44px] px-[8px] flex items-center gap-[6px] rounded-[var(--r-control)] text-[18px] font-bold"
               >
                 <span aria-hidden="true" className="text-[22px] leading-none">
                   ‹
                 </span>
-                <span className={showPanels ? "hidden min-[900px]:inline" : undefined}>Armies</span>
+                <span className={showPanels ? "hidden min-[900px]:inline" : undefined}>
+                  {inCrusadeBattle ? "Кампанія" : "Armies"}
+                </span>
               </button>
             )}
             <SyncStatus status={sync.status} />
@@ -373,8 +448,8 @@ function App() {
                 counts={state.modelCounts}
                 onCountChange={handleCountChange}
                 hidden={activeSide !== "a"}
-                leaderAssignments={state.leaderAssignments}
-                hiddenUnitIds={state.hiddenUnitIds}
+                leaderAssignments={leaderAssignments}
+                hiddenUnitIds={hiddenFor(armyA)}
                 detachment={effectiveDetachment(armyA, state.detachmentOverrides)}
                 weaponOverrides={state.weaponOverrides}
                 showNumbers={voiceEnabled}
@@ -387,8 +462,8 @@ function App() {
                 counts={state.modelCounts}
                 onCountChange={handleCountChange}
                 hidden={activeSide !== "b"}
-                leaderAssignments={state.leaderAssignments}
-                hiddenUnitIds={state.hiddenUnitIds}
+                leaderAssignments={leaderAssignments}
+                hiddenUnitIds={hiddenFor(armyB)}
                 detachment={effectiveDetachment(armyB, state.detachmentOverrides)}
                 weaponOverrides={state.weaponOverrides}
                 showNumbers={voiceEnabled}
@@ -400,15 +475,24 @@ function App() {
                 unitB={unitB}
                 unitsA={unitsA}
                 unitsB={unitsB}
-                leaderAssignments={state.leaderAssignments}
+                leaderAssignments={leaderAssignments}
                 counts={state.modelCounts}
                 weapons={weaponMode}
-                edition={edition}
+                edition={battleEdition}
                 onClose={handleCloseUnits}
               />
             )}
           </div>
           </PhaseFilterProvider>
+        ) : route.screen === "crusade" ? (
+          <CrusadeScreen
+            crusade={state.crusade}
+            armies={armiesForEdition(armies, 10)}
+            onChange={handleSetCrusade}
+            onStart={() => handleSetCrusade(ASHES_OF_ARMAGEDDON)}
+            onStartBattle={handleStartCrusadeBattle}
+            battleArmyIds={battleArmies.filter((a) => a.fromCrusade).map((a) => a.id)}
+          />
         ) : configArmy ? (
           <ArmyConfigScreen
             army={configArmy}
@@ -439,6 +523,7 @@ function App() {
             onAssign={handleAssignArmy}
             onStart={handleStart}
             onConfigure={handleOpenConfig}
+            onOpenCrusade={handleOpenCrusade}
           />
         )}
         {sync.prompt && (

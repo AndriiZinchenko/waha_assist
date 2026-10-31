@@ -61,6 +61,13 @@ export interface WeaponEntry {
   /** App-level: this weapon differs from the roster's (added, or a
    * different number of it) because of a weapon override. */
   edited?: boolean;
+  /** App-level: hit-roll modifier from Crusade honours and scars (e.g.
+   * Marksmen +1, Damaged Gear -1), summed with the other modifiers before
+   * the +1/-1 cap. AP changes from honours are baked into `ap`. */
+  crusadeHitMod?: number;
+  /** App-level: the Crusade honours (positive) and scars (negative) behind
+   * this weapon's changed stats, so the UI can name them. */
+  crusadeMods?: Array<{ ref: RuleRef; tone: "positive" | "negative" }>;
 }
 
 export interface LoadoutWeapon {

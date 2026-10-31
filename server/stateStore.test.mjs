@@ -88,6 +88,7 @@ describe("normalizeSyncedData", () => {
           rosterSignature: "3xlascannon",
         },
       },
+      crusade: null,
     });
   });
 
@@ -97,6 +98,7 @@ describe("normalizeSyncedData", () => {
       hiddenUnitIds: {},
       detachmentOverrides: {},
       weaponOverrides: {},
+      crusade: null,
     });
   });
 
@@ -129,5 +131,92 @@ describe("normalizeSyncedData", () => {
       JSON.stringify({ rev: 4, updatedAt: null, data: { leaderAssignments: { l1: "u1" }, hiddenUnitIds: {} } }),
     );
     expect((await readDoc(dir)).data.weaponOverrides).toEqual({});
+  });
+});
+
+describe("normalizeSyncedData: crusade", () => {
+  const unit = {
+    id: "u1",
+    playerId: "p1",
+    name: "Хеллбластери",
+    rosterUnitIds: ["a26qs7d", 7],
+    xp: 8.6,
+    honours: [
+      { id: "marksmen", weapon: "Plasma Incinerator - Standard" },
+      { id: "marksmen", weapon: null },
+      { id: "made-up" },
+      { id: "hardened" },
+    ],
+    scars: ["limp", "limp", "nope"],
+    skipsMission: "yes",
+  };
+
+  it("is null when no campaign was started", () => {
+    expect(normalizeSyncedData({}).crusade).toBeNull();
+    expect(normalizeSyncedData({ crusade: "x" }).crusade).toBeNull();
+  });
+
+  it("keeps a valid campaign and cleans what it cannot trust", () => {
+    const { crusade } = normalizeSyncedData({
+      crusade: {
+        name: "Попіл",
+        players: [{ id: "p1", name: "Андрій", armyId: "Grey" }, { id: 3 }],
+        units: [unit, { id: "u1", playerId: "p1" }, { name: "no id" }],
+        missions: [
+          { number: 1, name: "Засідка", result: "win", pointsLimit: 500, notes: "ok" },
+          { number: 1, name: "dupe" },
+          { number: 2, name: "Диверсія", result: "maybe", pointsLimit: -5 },
+          {
+            number: 3,
+            name: "WAAAGH!",
+            enemy: {
+              units: [
+                { armyId: "Orks", unitId: "nobz" },
+                { armyId: "Orks", unitId: "nobz" },
+                { armyId: "Chaos", unitId: 4 },
+                { armyId: "Chaos", unitId: "havocs" },
+              ],
+              leaders: { boss: "nobz", bad: 1 },
+              detachment: "War Horde",
+            },
+          },
+          { number: 4, name: "Справжній ворог", enemy: null },
+          { number: 5, name: "Фінал", enemy: { units: "no" } },
+        ],
+        enemy: { armyId: "Orks", rosterUnitIds: ["nobz"] },
+      },
+    });
+    expect(crusade).not.toHaveProperty("enemy");
+    expect("enemy" in crusade.missions[1]).toBe(false);
+    expect(crusade.missions[2].enemy).toEqual({
+      units: [
+        { armyId: "Orks", unitId: "nobz" },
+        { armyId: "Chaos", unitId: "havocs" },
+      ],
+      leaders: { boss: "nobz" },
+      detachment: "War Horde",
+    });
+    expect(crusade.missions[3].enemy).toBeNull();
+    expect(crusade.missions[4].enemy).toBeNull();
+    expect(crusade.players).toEqual([{ id: "p1", name: "Андрій", armyId: "Grey" }]);
+    expect(crusade.units).toEqual([
+      {
+        id: "u1",
+        playerId: "p1",
+        name: "Хеллбластери",
+        rosterUnitIds: ["a26qs7d"],
+        xp: 8,
+        honours: [
+          { id: "marksmen", weapon: "Plasma Incinerator - Standard" },
+          { id: "hardened", weapon: null },
+        ],
+        scars: ["limp"],
+        skipsMission: false,
+      },
+    ]);
+    expect(crusade.missions.slice(0, 2)).toEqual([
+      { number: 1, name: "Засідка", result: "win", pointsLimit: 500, notes: "ok" },
+      { number: 2, name: "Диверсія", result: null, pointsLimit: 0, notes: "" },
+    ]);
   });
 });

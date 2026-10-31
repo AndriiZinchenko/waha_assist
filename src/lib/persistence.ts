@@ -1,3 +1,4 @@
+import type { CrusadeState } from "./crusade";
 import type { UnitWeaponOverride } from "./weaponOverrides";
 
 /** The fields that live on the server and follow you between devices.
@@ -22,6 +23,9 @@ export interface SyncedState {
    * roster's. An army-list property like the three above: kept forever,
    * synced, and never touched by an army sync (armies/ is not edited). */
   weaponOverrides: Record<string, UnitWeaponOverride>;
+  /** The co-op Crusade campaign (see crusade.ts); null until one is
+   * started. Kept and synced like the army-list properties above. */
+  crusade: CrusadeState | null;
 }
 
 export interface StoredState extends SyncedState {
@@ -54,6 +58,7 @@ export function emptyState(): StoredState {
     hiddenUnitIds: {},
     detachmentOverrides: {},
     weaponOverrides: {},
+    crusade: null,
     lang: "en",
     syncedBaseRev: 0,
     syncDirty: false,
@@ -91,6 +96,7 @@ export function loadState(storage: StorageLike = window.localStorage): StoredSta
     hiddenUnitIds: candidate.hiddenUnitIds ?? {},
     detachmentOverrides: candidate.detachmentOverrides ?? {},
     weaponOverrides: candidate.weaponOverrides ?? {},
+    crusade: candidate.crusade ?? null,
     lang: candidate.lang === "uk" ? "uk" : "en",
     syncedBaseRev:
       typeof candidate.syncedBaseRev === "number" && candidate.syncedBaseRev >= 0
@@ -113,6 +119,7 @@ export function pickSynced(state: StoredState): SyncedState {
     hiddenUnitIds: state.hiddenUnitIds,
     detachmentOverrides: state.detachmentOverrides,
     weaponOverrides: state.weaponOverrides,
+    crusade: state.crusade,
   };
 }
 
@@ -129,6 +136,7 @@ export function withSynced(
     // Older server documents predate this field.
     detachmentOverrides: synced.detachmentOverrides ?? {},
     weaponOverrides: synced.weaponOverrides ?? {},
+    crusade: synced.crusade ?? null,
     syncedBaseRev: rev,
     syncDirty: dirty,
   };
@@ -139,7 +147,8 @@ export function isEmptySynced(synced: SyncedState): boolean {
     Object.keys(synced.leaderAssignments).length === 0 &&
     Object.keys(synced.hiddenUnitIds).length === 0 &&
     Object.keys(synced.detachmentOverrides ?? {}).length === 0 &&
-    Object.keys(synced.weaponOverrides ?? {}).length === 0
+    Object.keys(synced.weaponOverrides ?? {}).length === 0 &&
+    synced.crusade == null
   );
 }
 

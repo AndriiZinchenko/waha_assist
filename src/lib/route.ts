@@ -1,7 +1,7 @@
 import type { Side } from "../components/ArmyPanel";
 import { isPhase, type Phase } from "./phases";
 
-export type Screen = "list" | "config" | "battle";
+export type Screen = "list" | "config" | "battle" | "crusade";
 
 /** Which weapons the calculator resolves; follows the phase (see phases.ts). */
 export type WeaponMode = "ranged" | "melee";
@@ -14,6 +14,7 @@ export type WeaponMode = "ranged" | "melee";
  *
  *   #/                                   army list
  *   #/config/<armyId>                    configuration for one army
+ *   #/crusade                            the co-op Crusade campaign
  *   #/battle?a=&b=&ua=&ub=&p=fight&side=b the two panels
  *
  * The side assignments `a`/`b` ride along on every screen so picks made
@@ -69,6 +70,10 @@ export function parseRoute(hash: string): RouteState {
     return { ...withSides, screen: "config", configArmyId: decodeURIComponent(arg) };
   }
 
+  if (screen === "crusade") {
+    return { ...withSides, screen: "crusade" };
+  }
+
   if (screen === "battle" && a && b) {
     const side = params.get("side");
     return {
@@ -92,6 +97,8 @@ export function formatRoute(route: RouteState): string {
   let path = "/";
   if (route.screen === "config" && route.configArmyId) {
     path = `/config/${encodeURIComponent(route.configArmyId)}`;
+  } else if (route.screen === "crusade") {
+    path = "/crusade";
   } else if (route.screen === "battle" && route.a && route.b) {
     path = "/battle";
     if (route.ua) params.set("ua", route.ua);

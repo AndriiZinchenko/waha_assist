@@ -11,7 +11,13 @@ export function emptyDoc() {
   return {
     rev: 0,
     updatedAt: null,
-    data: { leaderAssignments: {}, hiddenUnitIds: {}, detachmentOverrides: {}, weaponOverrides: {} },
+    data: {
+      leaderAssignments: {},
+      hiddenUnitIds: {},
+      detachmentOverrides: {},
+      weaponOverrides: {},
+      crusade: null,
+    },
   };
 }
 
@@ -51,6 +57,104 @@ function normalizeWeaponOverrides(value) {
   return out;
 }
 
+// Keep in step with HONOUR_IDS / SCAR_IDS in src/lib/crusade.ts.
+const HONOUR_IDS = new Set([
+  "marksmen",
+  "ruthlessBlades",
+  "furiousCharge",
+  "hardened",
+  "steadfast",
+  "holdTheLine",
+]);
+const SCAR_IDS = new Set(["grievousWound", "damagedGear", "limp", "concussion", "vengeance", "panic"]);
+const MISSION_RESULTS = new Set(["win", "loss"]);
+
+function text(value, max = 2000) {
+  return typeof value === "string" ? value.slice(0, max) : "";
+}
+
+function count(value) {
+  return Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+function normalizeCrusadeUnit(raw) {
+  if (typeof raw?.id !== "string" || typeof raw.playerId !== "string") return null;
+  const honours = [];
+  for (const h of Array.isArray(raw.honours) ? raw.honours : []) {
+    if (!HONOUR_IDS.has(h?.id) || honours.some((x) => x.id === h.id)) continue;
+    honours.push({ id: h.id, weapon: typeof h.weapon === "string" ? text(h.weapon, 200) : null });
+  }
+  const scars = [];
+  for (const id of Array.isArray(raw.scars) ? raw.scars : []) {
+    if (SCAR_IDS.has(id) && !scars.includes(id)) scars.push(id);
+  }
+  return {
+    id: raw.id,
+    playerId: raw.playerId,
+    name: text(raw.name, 200),
+    rosterUnitIds: Array.isArray(raw.rosterUnitIds)
+      ? raw.rosterUnitIds.filter((id) => typeof id === "string")
+      : [],
+    xp: count(raw.xp),
+    honours,
+    scars,
+    skipsMission: raw.skipsMission === true,
+  };
+}
+
+/** A mission's enemy force; null for a malformed one. */
+function normalizeEnemy(raw) {
+  if (typeof raw !== "object" || raw === null || !Array.isArray(raw.units)) return null;
+  const units = [];
+  for (const u of raw.units) {
+    if (typeof u?.armyId !== "string" || typeof u.unitId !== "string") continue;
+    if (units.some((x) => x.armyId === u.armyId && x.unitId === u.unitId)) continue;
+    units.push({ armyId: u.armyId, unitId: u.unitId });
+  }
+  const leaders = {};
+  if (typeof raw.leaders === "object" && raw.leaders !== null) {
+    for (const [leader, target] of Object.entries(raw.leaders)) {
+      if (typeof target === "string") leaders[leader] = target;
+    }
+  }
+  const enemy = { units, leaders };
+  if (raw.detachment === null || typeof raw.detachment === "string") {
+    enemy.detachment = raw.detachment === null ? null : text(raw.detachment, 200);
+  }
+  return enemy;
+}
+
+/** The co-op Crusade campaign, or null when none has been started. */
+function normalizeCrusade(value) {
+  if (typeof value !== "object" || value === null) return null;
+  const players = [];
+  for (const p of Array.isArray(value.players) ? value.players : []) {
+    if (typeof p?.id !== "string" || typeof p.armyId !== "string") continue;
+    players.push({ id: p.id, name: text(p.name, 200), armyId: p.armyId });
+  }
+  const units = [];
+  for (const raw of Array.isArray(value.units) ? value.units : []) {
+    const unit = normalizeCrusadeUnit(raw);
+    if (unit && !units.some((u) => u.id === unit.id)) units.push(unit);
+  }
+  const missions = [];
+  for (const m of Array.isArray(value.missions) ? value.missions : []) {
+    if (!Number.isInteger(m?.number) || missions.some((x) => x.number === m.number)) continue;
+    const mission = {
+      number: m.number,
+      name: text(m.name, 200),
+      result: MISSION_RESULTS.has(m.result) ? m.result : null,
+      pointsLimit: count(m.pointsLimit),
+      notes: text(m.notes),
+    };
+    // Absent means "as the campaign book has it"; keep that apart from an
+    // explicit null (no enemy).
+    if ("enemy" in m) mission.enemy = m.enemy === null ? null : normalizeEnemy(m.enemy);
+    missions.push(mission);
+  }
+  return { name: text(value.name, 200), players, units, missions };
+}
+
 /**
  * Keep only the fields and value types we sync. The request body comes from
  * a browser we do not control, and the file may have been hand-edited, so
@@ -84,6 +188,7 @@ export function normalizeSyncedData(value) {
     hiddenUnitIds,
     detachmentOverrides,
     weaponOverrides: normalizeWeaponOverrides(source.weaponOverrides),
+    crusade: normalizeCrusade(source.crusade),
   };
 }
 
