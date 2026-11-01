@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: after-battle-report
+expected_outcome: |
+  XP awarded per the book's table and mission 4 secondaries, new ranks and honours flagged, the Interceptors get the Кульгавість scar, the 'Всі три' bonus honour per player noted, a journal row and Перед місією 5 drafted, and the ambiguity of who gets the Master of Possession kill asked or flagged.
+context:
+  scaffold_script: place-files.sh

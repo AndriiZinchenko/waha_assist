@@ -1,0 +1,395 @@
+{
+  "rev": 62,
+  "updatedAt": "2026-10-31T23:11:43.496Z",
+  "data": {
+    "leaderAssignments": {
+      "0zodqb": "htjm6he",
+      "tnrntf": "2bhtdil",
+      "uodfb6l": "j24j3p5",
+      "dz6oufs": "6a5fd9816e3b9858f2d3c611",
+      "53nj4gs": "xtpa0ww",
+      "ova1hfl": "k577as",
+      "8ki8zfu": "hx1q9z",
+      "reuk3vl": "epe02nc",
+      "17fyghe": "exsxqb",
+      "6a9f02c6e3ff0af34730aad3": "ijfz9q",
+      "qan3ff": "e65dz8e",
+      "ed432s": "f10ofxh",
+      "ucb6j2q": "oc9gmod",
+      "gykysbj": "yeol9nj",
+      "9vepaul": "1yucvxn"
+    },
+    "hiddenUnitIds": {},
+    "detachmentOverrides": {},
+    "weaponOverrides": {
+      "tubl65c": {
+        "groups": [
+          {
+            "key": "g1",
+            "modelCount": 1,
+            "weapons": [
+              {
+                "name": "Redemptor Fist",
+                "perModel": 1
+              },
+              {
+                "name": "Heavy Flamer",
+                "perModel": 1
+              },
+              {
+                "name": "Twin Fragstorm Grenade Launcher",
+                "perModel": 1
+              },
+              {
+                "name": "Macro Plasma Incinerator",
+                "perModel": 1
+              }
+            ]
+          }
+        ],
+        "rosterSignature": "1xheavy flamer+heavy onslaught gatling cannon+redemptor fist+twin fragstorm grenade launcher"
+      },
+      "dd3bfih": {
+        "groups": [
+          {
+            "key": "g1",
+            "modelCount": 1,
+            "weapons": [
+              {
+                "name": "Redemptor Fist",
+                "perModel": 1
+              },
+              {
+                "name": "Heavy Flamer",
+                "perModel": 1
+              },
+              {
+                "name": "Twin Fragstorm Grenade Launcher",
+                "perModel": 1
+              },
+              {
+                "name": "Macro Plasma Incinerator",
+                "perModel": 1
+              }
+            ]
+          }
+        ],
+        "rosterSignature": "1xheavy flamer+heavy onslaught gatling cannon+redemptor fist+twin fragstorm grenade launcher"
+      }
+    },
+    "crusade": {
+      "name": "Попіл Армагеддону",
+      "players": [
+        {
+          "id": "andrii",
+          "name": "Андрій",
+          "armyId": "Grey",
+          "armyIds": {
+            "11": "Grey 11"
+          }
+        },
+        {
+          "id": "sashko",
+          "name": "Сашко",
+          "armyId": "Ultramar",
+          "armyIds": {
+            "11": "Ultramar 11"
+          }
+        }
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "playerId": "andrii",
+          "name": "Бібліотекар",
+          "rosterUnitIds": [
+            "8ki8zfu"
+          ],
+          "xp": 14,
+          "honours": [
+            {
+              "id": "hardened",
+              "weapon": null
+            },
+            {
+              "id": "steadfast",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false,
+          "leads": "u10"
+        },
+        {
+          "id": "u12",
+          "playerId": "andrii",
+          "name": "Страйк-сквад (перший)",
+          "rosterUnitIds": [
+            "35p7rad"
+          ],
+          "xp": 14,
+          "honours": [
+            {
+              "id": "ruthlessBlades",
+              "weapon": null
+            },
+            {
+              "id": "furiousCharge",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u2",
+          "playerId": "andrii",
+          "name": "Інтерсептори",
+          "rosterUnitIds": [
+            "mdo41w"
+          ],
+          "xp": 9,
+          "honours": [
+            {
+              "id": "furiousCharge",
+              "weapon": null
+            },
+            {
+              "id": "ruthlessBlades",
+              "weapon": null
+            },
+            {
+              "id": "hardened",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u3",
+          "playerId": "andrii",
+          "name": "Страйк-сквад (другий)",
+          "rosterUnitIds": [
+            "6a5fe1ce6e3b9858f2d3c614"
+          ],
+          "xp": 8,
+          "honours": [
+            {
+              "id": "ruthlessBlades",
+              "weapon": null
+            },
+            {
+              "id": "holdTheLine",
+              "weapon": null
+            },
+            {
+              "id": "steadfast",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u4",
+          "playerId": "sashko",
+          "name": "Хеллбластери «золоті наплічники»",
+          "rosterUnitIds": [
+            "a26qs7d"
+          ],
+          "xp": 9,
+          "honours": [
+            {
+              "id": "marksmen",
+              "weapon": "Plasma Incinerator - Standard"
+            },
+            {
+              "id": "hardened",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u5",
+          "playerId": "sashko",
+          "name": "Хеллбластери «білі наплічники»",
+          "rosterUnitIds": [
+            "6ac407b63d9a9421ff1b5f5f"
+          ],
+          "xp": 6,
+          "honours": [
+            {
+              "id": "marksmen",
+              "weapon": "Plasma Incinerator - Standard"
+            },
+            {
+              "id": "steadfast",
+              "weapon": null
+            },
+            {
+              "id": "hardened",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u6",
+          "playerId": "sashko",
+          "name": "Інтерсесори",
+          "rosterUnitIds": [
+            "oc9gmod"
+          ],
+          "xp": 5,
+          "honours": [
+            {
+              "id": "marksmen",
+              "weapon": "Bolt Rifle"
+            },
+            {
+              "id": "holdTheLine",
+              "weapon": null
+            },
+            {
+              "id": "hardened",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u7",
+          "playerId": "sashko",
+          "name": "Техмарин",
+          "rosterUnitIds": [
+            "gznfiwm"
+          ],
+          "xp": 4,
+          "honours": [
+            {
+              "id": "holdTheLine",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u8",
+          "playerId": "sashko",
+          "name": "Елімінатори",
+          "rosterUnitIds": [
+            "b1qmlls"
+          ],
+          "xp": 2,
+          "honours": [],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u9",
+          "playerId": "sashko",
+          "name": "Апотекарій",
+          "rosterUnitIds": [
+            "e9k1cls"
+          ],
+          "xp": 3,
+          "honours": [
+            {
+              "id": "steadfast",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u10",
+          "playerId": "andrii",
+          "name": "Термінатори Братства",
+          "rosterUnitIds": [
+            "hx1q9z"
+          ],
+          "xp": 10,
+          "honours": [
+            {
+              "id": "ruthlessBlades",
+              "weapon": null
+            },
+            {
+              "id": "hardened",
+              "weapon": null
+            },
+            {
+              "id": "furiousCharge",
+              "weapon": null
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        },
+        {
+          "id": "u11",
+          "playerId": "sashko",
+          "name": "Редемптор",
+          "rosterUnitIds": [
+            "dd3bfih"
+          ],
+          "xp": 3,
+          "honours": [
+            {
+              "id": "marksmen",
+              "weapon": "Macro Plasma Incinerator - Standard"
+            }
+          ],
+          "scars": [],
+          "skipsMission": false
+        }
+      ],
+      "missions": [
+        {
+          "number": 1,
+          "name": "Засідка в руїнах",
+          "result": "win",
+          "pointsLimit": 500,
+          "notes": "Ретранслятор ваш, Варбос і Снікрот мертві. На стіні біля сліду патруля — восьмипроменева зірка. Ретранслятор передав план диверсії."
+        },
+        {
+          "number": 2,
+          "name": "Диверсія",
+          "result": "win",
+          "pointsLimit": 500,
+          "notes": "3 з 3 зарядів знешкоджено, жодного вибуху. Завод урятовано. На сході збирається великий WAAAGH!. Слід зірки в «Цистернах» не обшукано."
+        },
+        {
+          "number": 3,
+          "name": "WAAAGH!",
+          "result": "win",
+          "pointsLimit": 650,
+          "notes": "Усі 3 точки ваші щоходу, всі орки знищені, включно з Морканавтом і Газгкуллом. На тілі Варбоса — амулет із восьмипроменевою зіркою та табличка «Той, хто сяє найяскравіше, помре першим». Газгкулл мертвий — у фіналі третьої сили не буде."
+        },
+        {
+          "number": 4,
+          "name": "Справжній ворог",
+          "result": null,
+          "pointsLimit": 700,
+          "notes": "",
+          "edition": 11
+        },
+        {
+          "number": 5,
+          "name": "Брама Тартаруса",
+          "result": null,
+          "pointsLimit": 850,
+          "notes": "",
+          "edition": 11
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: dry-run
+expected_outcome: |
+  A plan that compares book, stored state and seed unit by unit and mission by mission, finds that they already agree (XP, honours, limits, editions, results), notes that differences in roster unit ids between the stored campaign and the seed are player choices to keep, and changes nothing.
+context:
+  scaffold_script: place-files.sh

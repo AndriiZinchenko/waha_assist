@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: mission4-intro
+expected_outcome: |
+  A vivid in-character briefing, then a deployment card that matches the book's mission 4 enemy table: wave 1 units placed where the table says, wave 2 arrivals and timing (Master of Executions hunts the highest-XP character, Obliterators deep strike more than 8 inches away), the special rules that bite first (enthralled Orks, ritual tokens), and the victory condition.
+context:
+  scaffold_script: place-files.sh

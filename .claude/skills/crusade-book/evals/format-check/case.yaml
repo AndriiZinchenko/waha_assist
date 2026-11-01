@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: format-check
+expected_outcome: |
+  A report that confirms the section order and mission skeletons, recomputes every enemy table total (625, 730, 1700, 2395, 2845 all match), checks the limits table, and surfaces the remaining factual conflicts: Victrix 'без витрати ліміту' versus 'обидва йдуть у ліміт', and 5 Nobz costing 105 in mission 1 versus 210 in mission 2.
+context:
+  scaffold_script: place-files.sh
