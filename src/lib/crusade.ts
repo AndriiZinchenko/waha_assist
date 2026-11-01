@@ -4,6 +4,7 @@
 // army config (see persistence.ts and server/stateStore.mjs).
 
 import type { ParsedUnit } from "../../parseRoster.mjs";
+import type { Edition } from "./edition";
 
 export const HONOUR_IDS = [
   "marksmen",
@@ -84,12 +85,19 @@ export interface CrusadeUnit {
   playerId: string;
   /** Name or mark that tells it apart, e.g. «золоті наплічники». */
   name: string;
-  /** The roster units it is made of (a leader and its bodyguard are one). */
+  /** The roster units it is made of (a leader and its bodyguard are one),
+   * in the player's 10th edition roster. */
   rosterUnitIds: string[];
+  /** The same in another edition's roster, keyed by edition ("11"). Absent
+   * to match by datasheet name (see `crusadeForEdition`). */
+  rosterUnitIdsByEdition?: Record<string, string[]>;
   xp: number;
   honours: CrusadeHonour[];
   scars: ScarId[];
   skipsMission: boolean;
+  /** Another campaign unit of the same player this one leads in battle
+   * (a character attached to a squad that keeps its own progress). */
+  leads?: string;
 }
 
 export type MissionResult = "win" | "loss";
@@ -101,9 +109,11 @@ export interface CrusadeMission {
   /** Points limit for each player. */
   pointsLimit: number;
   notes: string;
-  /** The enemy force of this mission. Absent until edited, and then read
-   * from the campaign book (see `missionEnemy`); null for none. */
+  /** The enemy force of this mission. Absent means: as the campaign book
+   * has it (see `missionEnemy`); null for none. */
   enemy?: CrusadeEnemy | null;
+  /** The edition the mission is played in; 10 when absent. */
+  edition?: Edition;
 }
 
 export interface CrusadePlayer {
@@ -111,6 +121,8 @@ export interface CrusadePlayer {
   name: string;
   /** The 10th edition roster (armies/<id>.json) its units come from. */
   armyId: string;
+  /** Its roster in another edition, keyed by edition ("11"). */
+  armyIds?: Record<string, string>;
 }
 
 /** One unit of an enemy force, from a roster in armies/. */
@@ -276,7 +288,12 @@ export function addUnit(
 }
 
 export function removeUnit(state: CrusadeState, unitId: string): CrusadeState {
-  return { ...state, units: state.units.filter((u) => u.id !== unitId) };
+  return {
+    ...state,
+    units: state.units
+      .filter((u) => u.id !== unitId)
+      .map((u) => (u.leads === unitId ? { ...u, leads: undefined } : u)),
+  };
 }
 
 /** The roster units behind a campaign unit; ids no longer in the roster
@@ -360,4 +377,99 @@ export function weaponProfiles(
     r.weapons.filter((w) => w.type === type).map((w) => w.name),
   );
   return [...new Set(names)];
+}
+
+// ---- Editions --------------------------------------------------------------
+// A campaign can change edition between missions (the book plays 1-3 in
+// 10th and 4-5 in 11th). Units keep their progress; only the roster their
+// datasheets and points come from changes.
+
+export function missionEdition(mission: CrusadeMission): Edition {
+  return mission.edition ?? 10;
+}
+
+/** The edition the next mission is played in (the last one's once all are
+ * played). */
+export function currentEdition(state: CrusadeState): Edition {
+  const mission = nextMission(state) ?? state.missions[state.missions.length - 1];
+  return mission ? missionEdition(mission) : 10;
+}
+
+export function playerArmyId(player: CrusadePlayer, edition: Edition): string {
+  return edition === 10 ? player.armyId : (player.armyIds?.[String(edition)] ?? player.armyId);
+}
+
+/**
+ * The campaign as one edition sees it: each player's roster for that
+ * edition, and each unit's roster ids in it. Units without ids for the
+ * edition are matched by datasheet name, in campaign order, to roster
+ * units not already taken (so two Hellblaster squads take the two
+ * Hellblaster squads). A unit that finds no match keeps its 10th edition
+ * ids, which then show as missing.
+ */
+export function crusadeForEdition(
+  state: CrusadeState,
+  edition: Edition,
+  armies: Array<{ id: string; parsed: { units: ParsedUnit[] } }>,
+): CrusadeState {
+  if (edition === 10) return state;
+  const key = String(edition);
+  const unitsOfArmy = (id: string) => armies.find((a) => a.id === id)?.parsed.units ?? [];
+  const resolved = new Map<string, string[]>();
+  for (const player of state.players) {
+    const from = unitsOfArmy(player.armyId);
+    const to = unitsOfArmy(playerArmyId(player, edition));
+    const mine = state.units.filter((u) => u.playerId === player.id);
+    const taken = new Set<string>();
+    for (const unit of mine) {
+      const ids = unit.rosterUnitIdsByEdition?.[key];
+      if (ids) {
+        resolved.set(unit.id, ids);
+        ids.forEach((id) => taken.add(id));
+      }
+    }
+    for (const unit of mine) {
+      if (resolved.has(unit.id)) continue;
+      const ids = unit.rosterUnitIds.map((id) => {
+        const name = from.find((r) => r.id === id)?.name;
+        const match = name ? to.find((r) => r.name === name && !taken.has(r.id)) : undefined;
+        if (!match) return id;
+        taken.add(match.id);
+        return match.id;
+      });
+      resolved.set(unit.id, ids);
+    }
+  }
+  return {
+    ...state,
+    players: state.players.map((p) => ({ ...p, armyId: playerArmyId(p, edition) })),
+    units: state.units.map((u) => ({ ...u, rosterUnitIds: resolved.get(u.id) ?? u.rosterUnitIds })),
+  };
+}
+
+/** Add a unit picked from an edition's roster: its ids go where that
+ * edition reads them. */
+export function addUnitInEdition(
+  state: CrusadeState,
+  playerId: string,
+  name: string,
+  rosterUnitIds: string[],
+  edition: Edition,
+): CrusadeState {
+  if (edition === 10) return addUnit(state, playerId, name, rosterUnitIds);
+  const added = addUnit(state, playerId, name, []);
+  const id = added.units[added.units.length - 1].id;
+  return updateUnit(added, id, (u) => ({
+    ...u,
+    rosterUnitIdsByEdition: { [String(edition)]: rosterUnitIds },
+  }));
+}
+
+/** Whether an honour's chosen profile is this weapon. A profile named
+ * without its mode ("Bolt Rifle") covers every mode of it ("Bolt Rifle -
+ * Focused Fire", "Bolt Rifle - Saturation"), as editions split some
+ * weapons into several profiles. */
+export function honourCoversWeapon(honourWeapon: string | null, weaponName: string): boolean {
+  if (!honourWeapon) return false;
+  return weaponName === honourWeapon || weaponName.startsWith(`${honourWeapon} - `);
 }

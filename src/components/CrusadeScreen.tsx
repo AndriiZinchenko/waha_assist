@@ -7,7 +7,11 @@ import {
   SCARS_TO_WRITE_OFF,
   addHonour,
   addScar,
-  addUnit,
+  addUnitInEdition,
+  crusadeForEdition,
+  currentEdition,
+  missionEdition,
+  playerArmyId,
   availableHonours,
   availableScars,
   missionEnemy,
@@ -39,13 +43,14 @@ import {
   type ScarId,
 } from "../lib/crusade";
 import { BOOK_ENEMIES } from "../data/crusade-seed";
-import { CRUSADE_ALLIES_ID, crusadeEnemyId, missionEnemyPoints } from "../lib/crusadeBattle";
+import { crusadeAlliesId, crusadeEnemyId, missionEnemyPoints } from "../lib/crusadeBattle";
+import type { Edition } from "../lib/edition";
 import { Chevron } from "./Collapsible";
 import { Stepper } from "./Stepper";
 
 interface CrusadeScreenProps {
   crusade: CrusadeState | null;
-  /** The 10th edition armies, whose rosters the campaign units come from. */
+  /** All armies; each edition's rosters supply that edition's missions. */
   armies: ArmyEntry[];
   onChange: (next: CrusadeState) => void;
   /** Start the campaign from its state after mission 2. */
@@ -74,6 +79,8 @@ const FACTION_NAMES_UK: Record<string, string> = {
   "Adeptus Custodes": "Адептус Кустодес",
   "Chaos Space Marines": "Космодесант Хаосу",
   Orks: "Орки",
+  "Chaos Knights": "Лицарі Хаосу",
+  "Imperial Knights": "Імперські лицарі",
 };
 
 /** "Imperium - Grey Knights" -> "Сірі Лицарі" (or the English name when
@@ -101,8 +108,8 @@ export function CrusadeScreen({
         >
           <div className="display font-bold text-[20px]">Кампанія ще не почата</div>
           <p className="prose m-0">
-            Кампанія «Попіл Армагеддону» після місії 2: Андрій (Сірі Лицарі) і Сашко
-            (Ультрамарини), 9 загонів із досвідом і нагородами, журнал двох перемог.
+            Кампанія «Попіл Армагеддону» після місії 3: Андрій (Сірі Лицарі) і Сашко
+            (Ультрамарини), 11 загонів із досвідом і нагородами, журнал трьох перемог.
           </p>
           <button
             type="button"
@@ -118,9 +125,18 @@ export function CrusadeScreen({
   }
 
   const next = nextMission(crusade);
-  const canFight = (missionNumber: number) =>
-    battleArmyIds.includes(CRUSADE_ALLIES_ID) &&
-    battleArmyIds.includes(crusadeEnemyId(missionNumber));
+  // Units show with the rosters and points of the edition the next
+  // mission is played in.
+  const edition = currentEdition(crusade);
+  const view = crusadeForEdition(crusade, edition, armies);
+  const canFight = (missionNumber: number) => {
+    const mission = crusade.missions.find((m) => m.number === missionNumber);
+    return (
+      !!mission &&
+      battleArmyIds.includes(crusadeAlliesId(missionEdition(mission))) &&
+      battleArmyIds.includes(crusadeEnemyId(missionNumber))
+    );
+  };
   const canFightNext = next !== null && canFight(next.number);
 
   return (
@@ -133,7 +149,7 @@ export function CrusadeScreen({
           </h1>
           <p className="m-0 mt-[6px] text-[15px] font-medium" style={{ color: "var(--ink-2)" }}>
             {next
-              ? `Наступна: місія ${next.number} «${next.name}», ліміт ${next.pointsLimit} очок на кожного`
+              ? `Наступна: місія ${next.number} «${next.name}», ліміт ${next.pointsLimit} очок на кожного · ${edition}-та редакція`
               : "Усі місії зіграно"}
           </p>
           {next && (
@@ -160,8 +176,10 @@ export function CrusadeScreen({
           <PlayerSection
             key={player.id}
             player={player}
-            army={armies.find((a) => a.id === player.armyId) ?? null}
+            army={armies.find((a) => a.id === playerArmyId(player, edition)) ?? null}
+            edition={edition}
             crusade={crusade}
+            view={view}
             limit={next?.pointsLimit ?? null}
             onChange={onChange}
           />
@@ -193,18 +211,25 @@ function SectionHeader({ children, aside }: { children: ReactNode; aside?: React
 function PlayerSection({
   player,
   army,
+  edition,
   crusade,
+  view,
   limit,
   onChange,
 }: {
   player: CrusadePlayer;
+  /** The player's roster in `edition`. */
   army: ArmyEntry | null;
+  edition: Edition;
+  /** The stored campaign, which edits apply to. */
   crusade: CrusadeState;
+  /** The campaign as `edition` sees it (see crusadeForEdition). */
+  view: CrusadeState;
   limit: number | null;
   onChange: (next: CrusadeState) => void;
 }) {
   const rosterUnits = army?.parsed.units ?? [];
-  const points = forcePoints(crusade, player.id, rosterUnits);
+  const points = forcePoints(view, player.id, rosterUnits);
   const over = limit !== null && points > limit;
 
   return (
@@ -221,7 +246,7 @@ function PlayerSection({
           </span>
         }
       >
-        {player.name} — {army ? shortName(army.parsed.catalogue) : `ростер «${player.armyId}» не знайдено`}
+        {player.name} — {army ? shortName(army.parsed.catalogue) : `ростер «${playerArmyId(player, edition)}» не знайдено`}
       </SectionHeader>
       {over && (
         <p className="m-0 px-[16px] py-[6px] text-[14px] font-medium" style={{ color: "var(--negative)" }}>
@@ -229,10 +254,11 @@ function PlayerSection({
         </p>
       )}
       <ul className="m-0 p-0 list-none">
-        {unitsOf(crusade, player.id).map((unit) => (
+        {unitsOf(view, player.id).map((unit) => (
           <UnitCard
             key={unit.id}
             unit={unit}
+            others={unitsOf(view, player.id).filter((u) => u.id !== unit.id)}
             rosterUnits={rosterUnits}
             onChange={(change) => onChange(updateUnit(crusade, unit.id, change))}
             onRemove={() => onChange(removeUnit(crusade, unit.id))}
@@ -241,8 +267,8 @@ function PlayerSection({
       </ul>
       {army && (
         <AddUnit
-          freeUnits={freeRosterUnits(crusade, rosterUnits)}
-          onAdd={(name, ids) => onChange(addUnit(crusade, player.id, name, ids))}
+          freeUnits={freeRosterUnits(view, rosterUnits)}
+          onAdd={(name, ids) => onChange(addUnitInEdition(crusade, player.id, name, ids, edition))}
         />
       )}
     </section>
@@ -265,11 +291,14 @@ function Tag({ children, tone }: { children: ReactNode; tone?: "positive" | "neg
 
 function UnitCard({
   unit,
+  others,
   rosterUnits,
   onChange,
   onRemove,
 }: {
   unit: CrusadeUnit;
+  /** The player's other campaign units, which a character can lead. */
+  others: CrusadeUnit[];
   rosterUnits: ParsedUnit[];
   onChange: (change: (unit: CrusadeUnit) => CrusadeUnit) => void;
   onRemove: () => void;
@@ -301,6 +330,9 @@ function UnitCard({
             )}
             {writtenOff && <Tag tone="negative">Списано</Tag>}
             {unit.skipsMission && !writtenOff && <Tag tone="negative">Пропускає місію</Tag>}
+            {unit.leads && others.some((o) => o.id === unit.leads) && (
+              <Tag>Веде: {others.find((o) => o.id === unit.leads)!.name}</Tag>
+            )}
             {missing.length > 0 && <Tag tone="negative">Немає в ростері</Tag>}
           </span>
         </span>
@@ -345,6 +377,24 @@ function UnitCard({
               ))}
             </ul>
           </Field>
+          {hasCharacter(unit, rosterUnits) && (
+            <Field label="Веде в бою">
+              <select
+                className={inputClass}
+                style={inputStyle}
+                aria-label="Загін, який веде цей персонаж"
+                value={unit.leads ?? ""}
+                onChange={(e) => onChange((u) => ({ ...u, leads: e.target.value || undefined }))}
+              >
+                <option value="">Нікого (або свій загін зі складу)</option>
+                {others.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <RemoveButton onRemove={onRemove} />
         </div>
       )}
@@ -747,8 +797,9 @@ function MissionEnemy({
   const enemy = missionEnemy(crusade, mission, BOOK_ENEMIES);
   const fromBook = mission.enemy === undefined && enemy !== null;
   const hasBook = BOOK_ENEMIES[crusade.name]?.[mission.number] !== undefined;
-  const playerArmies = new Set(crusade.players.map((p) => p.armyId));
-  const rosters = armies.filter((a) => !playerArmies.has(a.id));
+  const edition = missionEdition(mission);
+  const playerArmies = new Set(crusade.players.map((p) => playerArmyId(p, edition)));
+  const rosters = armies.filter((a) => a.edition === edition && !playerArmies.has(a.id));
   const picked = new Set((enemy?.units ?? []).map((u) => `${u.armyId}/${u.unitId}`));
   const points = missionEnemyPoints(crusade, mission, armies, BOOK_ENEMIES);
   const factions = [
@@ -918,6 +969,7 @@ function MissionRow({
             onChange={(e) => onChange({ pointsLimit: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
           />
         </label>
+        <Tag>{missionEdition(mission)}-та ред.</Tag>
         {isNext && <Tag>Наступна</Tag>}
       </div>
       <div className="flex flex-wrap items-start gap-[10px]">

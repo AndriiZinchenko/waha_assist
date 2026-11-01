@@ -1,14 +1,20 @@
 // The campaign as battle sides: the players' campaign units together on
 // one side, a mission's enemy on the other. Each is an ordinary ArmyEntry,
 // so the battle screen and calculator need nothing new; App puts them next
-// to the real armies under the ids below (one enemy id per mission).
+// to the real armies under the ids below: one allied id per edition (the
+// players field the same units, from that edition's rosters) and one enemy
+// id per mission.
 
 import type { Ability, ParsedUnit, RuleRef, WeaponEntry } from "../../parseRoster.mjs";
 import type { ArmyEntry } from "./armies";
+import type { Edition } from "./edition";
 import {
   HONOURS,
   SCARS,
+  crusadeForEdition,
+  honourCoversWeapon,
   isAvailable,
+  missionEdition,
   missionEnemy,
   nextMission,
   resolveRosterUnits,
@@ -20,8 +26,19 @@ import {
 import { effectiveDetachment } from "./detachment";
 import { getLeaderCandidates } from "./leaders";
 
-export const CRUSADE_ALLIES_ID = "crusade-allies";
+const ALLIES_PREFIX = "crusade-allies-";
 const ENEMY_PREFIX = "crusade-enemy-";
+
+export function crusadeAlliesId(edition: Edition): string {
+  return `${ALLIES_PREFIX}${edition}`;
+}
+
+/** The edition an allied side id stands for, or null for any other id. */
+export function editionOfArmyId(id: string | null): Edition | null {
+  if (!id?.startsWith(ALLIES_PREFIX)) return null;
+  const n = Number(id.slice(ALLIES_PREFIX.length));
+  return n === 10 || n === 11 ? n : null;
+}
 
 export function crusadeEnemyId(missionNumber: number): string {
   return `${ENEMY_PREFIX}${missionNumber}`;
@@ -35,7 +52,7 @@ export function missionOfArmyId(id: string | null): number | null {
 }
 
 export function isCrusadeArmyId(id: string | null): boolean {
-  return id === CRUSADE_ALLIES_ID || missionOfArmyId(id) !== null;
+  return editionOfArmyId(id) !== null || missionOfArmyId(id) !== null;
 }
 
 function sumPoints(units: ParsedUnit[]): number {
@@ -60,7 +77,7 @@ function weaponWithMods(weapon: WeaponEntry, unit: CrusadeUnit): WeaponEntry {
   let hitMod = 0;
   let ap = weapon.ap;
   for (const honour of unit.honours) {
-    if (honour.weapon !== weapon.name) continue;
+    if (!honourCoversWeapon(honour.weapon, weapon.name)) continue;
     if (honour.id === "marksmen" && weapon.type === "ranged") {
       hitMod += 1;
       mods.push({ ref: honourRef("marksmen"), tone: "positive" });
@@ -124,7 +141,12 @@ export function withCrusadeMods(roster: ParsedUnit, unit: CrusadeUnit): ParsedUn
  * Hellblaster squads stay apart. (A weapon override set in army
  * configuration rebuilds a unit's weapons and drops the honours on them.)
  */
-function alliedSide(crusade: CrusadeState, armies: ArmyEntry[]): ArmyEntry | null {
+function alliedSide(
+  campaign: CrusadeState,
+  armies: ArmyEntry[],
+  edition: Edition,
+): ArmyEntry | null {
+  const crusade = crusadeForEdition(campaign, edition, armies);
   const units: ParsedUnit[] = [];
   const catalogues: string[] = [];
   for (const player of crusade.players) {
@@ -141,9 +163,9 @@ function alliedSide(crusade: CrusadeState, armies: ArmyEntry[]): ArmyEntry | nul
   }
   if (units.length === 0) return null;
   return {
-    id: CRUSADE_ALLIES_ID,
+    id: crusadeAlliesId(edition),
     fileName: "",
-    edition: 10,
+    edition,
     fromCrusade: true,
     sourceCatalogues: catalogues,
     parsed: {
@@ -255,8 +277,9 @@ export function crusadeBattleArmies(
   book: BookEnemies,
 ): ArmyEntry[] {
   if (!crusade) return [];
+  const editions = [...new Set(crusade.missions.map(missionEdition))];
   return [
-    alliedSide(crusade, armies),
+    ...editions.map((e) => alliedSide(crusade, armies, e)),
     ...crusade.missions.map((m) => enemySide(crusade, m, armies, detachmentOverrides, book)),
   ].filter((a): a is ArmyEntry => a !== null);
 }
@@ -267,15 +290,16 @@ export function crusadeBattleArmies(
  * that squad, and the enemy's leaders are attached as the mission says.
  */
 export function crusadeLeaderAssignments(
-  crusade: CrusadeState | null,
+  campaign: CrusadeState | null,
   armies: ArmyEntry[],
   missionNumber: number | null,
   book: BookEnemies,
 ): Record<string, string> {
   const out: Record<string, string> = {};
-  if (!crusade) return out;
-  const mission = crusade.missions.find((m) => m.number === missionNumber);
-  if (mission) Object.assign(out, missionEnemy(crusade, mission, book)?.leaders ?? {});
+  if (!campaign) return out;
+  const mission = campaign.missions.find((m) => m.number === missionNumber);
+  if (mission) Object.assign(out, missionEnemy(campaign, mission, book)?.leaders ?? {});
+  const crusade = crusadeForEdition(campaign, mission ? missionEdition(mission) : 10, armies);
   for (const unit of crusade.units) {
     const army = armies.find(
       (a) => a.id === crusade.players.find((p) => p.id === unit.playerId)?.armyId,
@@ -283,7 +307,14 @@ export function crusadeLeaderAssignments(
     if (!army) continue;
     const { found } = resolveRosterUnits(unit, army.parsed.units);
     const leaders = getLeaderCandidates(found);
-    const squad = found.find((u) => !leaders.includes(u));
+    // The squad it leads: its own non-leader roster unit, or the one of the
+    // campaign unit it is set to lead.
+    const led = unit.leads ? crusade.units.find((u) => u.id === unit.leads) : undefined;
+    const squad = led
+      ? resolveRosterUnits(led, army.parsed.units).found.find(
+          (u) => !getLeaderCandidates([u]).length,
+        )
+      : found.find((u) => !leaders.includes(u));
     if (!squad) continue;
     for (const leader of leaders) out[leader.id] = squad.id;
   }

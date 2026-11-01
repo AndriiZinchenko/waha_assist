@@ -151,6 +151,28 @@ describe("normalizeSyncedData: crusade", () => {
     skipsMission: "yes",
   };
 
+  it("keeps the per-edition rosters and mission editions", () => {
+    const { crusade } = normalizeSyncedData({
+      crusade: {
+        name: "x",
+        players: [{ id: "p1", name: "A", armyId: "Grey", armyIds: { 11: "Grey 11", bad: "x", 12: 3 } }],
+        units: [
+          { id: "u1", playerId: "p1", rosterUnitIds: ["a"], rosterUnitIdsByEdition: { 11: ["b", 2] } },
+          { id: "u2", playerId: "p1", rosterUnitIds: [], rosterUnitIdsByEdition: "no" },
+        ],
+        missions: [
+          { number: 4, name: "x", edition: 11 },
+          { number: 5, name: "y", edition: 9 },
+        ],
+      },
+    });
+    expect(crusade.players[0].armyIds).toEqual({ 11: "Grey 11" });
+    expect(crusade.units[0].rosterUnitIdsByEdition).toEqual({ 11: ["b"] });
+    expect(crusade.units[1]).not.toHaveProperty("rosterUnitIdsByEdition");
+    expect(crusade.missions[0].edition).toBe(11);
+    expect(crusade.missions[1]).not.toHaveProperty("edition");
+  });
+
   it("is null when no campaign was started", () => {
     expect(normalizeSyncedData({}).crusade).toBeNull();
     expect(normalizeSyncedData({ crusade: "x" }).crusade).toBeNull();

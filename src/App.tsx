@@ -27,11 +27,12 @@ import { ArmyPanel, type Side } from "./components/ArmyPanel";
 import { ArmySetupScreen } from "./components/ArmySetupScreen";
 import { CrusadeScreen } from "./components/CrusadeScreen";
 import { ASHES_OF_ARMAGEDDON, BOOK_ENEMIES } from "./data/crusade-seed";
-import type { CrusadeState } from "./lib/crusade";
+import { missionEdition, type CrusadeState } from "./lib/crusade";
 import {
-  CRUSADE_ALLIES_ID,
+  crusadeAlliesId,
   crusadeBattleArmies,
   crusadeEnemyId,
+  editionOfArmyId,
   crusadeLeaderAssignments,
   isCrusadeArmyId,
   missionOfArmyId,
@@ -74,10 +75,9 @@ function App() {
 
   // The campaign's two sides sit next to the real armies, so a campaign
   // battle is an ordinary battle route (a=crusade-allies&b=crusade-enemy).
-  const tenthEdition = armiesForEdition(armies, 10);
   const battleArmies = [
     ...armies,
-    ...crusadeBattleArmies(state.crusade, tenthEdition, state.detachmentOverrides, BOOK_ENEMIES),
+    ...crusadeBattleArmies(state.crusade, armies, state.detachmentOverrides, BOOK_ENEMIES),
   ];
   const armyA = battleArmies.find((a) => a.id === route.a) ?? null;
   const armyB = battleArmies.find((a) => a.id === route.b) ?? null;
@@ -88,7 +88,7 @@ function App() {
   const leaderAssignments = inCrusadeBattle
     ? crusadeLeaderAssignments(
         state.crusade,
-        tenthEdition,
+        armies,
         missionOfArmyId(route.b) ?? missionOfArmyId(route.a),
         BOOK_ENEMIES,
       )
@@ -97,7 +97,10 @@ function App() {
   // configuration (to trim a list) still take part.
   const hiddenFor = (army: ArmyEntry): Record<string, boolean> =>
     army.fromCrusade ? {} : state.hiddenUnitIds;
-  const battleEdition: Edition = inCrusadeBattle ? 10 : edition;
+  // A campaign battle is played in its mission's edition.
+  const battleEdition: Edition = inCrusadeBattle
+    ? (editionOfArmyId(route.a) ?? editionOfArmyId(route.b) ?? 10)
+    : edition;
   const selectedUnitId: Record<Side, string | null> = { a: route.ua, b: route.ub };
   const activeSide = route.side;
 
@@ -183,10 +186,11 @@ function App() {
   }
 
   function handleStartCrusadeBattle(missionNumber: number) {
+    const mission = state.crusade?.missions.find((m) => m.number === missionNumber);
     navigate({
       ...route,
       screen: "battle",
-      a: CRUSADE_ALLIES_ID,
+      a: crusadeAlliesId(mission ? missionEdition(mission) : 10),
       b: crusadeEnemyId(missionNumber),
       ua: null,
       ub: null,
@@ -487,7 +491,7 @@ function App() {
         ) : route.screen === "crusade" ? (
           <CrusadeScreen
             crusade={state.crusade}
-            armies={armiesForEdition(armies, 10)}
+            armies={armies}
             onChange={handleSetCrusade}
             onStart={() => handleSetCrusade(ASHES_OF_ARMAGEDDON)}
             onStartBattle={handleStartCrusadeBattle}

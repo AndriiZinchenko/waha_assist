@@ -77,6 +77,21 @@ function count(value) {
   return Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 }
 
+/** { "11": value } maps keyed by edition, keeping only the values `keep` accepts. */
+function byEdition(raw, keep) {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const out = {};
+  for (const [edition, value] of Object.entries(raw)) {
+    const kept = keep(value);
+    if (/^\d+$/.test(edition) && kept !== undefined) out[edition] = kept;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function idList(value) {
+  return Array.isArray(value) ? value.filter((id) => typeof id === "string") : undefined;
+}
+
 function normalizeCrusadeUnit(raw) {
   if (typeof raw?.id !== "string" || typeof raw.playerId !== "string") return null;
   const honours = [];
@@ -88,7 +103,7 @@ function normalizeCrusadeUnit(raw) {
   for (const id of Array.isArray(raw.scars) ? raw.scars : []) {
     if (SCAR_IDS.has(id) && !scars.includes(id)) scars.push(id);
   }
-  return {
+  const unit = {
     id: raw.id,
     playerId: raw.playerId,
     name: text(raw.name, 200),
@@ -100,6 +115,10 @@ function normalizeCrusadeUnit(raw) {
     scars,
     skipsMission: raw.skipsMission === true,
   };
+  const byEd = byEdition(raw.rosterUnitIdsByEdition, idList);
+  if (byEd) unit.rosterUnitIdsByEdition = byEd;
+  if (typeof raw.leads === "string") unit.leads = raw.leads;
+  return unit;
 }
 
 /** A mission's enemy force; null for a malformed one. */
@@ -130,7 +149,10 @@ function normalizeCrusade(value) {
   const players = [];
   for (const p of Array.isArray(value.players) ? value.players : []) {
     if (typeof p?.id !== "string" || typeof p.armyId !== "string") continue;
-    players.push({ id: p.id, name: text(p.name, 200), armyId: p.armyId });
+    const player = { id: p.id, name: text(p.name, 200), armyId: p.armyId };
+    const armyIds = byEdition(p.armyIds, (v) => (typeof v === "string" ? v : undefined));
+    if (armyIds) player.armyIds = armyIds;
+    players.push(player);
   }
   const units = [];
   for (const raw of Array.isArray(value.units) ? value.units : []) {
@@ -150,6 +172,7 @@ function normalizeCrusade(value) {
     // Absent means "as the campaign book has it"; keep that apart from an
     // explicit null (no enemy).
     if ("enemy" in m) mission.enemy = m.enemy === null ? null : normalizeEnemy(m.enemy);
+    if (m.edition === 10 || m.edition === 11) mission.edition = m.edition;
     missions.push(mission);
   }
   return { name: text(value.name, 200), players, units, missions };

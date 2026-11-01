@@ -1,29 +1,59 @@
 import type { BookEnemies, CrusadeEnemy, CrusadeState } from "../lib/crusade";
 
 /**
- * «Попіл Армагеддону» as it stood after mission 2 (both won, no losses),
- * checked against the campaign book. Offered once, when no campaign is
- * stored yet; after that the synced copy is the only one that counts.
- * Roster unit ids are from armies/Grey.json and armies/Ultramar.json.
+ * «Попіл Армагеддону» as the campaign book has it after mission 3 (three
+ * wins, no losses; book rev 36). Missions 1-3 were played in 10th edition,
+ * 4-5 are played in 11th: each player has a roster for both, and units are
+ * matched to the 11th edition roster by datasheet name. Offered once, when
+ * no campaign is stored yet; after that the synced copy is the one that
+ * counts. Roster unit ids are from armies/Grey.json and armies/Ultramar.json.
  */
 export const ASHES_OF_ARMAGEDDON: CrusadeState = {
   name: "Попіл Армагеддону",
   players: [
-    { id: "andrii", name: "Андрій", armyId: "Grey" },
-    { id: "sashko", name: "Сашко", armyId: "Ultramar" },
+    { id: "andrii", name: "Андрій", armyId: "Grey", armyIds: { "11": "Grey 11" } },
+    { id: "sashko", name: "Сашко", armyId: "Ultramar", armyIds: { "11": "Ultramar 11" } },
   ],
   units: [
     {
+      // The book (rev 36) splits him from the Strike Squad he led in
+      // missions 1-3; from mission 4 he leads the Terminators.
       id: "u1",
       playerId: "andrii",
-      name: "Бібліотекар + Страйк-сквад",
-      rosterUnitIds: ["8ki8zfu", "35p7rad"],
+      name: "Бібліотекар",
+      rosterUnitIds: ["8ki8zfu"],
+      xp: 14,
+      honours: [
+        { id: "hardened", weapon: null },
+        { id: "steadfast", weapon: null },
+      ],
+      scars: [],
+      skipsMission: false,
+      leads: "u10",
+    },
+    {
+      id: "u12",
+      playerId: "andrii",
+      name: "Страйк-сквад (перший)",
+      rosterUnitIds: ["35p7rad"],
+      xp: 14,
+      honours: [
+        { id: "ruthlessBlades", weapon: null },
+        { id: "furiousCharge", weapon: null },
+      ],
+      scars: [],
+      skipsMission: false,
+    },
+    {
+      id: "u10",
+      playerId: "andrii",
+      name: "Термінатори Братства",
+      rosterUnitIds: ["hx1q9z"],
       xp: 10,
       honours: [
         { id: "ruthlessBlades", weapon: null },
         { id: "hardened", weapon: null },
         { id: "furiousCharge", weapon: null },
-        { id: "steadfast", weapon: null },
       ],
       scars: [],
       skipsMission: false,
@@ -33,10 +63,11 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       playerId: "andrii",
       name: "Інтерсептори",
       rosterUnitIds: ["mdo41w"],
-      xp: 6,
+      xp: 9,
       honours: [
         { id: "furiousCharge", weapon: null },
         { id: "ruthlessBlades", weapon: null },
+        { id: "hardened", weapon: null },
       ],
       scars: [],
       skipsMission: false,
@@ -46,10 +77,11 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       playerId: "andrii",
       name: "Страйк-сквад (другий)",
       rosterUnitIds: ["6a5fe1ce6e3b9858f2d3c614"],
-      xp: 4,
+      xp: 8,
       honours: [
         { id: "ruthlessBlades", weapon: null },
         { id: "holdTheLine", weapon: null },
+        { id: "steadfast", weapon: null },
       ],
       scars: [],
       skipsMission: false,
@@ -59,7 +91,7 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       playerId: "sashko",
       name: "Хеллбластери «золоті наплічники»",
       rosterUnitIds: ["a26qs7d"],
-      xp: 8,
+      xp: 9,
       honours: [
         { id: "marksmen", weapon: "Plasma Incinerator - Standard" },
         { id: "hardened", weapon: null },
@@ -72,10 +104,11 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       playerId: "sashko",
       name: "Хеллбластери «білі наплічники»",
       rosterUnitIds: ["6ac407b63d9a9421ff1b5f5f"],
-      xp: 4,
+      xp: 6,
       honours: [
         { id: "marksmen", weapon: "Plasma Incinerator - Standard" },
         { id: "steadfast", weapon: null },
+        { id: "hardened", weapon: null },
       ],
       scars: [],
       skipsMission: false,
@@ -85,10 +118,12 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       playerId: "sashko",
       name: "Інтерсесори",
       rosterUnitIds: ["oc9gmod"],
-      xp: 4,
+      xp: 5,
       honours: [
+        // Covers both 11th edition Bolt Rifle profiles.
         { id: "marksmen", weapon: "Bolt Rifle" },
         { id: "holdTheLine", weapon: null },
+        { id: "hardened", weapon: null },
       ],
       scars: [],
       skipsMission: false,
@@ -98,18 +133,8 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       playerId: "sashko",
       name: "Техмарин",
       rosterUnitIds: ["gznfiwm"],
-      xp: 3,
+      xp: 4,
       honours: [{ id: "holdTheLine", weapon: null }],
-      scars: [],
-      skipsMission: false,
-    },
-    {
-      id: "u8",
-      playerId: "sashko",
-      name: "Елімінатори",
-      rosterUnitIds: ["b1qmlls"],
-      xp: 2,
-      honours: [],
       scars: [],
       skipsMission: false,
     },
@@ -118,6 +143,30 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       playerId: "sashko",
       name: "Апотекарій",
       rosterUnitIds: ["e9k1cls"],
+      xp: 3,
+      honours: [{ id: "steadfast", weapon: null }],
+      scars: [],
+      skipsMission: false,
+    },
+    {
+      id: "u11",
+      playerId: "sashko",
+      name: "Редемптор",
+      rosterUnitIds: ["tubl65c"],
+      xp: 3,
+      honours: [
+        // «основна гармата»: the 11th edition roster's main gun, standard
+        // profile as on the Hellblasters.
+        { id: "marksmen", weapon: "Macro Plasma Incinerator - Standard" },
+      ],
+      scars: [],
+      skipsMission: false,
+    },
+    {
+      id: "u8",
+      playerId: "sashko",
+      name: "Елімінатори",
+      rosterUnitIds: ["b1qmlls"],
       xp: 2,
       honours: [],
       scars: [],
@@ -141,18 +190,27 @@ export const ASHES_OF_ARMAGEDDON: CrusadeState = {
       notes:
         "3 з 3 зарядів знешкоджено, жодного вибуху. Завод урятовано. На сході збирається великий WAAAGH!. Слід зірки в «Цистернах» не обшукано.",
     },
-    { number: 3, name: "WAAAGH!", result: null, pointsLimit: 650, notes: "" },
-    { number: 4, name: "Справжній ворог", result: null, pointsLimit: 650, notes: "" },
-    { number: 5, name: "Брама Тартаруса", result: null, pointsLimit: 800, notes: "" },
+    {
+      number: 3,
+      name: "WAAAGH!",
+      result: "win",
+      pointsLimit: 650,
+      notes:
+        "Усі 3 точки ваші щоходу, всі орки знищені, включно з Морканавтом і Газгкуллом. На тілі Варбоса — амулет із восьмипроменевою зіркою та табличка «Той, хто сяє найяскравіше, помре першим». Газгкулл мертвий — у фіналі третьої сили не буде.",
+    },
+    { number: 4, name: "Справжній ворог", result: null, pointsLimit: 700, notes: "", edition: 11 },
+    { number: 5, name: "Брама Тартаруса", result: null, pointsLimit: 850, notes: "", edition: 11 },
   ],
 };
 
 const orks = (...ids: string[]) => ids.map((unitId) => ({ armyId: "Orks", unitId }));
-const chaos = (...ids: string[]) => ids.map((unitId) => ({ armyId: "Chaos", unitId }));
+const chaos11 = (...ids: string[]) => ids.map((unitId) => ({ armyId: "Chaos 11", unitId }));
+const orks11 = (...ids: string[]) => ids.map((unitId) => ({ armyId: "Orks 11", unitId }));
 
 /**
- * Each mission's enemy as the campaign book lists it (book rev 15), out of
- * the 10th edition rosters armies/Orks.json and armies/Chaos.json. Leaders
+ * Each mission's enemy as the campaign book lists it (book rev 35): 1-3
+ * out of the 10th edition armies/Orks.json and armies/Chaos.json, 4-5 out
+ * of the 11th edition Chaos 11, Orks 11 and Chaos knights 11. Leaders
  * are attached where the book pairs them and the datasheet allows it; units
  * that only stand next to each other (Mek by the Gretchin, Warpsmith by the
  * Forgefiend) stay apart. Only each mission's main force is listed, as the
@@ -199,50 +257,69 @@ const MISSION_ENEMIES: Record<number, CrusadeEnemy> = {
     },
     detachment: "War Horde",
   },
-  // «Діти Горуса» with enthralled Orks: army rule only, base stratagems.
+  // «Діти Горуса» with enthralled Orks, 11th edition: the Chaos roster
+  // («Unnamed list», now «Chaos 11») and the 11th edition Orks. Each brings
+  // its own detachment (Chaos Cult, Green Tide), so the side shows none.
   4: {
     units: [
-      ...chaos(
-        "dz6oufs",
-        "6a5fd9816e3b9858f2d3c611",
-        "j24j3p5",
-        "qad6moh",
-        "04w4r2",
-        "pb6ek4",
-        "16bmj1",
-        "ul7ttvm",
-        "uodfb6l",
-        "h0b1vou",
-        "9jdxxt",
+      ...chaos11(
+        "t37h8k8",
+        "8i5t8w",
+        "o3wc4nt",
+        "tkr66q",
+        "2gxu8bb",
+        "lf81azv",
+        "q360e6f",
+        "i4kos3v",
+        "8k9orxf",
+        "uu46y5s",
+        "nko9ebx",
       ),
-      ...orks("17fyghe", "exsxqb", "410rll", "e65dz8e"),
+      ...orks11(
+        "f9lv7p",
+        "0c0e2mf",
+        "qzhbyu",
+        "i26kk3",
+        "wc478zb",
+        "n2g7v2",
+        "t2nm5xe",
+        "3s8v9qm",
+        "lucak7",
+        "63xo37n",
+        "meac1s",
+      ),
     ],
-    leaders: { dz6oufs: "6a5fd9816e3b9858f2d3c611", "17fyghe": "exsxqb" },
+    // The book pairs the Mek with the Lootas, but in 11th edition his Support
+    // ability does not list Lootas, so he stands alone.
+    leaders: { t37h8k8: "8i5t8w", f9lv7p: "0c0e2mf", n2g7v2: "t2nm5xe" },
     detachment: null,
   },
-  // The Black Crusade: the whole Chaos roster, 2000 points.
+  // The Black Crusade, 11th edition: the whole Chaos roster, the Knight
+  // Rampager and the enthralled Orks still standing.
   5: {
     units: [
-      ...chaos(
-        "tnrntf",
-        "2bhtdil",
-        "qad6moh",
-        "dz6oufs",
-        "6a5fd9816e3b9858f2d3c611",
-        "j24j3p5",
-        "ul7ttvm",
-        "04w4r2",
-        "pb6ek4",
-        "16bmj1",
-        "ivlh8f",
-        "9nq8kix",
-        "46lwtbe",
-        "h0b1vou",
-        "uodfb6l",
-        "9jdxxt",
+      ...chaos11(
+        "ri4v62g",
+        "c4vvdj",
+        "tkr66q",
+        "t37h8k8",
+        "8i5t8w",
+        "o3wc4nt",
+        "i4kos3v",
+        "2gxu8bb",
+        "lf81azv",
+        "q360e6f",
+        "v9ajzui",
+        "y51r71q",
+        "60n9h7i",
+        "uu46y5s",
+        "8k9orxf",
+        "nko9ebx",
       ),
+      { armyId: "Chaos knights 11", unitId: "mbb9l7l" },
+      ...orks11("f9lv7p", "0c0e2mf", "qzhbyu", "i26kk3"),
     ],
-    leaders: { tnrntf: "2bhtdil", dz6oufs: "6a5fd9816e3b9858f2d3c611" },
+    leaders: { ri4v62g: "c4vvdj", t37h8k8: "8i5t8w", f9lv7p: "0c0e2mf" },
     detachment: null,
   },
 };
