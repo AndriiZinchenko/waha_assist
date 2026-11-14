@@ -53,6 +53,7 @@ export function activeModifierChips(m: DirectionModifiers, labels: ModifierLabel
   if (m.hitMod !== 0) chips.push(`Hit ${signed(m.hitMod)}`);
   if (m.woundMod !== 0) chips.push(`Wound ${signed(m.woundMod)}`);
   if (m.apMod !== 0) chips.push(`AP ${signed(m.apMod)}`);
+  if (m.damageMod !== 0) chips.push(`D ${signed(m.damageMod)}`);
   if (m.invulnOverride !== null) chips.push(`${m.invulnOverride}++`);
   if (m.halfRange) chips.push(labels.halfRange);
   if (m.stationary) chips.push(labels.stationary);

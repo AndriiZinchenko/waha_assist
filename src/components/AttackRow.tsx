@@ -98,6 +98,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       row.leaderMods.find((m) => m.name === label)?.text ??
       row.crusadeMods.find((m) => m.ref.name === label)?.ref.text ??
       row.autoHitPenaltySources.find((m) => m.name === label)?.text ??
+      row.damageReductionSources.find((m) => m.name === label)?.text ??
       null
     );
   }
@@ -132,6 +133,13 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
     row.appliedWoundMod !== 0 && {
       text: `Wound ${formatMod(row.appliedWoundMod)} applied`,
       kind: row.appliedWoundMod > 0 ? "positive" : "negative",
+    },
+    row.appliedDamageMod !== 0 && {
+      text:
+        row.damageReductionSources.length > 0
+          ? `Damage ${formatMod(row.appliedDamageMod)} applied (${row.damageReductionSources.map((r) => r.name).join(", ")}; never below 1)`
+          : `Damage ${formatMod(row.appliedDamageMod)} applied (never below 1)`,
+      kind: row.appliedDamageMod > 0 ? "positive" : "negative",
     },
     row.apWorsened && {
       text: "AP worsened by 1 (Armour of Contempt)",
@@ -168,6 +176,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
     ...row.leaderMods.map((ref) => ({ ref, tone: "positive" as const })),
     ...row.crusadeMods,
     ...row.autoHitPenaltySources.map((ref) => ({ ref, tone: "negative" as const })),
+    ...row.damageReductionSources.map((ref) => ({ ref, tone: "negative" as const })),
   ];
   const openText = openLabel ? expandedText(openLabel) : null;
 

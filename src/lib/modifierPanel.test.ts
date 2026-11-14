@@ -25,13 +25,14 @@ describe("activeModifierChips", () => {
         hitMod: 1,
         woundMod: -1,
         apMod: 1,
+        damageMod: -1,
         invulnOverride: 4,
         halfRange: true,
         waaagh: true,
       },
       labels,
     );
-    expect(chips).toEqual(["Hit +1", "Wound −1", "AP +1", "4++", "Half range", "Waaagh!"]);
+    expect(chips).toEqual(["Hit +1", "Wound −1", "AP +1", "D −1", "4++", "Half range", "Waaagh!"]);
   });
 });
 

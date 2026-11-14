@@ -10,6 +10,11 @@ export interface DirectionModifiers {
   /** +1 improves every weapon's AP by 1 (e.g. a Crusade weapon upgrade),
    * -1 worsens it (e.g. Armour of Contempt). */
   apMod: -1 | 0 | 1;
+  /** Added to every attack's Damage characteristic (never below 1): -1 for a
+   * stratagem or ability the calculator does not pick up by itself, +1 for
+   * a damage bonus. The target's own "-1 Damage" abilities are applied
+   * automatically on top (see damageReductionSources). */
+  damageMod: -1 | 0 | 1;
   halfRange: boolean;
   /** The attacking unit did not move this turn: Heavy weapons get +1 to hit. */
   stationary: boolean;
@@ -26,6 +31,7 @@ export function emptyModifiers(): DirectionModifiers {
     woundMod: 0,
     invulnOverride: null,
     apMod: 0,
+    damageMod: 0,
     halfRange: false,
     stationary: false,
     engaged: false,
@@ -66,6 +72,60 @@ export function hasWaaagh(unit: ParsedUnit): boolean {
   return unit.rules.some((r) => r.name.trim().toLowerCase() === "waaagh!");
 }
 
+/**
+ * A model ability that always subtracts 1 from the Damage of attacks
+ * allocated to it: 10th edition's "Each time an attack is allocated to this
+ * model, subtract 1 from the Damage characteristic of that attack" (Duty
+ * Eternal, Guardian Eternal, Necrodermis) and New Recruit's 11th edition
+ * Timing/Result form ("this model is allocated an attack" / "reduce Damage
+ * characteristic of the attack by 1", Implacable Resilience). Abilities with
+ * a condition (once per battle, while affected by another unit, only against
+ * some attacks) are left to the manual Damage modifier.
+ */
+const ALLOCATED_TO_THIS_MODEL = /allocated to this model|this model is allocated an attack/i;
+const MINUS_ONE_DAMAGE =
+  /subtract 1 from the Damage characteristic|reduce (the )?Damage characteristic of (that|the) attack by 1|Damage characteristic of (that|the) attack drops by 1/i;
+const DAMAGE_CONDITION = /\b(once per|while|until|unless|if|select|strength|melee|ranged|psychic|mortal)\b/i;
+
+function isMinusOneDamage(text: string): boolean {
+  const plain = text.replace(/\*\*|\^\^/g, "");
+  return (
+    ALLOCATED_TO_THIS_MODEL.test(plain) &&
+    MINUS_ONE_DAMAGE.test(plain) &&
+    !DAMAGE_CONDITION.test(plain)
+  );
+}
+
+/** The target's own abilities that take 1 off the Damage of every attack
+ * allocated to it. */
+export function damageReductionSources(unit: ParsedUnit): RuleRef[] {
+  return unit.abilities
+    .filter((a) => isMinusOneDamage(a.text ?? ""))
+    .map((a) => ({ name: a.name, text: a.text }));
+}
+
+/** `base` with `mod` added to every roll, each result floored at 1, so
+ * "D6" - 1 reads "D6-1" and averages (1+1+2+3+4+5)/6. */
+export function applyDamageMod(base: DiceExpr, mod: number): DiceExpr {
+  if (mod === 0 || base.raw === "—") return base;
+  const flat = base.flat + mod;
+  if (base.dice <= 0 || base.sides <= 0) {
+    const value = Math.max(1, flat);
+    return { ...base, flat: value, avg: value, raw: String(value) };
+  }
+  // Every total of the dice, floored at 1 after the modifier.
+  let totals = [0];
+  for (let i = 0; i < base.dice; i++) {
+    const next: number[] = [];
+    for (const t of totals) for (let f = 1; f <= base.sides; f++) next.push(t + f);
+    totals = next;
+  }
+  const avg = totals.reduce((sum, t) => sum + Math.max(1, t + flat), 0) / totals.length;
+  const dice = `${base.dice === 1 ? "" : base.dice}D${base.sides}`;
+  const raw = flat > 0 ? `${dice}+${flat}` : flat < 0 ? `${dice}${flat}` : dice;
+  return { ...base, flat, avg, raw };
+}
+
 /** The invulnerable save the Waaagh! grants in both editions. */
 const WAAAGH_INVULN = 5;
 
@@ -102,6 +162,10 @@ export interface AttackRow {
   leaderMods: RuleRef[];
   /** Crusade honours and scars that changed this weapon (see WeaponEntry). */
   crusadeMods: Array<{ ref: RuleRef; tone: "positive" | "negative" }>;
+  /** The target's own "-1 Damage" abilities applied to this weapon. */
+  damageReductionSources: RuleRef[];
+  /** Net change to the Damage characteristic (manual + target abilities). */
+  appliedDamageMod: number;
   /** Abilities behind the target's automatic hit penalty (e.g. Grand
    * Master Voldus's Sanctuary), separate from the plain numeric total in
    * `appliedHitMod` so the UI can name the source. */
@@ -145,7 +209,7 @@ function clampTarget(value: number): number {
   return Math.min(6, Math.max(2, value));
 }
 
-const ANTI_X_PATTERN = /Anti-(\w+) (\d)\+/;
+const ANTI_X_PATTERN = /Anti-(\w+) (\d)\+/i;
 
 function findAntiX(
   weaponKeywords: string[],
@@ -166,8 +230,9 @@ function findAntiX(
   return null;
 }
 
-const MELTA_PATTERN = /^Melta (\d+)$/;
-const RAPID_FIRE_PATTERN = /^Rapid Fire (\d+)$/;
+// 11th edition exports spell some keywords in capitals ("RAPID FIRE 2").
+const MELTA_PATTERN = /^Melta (\d+)$/i;
+const RAPID_FIRE_PATTERN = /^Rapid Fire (\d+)$/i;
 
 function findHalfRangeBonus(weaponKeywords: string[]): HalfRangeBonus | null {
   for (const kw of weaponKeywords) {
@@ -221,6 +286,9 @@ export function computeAttackTable(
   const targetModels = getUnitLiveTotal(counts, target.id, target);
   const attackerWaaagh = modifiers.waaagh && hasWaaagh(attacker);
   const targetWaaagh = modifiers.waaagh && hasWaaagh(target);
+  const targetDamageReduction = damageReductionSources(target);
+  // Several such abilities on one model still take off 1 in total.
+  const damageMod = modifiers.damageMod - (targetDamageReduction.length > 0 ? 1 : 0);
 
   return merged.map((weapon) => {
     const count = getLiveWeaponCount(counts, attacker.id, attacker, weapon.profileId);
@@ -302,10 +370,12 @@ export function computeAttackTable(
 
     const baseDamage =
       weapon.damage ?? { dice: 0, sides: 0, flat: 0, raw: "—", avg: 0 };
-    const damage =
+    const meltaDamage =
       halfRangeApplied && halfRangeBonus!.kind === "melta"
         ? applyBonus(baseDamage, halfRangeBonus!.value)
         : baseDamage;
+    const hasDamage = weapon.damage != null;
+    const damage = hasDamage ? applyDamageMod(meltaDamage, damageMod) : meltaDamage;
 
     const baseAttacks =
       weapon.attacks ?? { dice: 0, sides: 0, flat: 0, raw: "—", avg: 0 };
@@ -336,6 +406,8 @@ export function computeAttackTable(
       rules: weapon.rules,
       leaderMods: weapon.leaderMods ?? [],
       crusadeMods: weapon.crusadeMods ?? [],
+      damageReductionSources: hasDamage ? targetDamageReduction : [],
+      appliedDamageMod: hasDamage ? damageMod : 0,
       autoHitPenaltySources: weapon.skill === null ? [] : autoHitPenaltySources,
       appliedHitMod: weapon.skill === null ? 0 : totalHitMod,
       appliedWoundMod: modifiers.woundMod,

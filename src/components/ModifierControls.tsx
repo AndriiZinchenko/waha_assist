@@ -178,6 +178,21 @@ export function ModifierControls({
         }
       />
       <Stepper
+        caption="Damage"
+        value={formatMod(modifiers.damageMod)}
+        style={stepperStyle}
+        decrementLabel="Damage modifier down"
+        incrementLabel="Damage modifier up"
+        decrementDisabled={modifiers.damageMod <= -1}
+        incrementDisabled={modifiers.damageMod >= 1}
+        onDecrement={() =>
+          onChange({ ...modifiers, damageMod: (modifiers.damageMod - 1) as -1 | 0 | 1 })
+        }
+        onIncrement={() =>
+          onChange({ ...modifiers, damageMod: (modifiers.damageMod + 1) as -1 | 0 | 1 })
+        }
+      />
+      <Stepper
         caption="Invuln"
         value={modifiers.invulnOverride === null ? "None" : `${modifiers.invulnOverride}++`}
         style={stepperStyle}

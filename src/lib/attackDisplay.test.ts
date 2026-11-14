@@ -24,6 +24,8 @@ const base: AttackRow = {
   rules: [],
   leaderMods: [],
   crusadeMods: [],
+  damageReductionSources: [],
+  appliedDamageMod: 0,
   autoHitPenaltySources: [],
   appliedHitMod: 0,
   appliedWoundMod: 0,
@@ -112,6 +114,22 @@ describe("rowTones: attacks and damage", () => {
         halfRangeBonus: { kind: "rapidFire", value: 2 },
       }).attacks,
     ).toBe("boost");
+  });
+
+  it("warns when the damage is reduced, even at melta half range", () => {
+    expect(rowTones({ ...base, appliedDamageMod: -1 }).damage).toBe("warn");
+    expect(
+      rowTones({
+        ...base,
+        appliedDamageMod: -1,
+        halfRangeApplied: true,
+        halfRangeBonus: { kind: "melta", value: 2 },
+      }).damage,
+    ).toBe("warn");
+  });
+
+  it("boosts damage on a +1 damage modifier", () => {
+    expect(rowTones({ ...base, appliedDamageMod: 1 }).damage).toBe("boost");
   });
 
   it("boosts damage on melta at half range", () => {

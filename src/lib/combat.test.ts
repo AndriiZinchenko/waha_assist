@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { ParsedUnit, WeaponEntry } from "../../parseRoster.mjs";
 import {
+  applyDamageMod,
   bigGunsApplies,
+  damageReductionSources,
   computeAttackTable,
   emptyModifiers,
   canBeEngaged,
@@ -964,5 +966,108 @@ describe("computeAttackTable — Waaagh!", () => {
     );
     expect(row.saveTarget).toBe(4);
     expect(row.waaaghInvuln).toBe(false);
+  });
+});
+
+describe("damage modifiers", () => {
+  const D6 = { dice: 1, sides: 6, flat: 0, raw: "D6", avg: 3.5 };
+  const NECRODERMIS_11E = {
+    type: "Abilities",
+    name: "Necrodermis",
+    text: "- **Timing:** this model is allocated an attack\n- **Result:** reduce Damage characteristic of the attack by 1",
+  };
+  const IMPLACABLE_11E = {
+    type: "Abilities",
+    name: "Implacable Resilience",
+    text: "- **Timing:** any attack allocated to this model\n- **Result:** the Damage characteristic of that attack drops by 1",
+  };
+  const DUTY_ETERNAL_10E = {
+    type: "Abilities",
+    name: "Duty Eternal",
+    text: "Each time an attack is allocated to this model, subtract 1 from the Damage characteristic of that attack.",
+  };
+
+  it("floors each roll at 1", () => {
+    expect(applyDamageMod(D6, -1)).toMatchObject({ raw: "D6-1", flat: -1, avg: 16 / 6 });
+    expect(applyDamageMod({ dice: 0, sides: 0, flat: 1, raw: "1", avg: 1 }, -1)).toMatchObject({
+      raw: "1",
+      avg: 1,
+    });
+    expect(applyDamageMod({ dice: 0, sides: 0, flat: 3, raw: "3", avg: 3 }, -1).raw).toBe("2");
+    expect(applyDamageMod({ dice: 1, sides: 6, flat: 1, raw: "D6+1", avg: 4.5 }, -1).raw).toBe("D6");
+    expect(applyDamageMod(D6, 1)).toMatchObject({ raw: "D6+1", avg: 4.5 });
+  });
+
+  it("finds unconditional -1 Damage abilities in both editions' wording", () => {
+    for (const a of [NECRODERMIS_11E, IMPLACABLE_11E, DUTY_ETERNAL_10E]) {
+      expect(damageReductionSources(makeUnit({ abilities: [a] }))).toHaveLength(1);
+    }
+  });
+
+  it("ignores conditional or different damage abilities", () => {
+    const conditional = [
+      {
+        type: "Abilities",
+    name: "Warden's Duty (Bondsman)",
+        text: "While a model is affected by this ability, each time an attack is allocated to that model, subtract 1 from the Damage characteristic of that attack.",
+      },
+      {
+        type: "Abilities",
+    name: "Auramite and Adamantite",
+        text: "Once per battle, at the start of any phase, this model can use this ability. If it does, until the end of the phase, each time an attack is allocated to this model, change the Damage characteristic of that attack to 1.",
+      },
+    ];
+    for (const a of conditional) {
+      expect(damageReductionSources(makeUnit({ abilities: [a] }))).toEqual([]);
+    }
+  });
+
+  it("applies the target's -1 Damage and names the source", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ damage: { dice: 0, sides: 0, flat: 3, raw: "3", avg: 3 } }),
+      {},
+      makeUnit({ abilities: [NECRODERMIS_11E] }),
+    );
+    expect(row.damage.raw).toBe("2");
+    expect(row.appliedDamageMod).toBe(-1);
+    expect(row.damageReductionSources.map((r) => r.name)).toEqual(["Necrodermis"]);
+  });
+
+  it("takes off only 1 for several such abilities, and adds the manual modifier", () => {
+    const attacker = makeAttacker({ damage: { dice: 0, sides: 0, flat: 3, raw: "3", avg: 3 } });
+    const target = makeUnit({ abilities: [NECRODERMIS_11E, IMPLACABLE_11E] });
+    expect(computeAttackTable(attacker, {}, target)[0].damage.raw).toBe("2");
+    expect(computeAttackTable(attacker, {}, target, modifiers({ damageMod: -1 }))[0].damage.raw).toBe("1");
+    expect(computeAttackTable(attacker, {}, target, modifiers({ damageMod: 1 }))[0].appliedDamageMod).toBe(0);
+  });
+
+  it("applies after melta", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ damage: D6, keywords: ["Melta 2"] }),
+      {},
+      makeUnit({ abilities: [DUTY_ETERNAL_10E] }),
+      modifiers({ halfRange: true }),
+    );
+    expect(row.damage.raw).toBe("D6+1");
+  });
+});
+
+describe("keyword spelling", () => {
+  it("reads capitalised Rapid Fire and Melta from 11th edition exports", () => {
+    const rf = computeAttackTable(
+      makeAttacker({ keywords: ["RAPID FIRE 2"] }),
+      {},
+      makeUnit(),
+      modifiers({ halfRange: true }),
+    )[0];
+    expect(rf.halfRangeApplied).toBe(true);
+    expect(rf.attacksRaw).toBe("4");
+    const melta = computeAttackTable(
+      makeAttacker({ keywords: ["MELTA 2"] }),
+      {},
+      makeUnit(),
+      modifiers({ halfRange: true }),
+    )[0];
+    expect(melta.damage.raw).toBe("3");
   });
 });

@@ -48,9 +48,12 @@ export function rowTones(row: AttackRow): RowTones {
         : null,
     save: row.isInvulnFallback || row.apWorsened ? "warn" : null,
     damage:
-      row.halfRangeApplied && row.halfRangeBonus?.kind === "melta"
-        ? "boost"
-        : null,
+      row.appliedDamageMod < 0
+        ? "warn"
+        : row.appliedDamageMod > 0 ||
+            (row.halfRangeApplied && row.halfRangeBonus?.kind === "melta")
+          ? "boost"
+          : null,
   };
 }
 
