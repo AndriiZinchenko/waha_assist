@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInvulnStat, parseRoster } from "../../parseRoster.mjs";
+import { parseInvuln, parseInvulnStat, parseRoster } from "../../parseRoster.mjs";
 
 type RosterJson = {
   roster: { forces: Array<{ selections: Array<Record<string, unknown>> }> };
@@ -55,5 +55,18 @@ describe("unit profile across editions", () => {
     expect(parseInvulnStat("5+*")).toEqual({ value: 5, conditional: true });
     expect(parseInvulnStat(null)).toBeNull();
     expect(parseInvulnStat("-")).toBeNull();
+  });
+});
+
+describe("parseInvuln", () => {
+  it("reads a bare value and marks 'against ranged attacks' as conditional", () => {
+    expect(parseInvuln("Invulnerable Save", "4+")).toEqual({ value: 4, conditional: false });
+    expect(
+      parseInvuln("Invulnerable Save", "This model has a 5+ invulnerable save against ranged attacks."),
+    ).toEqual({ value: 5, conditional: true });
+    expect(parseInvuln("Invulnerable Save", "Models in this unit have a 4+ invulnerable save.")).toEqual({
+      value: 4,
+      conditional: false,
+    });
   });
 });

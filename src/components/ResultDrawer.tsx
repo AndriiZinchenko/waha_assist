@@ -6,12 +6,13 @@ import {
   hasLanceWeapon,
   hasWaaagh,
   canBeEngaged,
+  syncSharedModifiers,
   type DirectionModifiers,
 } from "../lib/combat";
 import { AttackTable } from "./AttackTable";
 import type { WeaponMode } from "../lib/route";
 import type { Edition } from "../lib/edition";
-import { ModifierControls } from "./ModifierControls";
+import { ModifierControls, type Direction } from "./ModifierControls";
 import { loadModifiersCollapsed, saveModifiersCollapsed } from "../lib/modifierPanel";
 
 interface ResultDrawerProps {
@@ -110,7 +111,22 @@ function CombatResults({
   edition,
   onClose,
 }: CombatResultsProps) {
-  const [modifiers, setModifiers] = useState<DirectionModifiers>(emptyModifiers());
+  // Each attack direction has its own modifiers (cover on one target, a
+  // charge by one attacker...); the board-wide ones are kept in step.
+  const [mods, setMods] = useState<Record<Direction, DirectionModifiers>>(() => ({
+    ab: emptyModifiers(),
+    ba: emptyModifiers(),
+  }));
+  const [direction, setDirection] = useState<Direction>("ab");
+  const otherDirection: Direction = direction === "ab" ? "ba" : "ab";
+
+  function setModifiers(next: DirectionModifiers) {
+    setMods((prev) => ({
+      ...prev,
+      [direction]: next,
+      [otherDirection]: syncSharedModifiers(next, prev[otherDirection]),
+    }));
+  }
   const [collapsed, setCollapsed] = useState(() => loadModifiersCollapsed());
 
   function toggleCollapsed() {
@@ -125,8 +141,14 @@ function CombatResults({
         style={{ background: "var(--panel)", borderBottom: "1px solid var(--rule)" }}
       >
         <ModifierControls
-          modifiers={modifiers}
+          modifiers={mods[direction]}
           onChange={setModifiers}
+          direction={{
+            value: direction,
+            onChange: setDirection,
+            names: { a: unitA.name, b: unitB.name },
+            otherModifiers: mods[otherDirection],
+          }}
           onClose={onClose}
           showEngaged={weapons === "ranged" && canBeEngaged(unitA, unitB)}
           showWaaagh={hasWaaagh(unitA) || hasWaaagh(unitB)}
@@ -148,7 +170,7 @@ function CombatResults({
           attackerSideUnits={unitsA}
           leaderAssignments={leaderAssignments}
           side="a"
-          modifiers={modifiers}
+          modifiers={mods.ab}
           weaponFilter={weapons}
           edition={edition}
         />
@@ -160,7 +182,7 @@ function CombatResults({
           attackerSideUnits={unitsB}
           leaderAssignments={leaderAssignments}
           side="b"
-          modifiers={modifiers}
+          modifiers={mods.ba}
           weaponFilter={weapons}
           edition={edition}
         />

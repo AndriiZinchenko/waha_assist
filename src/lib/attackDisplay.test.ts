@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { AttackRow } from "./combat";
 import { rangeLabel, rowTones } from "./attackDisplay";
 
+const TWO = { dice: 0, sides: 0, flat: 2, raw: "2", avg: 2 };
+
 const base: AttackRow = {
   profileId: "p1",
   name: "Ectoplasma cannon",
@@ -27,6 +29,7 @@ const base: AttackRow = {
   damageReductionSources: [],
   coverApplied: null,
   coverFromStealth: false,
+  defenceSources: [],
   coverBlocked: null,
   stealthApplied: false,
   lanceApplied: false,
@@ -45,6 +48,14 @@ const base: AttackRow = {
   halfRangeApplied: false,
   conditionalInvulnAvailable: null,
   blastBonus: 0,
+  cleaveBonus: 0,
+  antiApplied: false,
+  psychicIgnored: false,
+  lethalHits: false,
+  sustainedHits: null,
+  devastatingWounds: false,
+  critWoundOn: 6,
+  indirectFire: false,
   heavyApplied: false,
   engagedApplied: false,
   twinLinked: false,
@@ -81,7 +92,7 @@ describe("rowTones: wound", () => {
 
   it("marks an Anti-X match as a boost", () => {
     expect(
-      rowTones({ ...base, antiX: { keyword: "Infantry", threshold: 2 } }).wound,
+      rowTones({ ...base, antiX: { keyword: "Infantry", threshold: 2 }, antiApplied: true }).wound,
     ).toBe("boost");
   });
 });
@@ -118,7 +129,7 @@ describe("rowTones: attacks and damage", () => {
       rowTones({
         ...base,
         halfRangeApplied: true,
-        halfRangeBonus: { kind: "rapidFire", value: 2 },
+        halfRangeBonus: { kind: "rapidFire", value: TWO },
       }).attacks,
     ).toBe("boost");
   });
@@ -130,7 +141,7 @@ describe("rowTones: attacks and damage", () => {
         ...base,
         appliedDamageMod: -1,
         halfRangeApplied: true,
-        halfRangeBonus: { kind: "melta", value: 2 },
+        halfRangeBonus: { kind: "melta", value: TWO },
       }).damage,
     ).toBe("warn");
   });
@@ -144,7 +155,7 @@ describe("rowTones: attacks and damage", () => {
       rowTones({
         ...base,
         halfRangeApplied: true,
-        halfRangeBonus: { kind: "melta", value: 2 },
+        halfRangeBonus: { kind: "melta", value: TWO },
       }).damage,
     ).toBe("boost");
   });
@@ -154,7 +165,7 @@ describe("rowTones: attacks and damage", () => {
       rowTones({
         ...base,
         halfRangeApplied: true,
-        halfRangeBonus: { kind: "rapidFire", value: 2 },
+        halfRangeBonus: { kind: "rapidFire", value: TWO },
       }).damage,
     ).toBeNull();
   });

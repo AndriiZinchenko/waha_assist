@@ -87,8 +87,15 @@ function parseInvuln(profileName, text) {
   if (fromName) return { value: Number(fromName[1]), conditional: fromName[2] === "*" };
 
   if (name.trim() !== "Invulnerable Save") return null;
-  const fromText = /(\d)\+ invulnerable save/i.exec(text ?? "");
-  return fromText ? { value: Number(fromText[1]), conditional: false } : null;
+  const body = (text ?? "").trim();
+  // Some datasheets give only the value ("4+").
+  const bare = /^(\d)\+\s*(\*?)$/.exec(body);
+  if (bare) return { value: Number(bare[1]), conditional: bare[2] === "*" };
+  const fromText = /(\d)\+ invulnerable save([^.]*)/i.exec(body);
+  if (!fromText) return null;
+  // "...a 5+ invulnerable save against ranged attacks" only holds sometimes.
+  const conditional = /\b(against|while|if|until|when)\b/i.test(fromText[2]);
+  return { value: Number(fromText[1]), conditional };
 }
 
 /** An 11th edition InSv characteristic: "4+" -> { value: 4 }, "5+*" -> conditional. */

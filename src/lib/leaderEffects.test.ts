@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ParsedUnit, WeaponEntry } from "../../parseRoster.mjs";
 import {
   commandProtocolsFor,
+  leaderDefences,
   applyLeaderWeaponBonuses,
   leaderHitPenaltyAgainst,
   leaderHitPenaltySources,
@@ -271,5 +272,42 @@ describe("commandProtocolsFor", () => {
   it("ignores a Command Protocols rule without the +1 to hit (10th edition)", () => {
     const old = makeUnit({ id: "imm", rules: [{ name: "Command Protocols", text: "Select one protocol..." }] });
     expect(commandProtocolsFor(old, [old, overlord], { ov: "imm" })).toBeNull();
+  });
+});
+
+describe("leaderDefences and the 11th edition Sanctuary", () => {
+  const SANCTUARY_11 = {
+    type: "Abilities",
+    name: "Sanctuary (Psychic)",
+    text: "- This unit has **Stealth**.\n- Melee attacks that target this unit have -1 to **hit rolls**.",
+  };
+  const voldus = makeUnit({ id: "vol", abilities: [SANCTUARY_11], keywords: ["Character"] });
+  const paladins = makeUnit({ id: "pal" });
+  const units = [voldus, paladins];
+  const led = { vol: "pal" };
+
+  it("applies the -1 to hit only to melee attacks in 11th", () => {
+    expect(leaderHitPenaltyAgainst(paladins, units, led, "melee")).toBe(-1);
+    expect(leaderHitPenaltyAgainst(paladins, units, led, "ranged")).toBe(0);
+  });
+
+  it("gives the led unit Stealth", () => {
+    expect(leaderDefences(paladins, units, led).stealth.map((r) => r.name)).toEqual(["Sanctuary (Psychic)"]);
+    expect(leaderDefences(paladins, units, {}).stealth).toEqual([]);
+  });
+
+  it("needs a leading bearer for 'while leading' cover, but not for 'bearer's unit'", () => {
+    const snikrot = makeUnit({
+      id: "sn",
+      abilities: [{ type: "Abilities", name: "Red Skull Kommandos", text: "While this model is leading a unit, models in that unit have the Benefit of Cover." }],
+    });
+    expect(leaderDefences(snikrot, [snikrot], {}).cover).toEqual([]);
+    const kommandos = makeUnit({ id: "ko" });
+    expect(leaderDefences(kommandos, [snikrot, kommandos], { sn: "ko" }).cover).toHaveLength(1);
+    const librarian = makeUnit({
+      id: "lib",
+      abilities: [{ type: "Abilities", name: "Phial of the Abyss", text: "Models in the bearer’s unit have the Stealth ability." }],
+    });
+    expect(leaderDefences(librarian, [librarian], {}).stealth).toHaveLength(1);
   });
 });

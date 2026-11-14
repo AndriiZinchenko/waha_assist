@@ -36,7 +36,8 @@ export function rowTones(row: AttackRow): RowTones {
   const attacksBoosted =
     (row.halfRangeApplied && row.halfRangeBonus?.kind === "rapidFire") ||
     row.leaderMods.length > 0 ||
-    row.blastBonus > 0;
+    row.blastBonus > 0 ||
+    row.cleaveBonus > 0;
 
   return {
     attacks: attacksBoosted ? "boost" : null,
@@ -44,7 +45,7 @@ export function rowTones(row: AttackRow): RowTones {
     hit: directional(row.appliedHitMod - (row.coverApplied === "bs" ? 1 : 0)),
     wound: row.appliedWoundMod !== 0
       ? directional(row.appliedWoundMod)
-      : row.antiX
+      : row.antiApplied
         ? "boost"
         : null,
     save: row.isInvulnFallback || row.apWorsened || row.coverApplied === "save" ? "warn" : null,

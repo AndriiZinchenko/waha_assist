@@ -47,13 +47,13 @@ Answer from the files below, never from memory. Every answer names its edition a
 
 ## List-aware questions
 
-Read the roster in `armies/*.json` and `src/data/detachments/*.ts` (the detachment rules and stratagems the app synced). A roster's edition is `roster.gameSystemName` ("Warhammer 40,000 10th Edition"); a file with no system name is 10th, and the app's own rule is in `rosterEdition.mjs`. Today all five rosters are 10th, so answer them from `10e` sources. The detachment files under `src/data/detachments/` are synced from the 10th edition catalogue only, so do not use them for 11e questions. Use `lookup.mjs` for datasheet details the roster lacks. Answer about the user's actual units, weapons and detachment, not generic ones.
+Read the roster in `armies/*.json` and `src/data/detachments/*.ts` (the detachment rules and stratagems the app synced). A roster's edition is `roster.gameSystemName` ("Warhammer 40,000 10th Edition"); a file with no system name is 10th, and the app's own rule is in `rosterEdition.mjs`. Rosters of both editions are in `armies/`; check each one's system name. The detachment files under `src/data/detachments/` are synced from the 10th edition catalogue only, so do not use them for 11e questions. Use `lookup.mjs` for datasheet details the roster lacks. Answer about the user's actual units, weapons and detachment, not generic ones.
 
 ## Checking the combat calculator
 
-The app is being extended to support both editions (`src/lib/edition.ts`), but the calculation logic is still **10th edition only**: `src/lib/combat.ts`, `rules.ts` and `coreRules.ts` contain no edition handling. Be careful with that:
+`computeAttackTable` in `src/lib/combat.ts` takes an `edition` and branches where the editions differ: cover (10e +1 armour save; 11e BS worsened by 1), Stealth (10e -1 to hit; 11e benefit of cover), [PSYCHIC] (11e ignores hit/BS penalties), Waaagh!, and the Hazardous / engaged-shooting / Heavy notes in `AttackRow.tsx`. Everything else is shared. Two things are carried over from 10e without an 11e source: the ±1 cap on hit and wound modifiers, and Damage never dropping below 1.
 
-1. Compare against **10e** sources unless the user asks about 11e. In 11e mode, do not report "matches": say the calculator has no 11e logic yet and list where the 11e rules differ from what the code does (these are gaps to build, not bugs).
+1. Compare against the sources of the edition asked about; name it. Where the code shares a rule between editions, check both.
 2. Find the rule text for the mechanic (in 11e the attack sequence is §05, starting at §05.01 Hit rolls; for 10e search `10e/core-rules.md` for "Hit roll", "Wound roll").
 3. Read the matching code: `src/lib/combat.ts`, `src/lib/rules.ts`, `src/lib/coreRules.ts`, `src/lib/attackDisplay.ts`, and `src/data/core-abilities.ts` for ability definitions.
 4. Report each point as **matches**, **differs** or **cannot tell**, with the rule citation and a `file:line` for the code, and name the edition compared.

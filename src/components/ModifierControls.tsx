@@ -3,6 +3,18 @@ import type { DirectionModifiers } from "../lib/combat";
 import { activeModifierChips } from "../lib/modifierPanel";
 import { useUi } from "../lib/uiStrings";
 import { Stepper } from "./Stepper";
+import { SideMark } from "./SideMark";
+
+export type Direction = "ab" | "ba";
+
+export interface DirectionSwitch {
+  value: Direction;
+  onChange: (d: Direction) => void;
+  /** Attacker and target names for each direction. */
+  names: { a: string; b: string };
+  /** The other direction's modifiers, for the collapsed summary. */
+  otherModifiers: DirectionModifiers;
+}
 
 interface ModifierControlsProps {
   modifiers: DirectionModifiers;
@@ -22,6 +34,9 @@ interface ModifierControlsProps {
   showCharged?: boolean;
   /** Units in the matchup that have a Damaged profile, one toggle each. */
   damagedUnits?: Array<{ id: string; name: string }>;
+  /** Which attack direction the steppers and toggles edit. Without it the
+   * panel edits a single set of modifiers. */
+  direction?: DirectionSwitch;
   /** Fold the panel to one line listing the active modifiers. Without
    * `onToggleCollapsed` the panel cannot be folded. */
   collapsed?: boolean;
@@ -88,6 +103,7 @@ export function ModifierControls({
   showCover = false,
   showCharged = false,
   damagedUnits = [],
+  direction,
   collapsed = false,
   onToggleCollapsed,
 }: ModifierControlsProps) {
@@ -106,16 +122,61 @@ export function ModifierControls({
     </button>
   );
 
+  const chipLabels = {
+    halfRange: ui("calc.halfRange"),
+    stationary: ui("calc.stationary"),
+    engaged: ui("calc.engagedShort"),
+    waaagh: ui("calc.waaagh"),
+    cover: ui("calc.cover"),
+    charged: ui("calc.charged"),
+    damaged: ui("calc.damaged"),
+  };
+
+  const directionSwitch = direction && (
+    <div role="tablist" aria-label={ui("calc.direction")} className="w-full flex gap-[6px]">
+      {(["ab", "ba"] as const).map((d) => {
+        const from = d === "ab" ? "a" : "b";
+        const to = d === "ab" ? "b" : "a";
+        const selected = direction.value === d;
+        return (
+          <button
+            key={d}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            onClick={() => direction.onChange(d)}
+            className="flex-1 min-w-0 min-h-[40px] px-[10px] flex items-center gap-[6px] rounded-[var(--r-control)] text-[14px] font-semibold"
+            style={{
+              border: `1px solid ${selected ? "var(--ink)" : "var(--rule)"}`,
+              background: selected ? "var(--checked-wash)" : undefined,
+              color: selected ? "var(--ink)" : "var(--ink-2)",
+            }}
+          >
+            <SideMark side={from} size={10} />
+            <span className="min-w-0 truncate">{direction.names[from]}</span>
+            <span aria-hidden="true" className="mono shrink-0">→</span>
+            <SideMark side={to} size={10} />
+            <span className="min-w-0 truncate">{direction.names[to]}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   if (collapsed && onToggleCollapsed) {
-    const chips = activeModifierChips(modifiers, {
-      halfRange: ui("calc.halfRange"),
-      stationary: ui("calc.stationary"),
-      engaged: ui("calc.engagedShort"),
-      waaagh: ui("calc.waaagh"),
-      cover: ui("calc.cover"),
-      charged: ui("calc.charged"),
-      damaged: ui("calc.damaged"),
-    });
+    let chips = activeModifierChips(modifiers, chipLabels);
+    if (direction) {
+      const mark = (d: Direction) => (d === "ab" ? "■→◆" : "◆→■");
+      const own = chips;
+      const other = activeModifierChips(direction.otherModifiers, chipLabels);
+      const byDir: Record<Direction, string[]> = {
+        ab: direction.value === "ab" ? own : other,
+        ba: direction.value === "ab" ? other : own,
+      };
+      chips = (["ab", "ba"] as const)
+        .filter((d) => byDir[d].length > 0)
+        .map((d) => `${mark(d)} ${byDir[d].join(", ")}`);
+    }
     return (
       <div className="px-[12px] py-[6px] flex items-center gap-[8px]">
         <button
@@ -144,6 +205,7 @@ export function ModifierControls({
 
   return (
     <div className="px-[12px] py-[10px] flex flex-wrap gap-[8px]">
+      {directionSwitch}
       <Stepper
         caption="Hit"
         value={formatMod(modifiers.hitMod)}

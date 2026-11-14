@@ -1,4 +1,5 @@
 import type { ParsedUnit, RuleRef, WeaponEntry } from "../../parseRoster.mjs";
+import { applyBonus } from "./combat";
 
 /**
  * Combat-relevant effects a Leader grants once actually attached to a unit
@@ -12,6 +13,15 @@ import type { ParsedUnit, RuleRef, WeaponEntry } from "../../parseRoster.mjs";
 export type LeaderEffect =
   | { kind: "weaponAttacksBonus"; weaponName: string; bonus: number }
   | { kind: "hitPenaltyWhenTargeted"; amount: number };
+
+/** 11th edition Sanctuary: "Melee attacks that target this unit have -1 to
+ * hit rolls" (and Stealth against ranged attacks, see leaderDefences). */
+function penaltyAppliesTo(source: RuleRef, weaponType: "ranged" | "melee" | undefined): boolean {
+  const text = (source.text ?? "").replace(/\*\*|\^\^/g, "");
+  if (/melee attacks that target this unit/i.test(text)) return weaponType !== "ranged";
+  if (/ranged attacks that target this unit/i.test(text)) return weaponType !== "melee";
+  return true;
+}
 
 const LEADER_EFFECTS: Record<string, LeaderEffect> = {
   // Castellan Crowe, Grey Knights.
@@ -76,18 +86,8 @@ function activeSourcedEffects(
 
 function bumpAttacks(weapon: WeaponEntry, bonus: number): WeaponEntry {
   if (!weapon.attacks) return weapon;
-  const attacks = weapon.attacks;
-  return {
-    ...weapon,
-    attacks: {
-      ...attacks,
-      flat: attacks.flat + bonus,
-      avg: attacks.avg != null ? attacks.avg + bonus : attacks.avg,
-      raw: /[Dd]/.test(attacks.raw)
-        ? `${attacks.raw}+${bonus}`
-        : String(attacks.flat + bonus),
-    },
-  };
+  // "D6+1" + 1 reads "D6+2", not "D6+1+1".
+  return { ...weapon, attacks: applyBonus(weapon.attacks, bonus) };
 }
 
 /**
@@ -151,10 +151,14 @@ export function leaderHitPenaltyAgainst(
   unit: ParsedUnit,
   units: ParsedUnit[],
   assignments: Record<string, string>,
+  /** The attacks being made; a melee-only penalty skips ranged ones. */
+  weaponType?: "ranged" | "melee",
 ): number {
   let penalty = 0;
-  for (const { effect } of activeSourcedEffects(unit, units, assignments)) {
-    if (effect.kind === "hitPenaltyWhenTargeted") penalty += effect.amount;
+  for (const { effect, source } of activeSourcedEffects(unit, units, assignments)) {
+    if (effect.kind === "hitPenaltyWhenTargeted" && penaltyAppliesTo(source, weaponType)) {
+      penalty += effect.amount;
+    }
   }
   return penalty;
 }
@@ -165,10 +169,56 @@ export function leaderHitPenaltySources(
   unit: ParsedUnit,
   units: ParsedUnit[],
   assignments: Record<string, string>,
+  weaponType?: "ranged" | "melee",
 ): RuleRef[] {
   return activeSourcedEffects(unit, units, assignments)
-    .filter(({ effect }) => effect.kind === "hitPenaltyWhenTargeted")
+    .filter(
+      ({ effect, source }) =>
+        effect.kind === "hitPenaltyWhenTargeted" && penaltyAppliesTo(source, weaponType),
+    )
     .map(({ source }) => source);
+}
+
+const GRANTS_STEALTH =
+  /(this unit has|bearer.s unit have|led by the bearer gains|that unit ha(s|ve))[^.\n]{0,30}\bStealth\b/i;
+const GRANTS_COVER = /(models in that unit|this unit|that unit)[^.\n]{0,20}ha(s|ve) the Benefit of Cover/i;
+
+/**
+ * Stealth or the Benefit of Cover that a unit has from an ability, its own or
+ * an attached character's: Sanctuary (11th, "This unit has Stealth"), Phial
+ * of the Abyss ("Models in the bearer's unit have the Stealth ability"),
+ * Nether-realm Casket ("the unit led by the bearer gains Stealth"), Red Skull
+ * Kommandos ("models in that unit have the Benefit of Cover"). Abilities that
+ * add a condition (an objective, a phase) are left to the Cover toggle.
+ */
+export function leaderDefences(
+  unit: ParsedUnit,
+  units: ParsedUnit[],
+  assignments: Record<string, string>,
+): { stealth: RuleRef[]; cover: RuleRef[] } {
+  const byId = new Map(units.map((u) => [u.id, u]));
+  const bodyId = assignments[unit.id] && byId.has(assignments[unit.id]) ? assignments[unit.id] : unit.id;
+  const attached = Object.entries(assignments)
+    .filter(([id, target]) => target === bodyId && byId.has(id))
+    .map(([id]) => byId.get(id)!);
+  const members = [byId.get(bodyId) ?? unit, ...attached];
+  const conditional = /\b(objective|once per|until|if |unless|phase)\b/i;
+  const stealth: RuleRef[] = [];
+  const cover: RuleRef[] = [];
+  for (const m of members) {
+    const isAttached = m.id !== bodyId;
+    for (const a of m.abilities) {
+      const text = (a.text ?? "").replace(/\*\*|\^\^/g, "");
+      if (conditional.test(text)) continue;
+      // "While this model is leading a unit" needs it to be attached.
+      const needsLeading = /leading|led by the bearer|leads a unit/i.test(text);
+      if (needsLeading && !isAttached) continue;
+      const ref = { name: a.name, text: a.text };
+      if (GRANTS_STEALTH.test(text)) stealth.push(ref);
+      if (GRANTS_COVER.test(text)) cover.push(ref);
+    }
+  }
+  return { stealth, cover };
 }
 
 const COMMAND_PROTOCOLS_HIT_BONUS = /Hit rolls?[^\n]*\+1/i;

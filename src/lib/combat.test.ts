@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ParsedUnit, WeaponEntry } from "../../parseRoster.mjs";
 import {
+  addDiceExpr,
+  applyBonus,
   applyDamageMod,
   bigGunsApplies,
+  syncSharedModifiers,
   damageReductionSources,
   damagedProfile,
   hasLanceWeapon,
@@ -243,9 +246,30 @@ describe("computeAttackTable — hit/wound modifiers", () => {
     const attacker = makeAttacker({ strength: 3, keywords: ["Anti-Infantry 3+"] });
     const target = makeUnit({ keywords: ["Infantry"] });
     const [row] = computeAttackTable(attacker, {}, target, modifiers({ woundMod: 1 }));
-    // base wound 5+ (S3 vs T4), Anti-Infantry 3+ -> min(5,3)=3, then -1 for the +1 modifier -> 2
-    expect(row.woundTarget).toBe(2);
+    // base wound 5+ (S3 vs T4), +1 -> 4+; Anti 3+ works on the unmodified
+    // roll, so the modifier does not move it: 3+.
+    expect(row.woundTarget).toBe(3);
     expect(row.appliedWoundMod).toBe(1);
+    expect(row.antiApplied).toBe(true);
+  });
+
+  it("a wound penalty does not push Anti-X beyond its threshold", () => {
+    const attacker = makeAttacker({ strength: 4, keywords: ["Anti-Infantry 4+"] });
+    const [row] = computeAttackTable(attacker, {}, makeUnit({ keywords: ["Infantry"] }), modifiers({ woundMod: -1 }));
+    expect(row.woundTarget).toBe(4); // table 4+ -1 -> 5+, Anti 4+ still wounds on 4
+  });
+
+  it("uses the best of several Anti-X and multi-word keywords, and flags Anti only when it helps", () => {
+    const attacker = makeAttacker({
+      strength: 3,
+      keywords: ["Anti-Infantry 4+", "Anti-Epic Hero 2+"],
+    });
+    const [row] = computeAttackTable(attacker, {}, makeUnit({ keywords: ["Infantry", "Epic Hero"] }));
+    expect(row.woundTarget).toBe(2);
+    const strong = makeAttacker({ strength: 10, keywords: ["Anti-Infantry 4+"] });
+    const [noHelp] = computeAttackTable(strong, {}, makeUnit({ keywords: ["Infantry"] }));
+    expect(noHelp.woundTarget).toBe(2);
+    expect(noHelp.antiApplied).toBe(false);
   });
 
   it("wound target clamps at 6", () => {
@@ -394,7 +418,7 @@ describe("computeAttackTable — Half range (Melta)", () => {
       makeUnit(),
       modifiers({ halfRange: true }),
     );
-    expect(row.halfRangeBonus).toEqual({ kind: "melta", value: 2 });
+    expect(row.halfRangeBonus).toMatchObject({ kind: "melta", value: { flat: 2 } });
     expect(row.halfRangeApplied).toBe(true);
     expect(row.damage.flat).toBe(2);
     expect(row.damage.avg).toBe(5.5);
@@ -420,7 +444,7 @@ describe("computeAttackTable — Half range (Melta)", () => {
   it("leaves damage unchanged when Melta is available but halfRange is off", () => {
     const attacker = makeAttacker({ keywords: ["Melta 2"] });
     const [row] = computeAttackTable(attacker, {}, makeUnit(), emptyModifiers());
-    expect(row.halfRangeBonus).toEqual({ kind: "melta", value: 2 });
+    expect(row.halfRangeBonus).toMatchObject({ kind: "melta", value: { flat: 2 } });
     expect(row.halfRangeApplied).toBe(false);
     expect(row.damage.flat).toBe(1); // makeWeapon's default damage.flat
     expect(row.damage.raw).toBe("1");
@@ -451,7 +475,7 @@ describe("computeAttackTable — Half range (Rapid Fire)", () => {
       makeUnit(),
       modifiers({ halfRange: true }),
     );
-    expect(row.halfRangeBonus).toEqual({ kind: "rapidFire", value: 2 });
+    expect(row.halfRangeBonus).toMatchObject({ kind: "rapidFire", value: { flat: 2 } });
     expect(row.halfRangeApplied).toBe(true);
     expect(row.attacksRaw).toBe("4");
     expect(row.totalAttacks).toBe(4); // count 1 * (2+2)
@@ -476,7 +500,7 @@ describe("computeAttackTable — Half range (Rapid Fire)", () => {
   it("leaves attacks unchanged when Rapid Fire is available but halfRange is off", () => {
     const attacker = makeAttacker({ keywords: ["Rapid Fire 2"] });
     const [row] = computeAttackTable(attacker, {}, makeUnit(), emptyModifiers());
-    expect(row.halfRangeBonus).toEqual({ kind: "rapidFire", value: 2 });
+    expect(row.halfRangeBonus).toMatchObject({ kind: "rapidFire", value: { flat: 2 } });
     expect(row.halfRangeApplied).toBe(false);
     expect(row.attacksRaw).toBe("2"); // makeWeapon's default attacks.raw
     expect(row.totalAttacks).toBe(2);
@@ -1208,5 +1232,128 @@ describe("cover, Stealth, Lance, Damaged and Command Protocols", () => {
     });
     expect(row.hitTarget).toBe(2);
     expect(row.commandProtocolsSource).toEqual(cp);
+  });
+});
+
+describe("audit fixes", () => {
+  const crowd = makeTargetWithModels(12);
+
+  it("Blast X adds X per five models; plain Blast adds 1", () => {
+    for (const [kw, extra] of [["Blast", 2], ["Blast 2", 4], ["BLAST 1", 2]] as const) {
+      const [row] = computeAttackTable(makeAttacker({ keywords: [kw] }), {}, crowd);
+      expect(row.blastBonus).toBe(extra);
+    }
+  });
+
+  it("Cleave X adds X per five models", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["CLEAVE 2"], type: "melee", range: "Melee" }),
+      {},
+      crowd,
+    );
+    expect(row.cleaveBonus).toBe(4);
+    expect(row.attacksRaw).toBe("6");
+  });
+
+  it("reads random Rapid Fire and Melta values", () => {
+    const [rf] = computeAttackTable(makeAttacker({ keywords: ["Rapid Fire D3"] }), {}, makeUnit(), modifiers({ halfRange: true }));
+    expect(rf.attacksRaw).toBe("D3+2");
+    const [melta] = computeAttackTable(
+      makeAttacker({ keywords: ["Melta D3"], damage: { dice: 1, sides: 6, flat: 0, raw: "D6", avg: 3.5 } }),
+      {},
+      makeUnit(),
+      modifiers({ halfRange: true }),
+    );
+    expect(melta.damage.raw).toBe("D6+D3");
+    expect(melta.damage.avg).toBe(5.5);
+  });
+
+  it("adds dice expressions and renders negative flats", () => {
+    const D3 = { dice: 1, sides: 3, flat: 0, raw: "D3", avg: 2 };
+    expect(addDiceExpr({ dice: 1, sides: 3, flat: 1, raw: "D3+1", avg: 3 }, D3).raw).toBe("2D3+1");
+    expect(applyBonus({ dice: 1, sides: 6, flat: 0, raw: "D6", avg: 3.5 }, -1).raw).toBe("D6-1");
+  });
+
+  it("11th Psychic ignores hit penalties and cover, keeps bonuses", () => {
+    const psy = makeAttacker({ keywords: ["Psychic"] });
+    const [row] = computeAttackTable(psy, {}, makeUnit(), modifiers({ hitMod: -1, cover: true }), 0, [], false, 11);
+    expect(row.hitTarget).toBe(3);
+    expect(row.psychicIgnored).toBe(true);
+    const [plus] = computeAttackTable(psy, {}, makeUnit(), modifiers({ hitMod: 1 }), 0, [], false, 11);
+    expect(plus.hitTarget).toBe(2);
+    const [tenth] = computeAttackTable(psy, {}, makeUnit(), modifiers({ hitMod: -1 }), 0, [], false, 10);
+    expect(tenth.hitTarget).toBe(4);
+  });
+
+  it("Close-quarters is exempt from the engaged penalty like Pistol", () => {
+    const [row] = computeAttackTable(makeAttacker({ keywords: ["CLOSE-QUARTERS"] }), {}, makeUnit(), modifiers(), 0, [], true);
+    expect(row.engagedApplied).toBe(false);
+  });
+
+  it("an invuln override never makes the target's own invuln worse", () => {
+    const target = makeUnit({ invuln: { value: 4, conditional: false } });
+    const [row] = computeAttackTable(makeAttacker({ ap: -4 }), {}, target, modifiers({ invulnOverride: 6 }));
+    expect(row.saveTarget).toBe(4);
+  });
+
+  it("detects the 11th edition Damaged X rule", () => {
+    const unit = makeUnit({
+      rules: [{ name: "Damaged 4", text: "While a model is **damaged**, that model's attacks have -1 to **hit rolls**." }],
+    });
+    expect(damagedProfile(unit)?.name).toBe("Damaged 4");
+  });
+
+  it("Waaagh! adds no attacks to Extra Attacks weapons", () => {
+    const waaagh = { name: "Waaagh!", text: "" };
+    const attacker = {
+      ...makeAttacker({ keywords: ["Extra Attacks"], type: "melee", range: "Melee" }),
+      rules: [waaagh],
+    };
+    const [row] = computeAttackTable(attacker, {}, makeUnit(), modifiers({ waaagh: true }));
+    expect(row.attacksRaw).toBe("2");
+    expect(row.strength).toBe(5);
+  });
+
+  it("Mobile Fortress: -1 Damage against ranged attacks only", () => {
+    const fortress = makeUnit({
+      abilities: [{ type: "Abilities", name: "Mobile Fortress", text: "Ranged attacks that target this unit have -1 **D**." }],
+    });
+    const three = { dice: 0, sides: 0, flat: 3, raw: "3", avg: 3 };
+    expect(computeAttackTable(makeAttacker({ damage: three }), {}, fortress)[0].damage.raw).toBe("2");
+    expect(
+      computeAttackTable(makeAttacker({ damage: three, type: "melee", range: "Melee" }), {}, fortress)[0].damage.raw,
+    ).toBe("3");
+  });
+
+  it("Stealth or cover granted by a leader counts", () => {
+    const stealth = [{ name: "Nether-realm Casket", text: "..." }];
+    const [row] = computeAttackTable(makeAttacker(), {}, makeUnit(), modifiers(), 0, [], false, 11, { grantedStealth: stealth });
+    expect(row.coverApplied).toBe("bs");
+    expect(row.defenceSources.map((r) => r.name)).toEqual(["Nether-realm Casket"]);
+    const cover = [{ name: "Red Skull Kommandos", text: "..." }];
+    const [ten] = computeAttackTable(makeAttacker({ ap: -1 }), {}, makeUnit({ profile: { M: '6"', T: 4, SV: 5, W: 2, LD: "6+", OC: 1 } }), modifiers(), 0, [], false, 10, { grantedCover: cover });
+    expect(ten.coverApplied).toBe("save");
+  });
+
+  it("keeps the board-wide modifiers in step between directions", () => {
+    const other = syncSharedModifiers(
+      modifiers({ waaagh: true, engaged: true, damaged: ["x"], cover: true, hitMod: 1 }),
+      modifiers(),
+    );
+    expect(other).toMatchObject({ waaagh: true, engaged: true, damaged: ["x"], cover: false, hitMod: 0 });
+  });
+
+  it("reminds of Lethal, Sustained and Devastating, with the Anti crit threshold", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ keywords: ["LETHAL HITS: non-MONSTER/VEHICLE", "Sustained Hits D3", "Devastating Wounds", "Anti-Infantry 4+"] }),
+      {},
+      makeUnit({ keywords: ["Infantry"] }),
+    );
+    expect(row.lethalHits).toBe(true);
+    expect(row.sustainedHits).toBe("D3");
+    expect(row.devastatingWounds).toBe(true);
+    expect(row.critWoundOn).toBe(4);
+    const [torrent] = computeAttackTable(makeAttacker({ skill: null, keywords: ["Lethal Hits"] }), {}, makeUnit());
+    expect(torrent.lethalHits).toBe(false);
   });
 });

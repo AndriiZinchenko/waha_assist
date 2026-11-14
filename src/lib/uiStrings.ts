@@ -29,6 +29,7 @@ const STRINGS = {
   },
   "calc.charged": { en: "Charged (Lance)", uk: "Charge (Lance)" },
   "calc.damaged": { en: "Damaged", uk: "Пошкоджений" },
+  "calc.direction": { en: "Attack direction", uk: "Напрямок атаки" },
   "voice.notUnderstood": {
     en: "Didn't catch that — try “3 against 7”",
     uk: "Не розчув — спробуйте «3 проти 7»",

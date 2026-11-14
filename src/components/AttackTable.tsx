@@ -3,6 +3,7 @@ import { bigGunsApplies, computeAttackTable, type DirectionModifiers } from "../
 import { getUnitLiveTotal } from "../lib/loadouts";
 import {
   commandProtocolsFor,
+  leaderDefences,
   leaderHitPenaltyAgainst,
   leaderHitPenaltySources,
 } from "../lib/leaderEffects";
@@ -55,12 +56,15 @@ export function AttackTable({
     target,
     targetSideUnits,
     leaderAssignments,
+    weaponFilter,
   );
   const autoHitPenaltySources = leaderHitPenaltySources(
     target,
     targetSideUnits,
     leaderAssignments,
+    weaponFilter,
   );
+  const defences = leaderDefences(target, targetSideUnits, leaderAssignments);
   const rows = computeAttackTable(
     attacker,
     attackerCounts,
@@ -73,6 +77,8 @@ export function AttackTable({
     {
       commandProtocols:
         edition === 11 ? commandProtocolsFor(attacker, attackerSideUnits, leaderAssignments) : null,
+      grantedStealth: defences.stealth,
+      grantedCover: defences.cover,
     },
   );
   const filtered = rows.filter((row) => row.type === weaponFilter);
@@ -105,6 +111,7 @@ export function AttackTable({
               row={row}
               targetToughness={target.profile.T}
               targetModels={targetModels}
+              edition={edition}
             />
           ))}
         </div>

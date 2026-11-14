@@ -1,4 +1,5 @@
 import type { DiceExpr, ParsedUnit, RuleRef } from "../../parseRoster.mjs";
+import { parseDice } from "../../parseRoster.mjs";
 import { getLiveWeaponCount, getUnitLiveTotal } from "./loadouts";
 import { mergeByProfileId } from "./weapons";
 import type { Edition } from "./edition";
@@ -32,6 +33,23 @@ export interface DirectionModifiers {
   /** Units (by id) whose model is on its "Damaged: 1-N wounds remaining"
    * profile: -1 to hit for their attacks. */
   damaged: string[];
+}
+
+/** Modifiers that describe the board, not one attack direction: they are the
+ * same whichever side attacks. */
+export const SHARED_MODIFIER_KEYS = ["waaagh", "engaged", "damaged"] as const;
+
+/** Both directions after `next` was edited for one of them: the shared keys
+ * are copied to the other direction, everything else stays per direction. */
+export function syncSharedModifiers(
+  next: DirectionModifiers,
+  other: DirectionModifiers,
+): DirectionModifiers {
+  const copy = { ...other };
+  for (const key of SHARED_MODIFIER_KEYS) {
+    (copy as Record<string, unknown>)[key] = next[key];
+  }
+  return copy;
 }
 
 export function emptyModifiers(): DirectionModifiers {
@@ -108,11 +126,24 @@ function isMinusOneDamage(text: string): boolean {
   );
 }
 
+/** "Ranged attacks that target this unit have -1 D" (Mobile Fortress). */
+const RANGED_MINUS_ONE_DAMAGE = /^\s*ranged attacks that target this unit have\s*[-−]1\s*(D|Damage)\s*\.?\s*$/i;
+
 /** The target's own abilities that take 1 off the Damage of every attack
- * allocated to it. */
-export function damageReductionSources(unit: ParsedUnit): RuleRef[] {
+ * allocated to it (or, for some, of every ranged attack). */
+export function damageReductionSources(
+  unit: ParsedUnit,
+  weaponType: "ranged" | "melee" = "ranged",
+): RuleRef[] {
   return unit.abilities
-    .filter((a) => isMinusOneDamage(a.text ?? ""))
+    .filter((a) => {
+      const text = a.text ?? "";
+      if (isMinusOneDamage(text)) return true;
+      return (
+        weaponType === "ranged" &&
+        RANGED_MINUS_ONE_DAMAGE.test(text.replace(/\*\*|\^\^/g, ""))
+      );
+    })
     .map((a) => ({ name: a.name, text: a.text }));
 }
 
@@ -144,13 +175,18 @@ export function hasStealth(unit: ParsedUnit): boolean {
 }
 
 const DAMAGED_NAME = /^damaged\b/i;
-const DAMAGED_HIT_PENALTY = /subtract 1 from the Hit roll|Hit roll\s*[-−]1/i;
+const DAMAGED_HIT_PENALTY = /subtract 1 from the Hit roll|Hit roll\s*[-−]1|[-−]1 to hit rolls?/i;
 
 /** The "Damaged: 1-N wounds remaining" ability of a unit, when it gives -1
  * to hit (every such profile in the rosters does). */
 export function damagedProfile(unit: ParsedUnit): RuleRef | null {
-  const a = unit.abilities.find(
-    (x) => DAMAGED_NAME.test(x.name) && DAMAGED_HIT_PENALTY.test(x.text ?? ""),
+  // 10th edition and New Recruit's 11th edition datasheets carry it as an
+  // ability ("Damaged: 1-4 wounds remaining"); 11th edition core-style
+  // exports as a rule ("Damaged 4": "that model's attacks have -1 to hit rolls").
+  const a = [...unit.abilities, ...unit.rules].find(
+    (x) =>
+      DAMAGED_NAME.test(x.name) &&
+      DAMAGED_HIT_PENALTY.test((x.text ?? "").replace(/\*\*|\^\^/g, "")),
   );
   return a ? { name: a.name, text: a.text } : null;
 }
@@ -168,6 +204,10 @@ export interface AttackContext {
   /** Necrons Command Protocols (11th, Awakened Dynasty): the attacker is
    * led by a Necrons Character, so its attacks get +1 to hit. */
   commandProtocols?: RuleRef | null;
+  /** Stealth / Benefit of Cover the target has from an ability, its own or
+   * an attached character's (see leaderDefences). */
+  grantedStealth?: RuleRef[];
+  grantedCover?: RuleRef[];
 }
 
 /** The invulnerable save the Waaagh! grants in both editions. */
@@ -175,7 +215,8 @@ const WAAAGH_INVULN = 5;
 
 export interface HalfRangeBonus {
   kind: "melta" | "rapidFire";
-  value: number;
+  /** The bonus, which can be random ("Rapid Fire D3"). */
+  value: DiceExpr;
 }
 
 export interface AttackRow {
@@ -215,6 +256,8 @@ export interface AttackRow {
   coverApplied: "save" | "bs" | null;
   /** The cover came from the target's Stealth (11th). */
   coverFromStealth: boolean;
+  /** Abilities that gave the target Stealth or cover (e.g. a leader's). */
+  defenceSources: RuleRef[];
   /** Cover was switched on but did not apply: Ignores Cover, or a 3+ save
    * against AP 0 (10th). */
   coverBlocked: "ignoresCover" | "saveTooGood" | null;
@@ -243,8 +286,24 @@ export interface AttackRow {
   halfRangeBonus: HalfRangeBonus | null;
   halfRangeApplied: boolean;
   conditionalInvulnAvailable: number | null;
-  /** Extra attacks from Blast: one per full five models in the target. */
+  /** Extra attacks from Blast: X (1 for plain Blast) per full five models
+   * in the target. */
   blastBonus: number;
+  /** Extra attacks from Cleave X, the same way, if it has a single target. */
+  cleaveBonus: number;
+  /** The Anti-X critical wound threshold is better than the wound roll
+   * needed, so it sets the wound target. */
+  antiApplied: boolean;
+  /** 11th edition [PSYCHIC]: penalties to the hit roll and BS were ignored. */
+  psychicIgnored: boolean;
+  /** Reminders for abilities that act on unmodified rolls and change no
+   * target number here. */
+  lethalHits: boolean;
+  sustainedHits: string | null;
+  devastatingWounds: boolean;
+  /** The roll that is a critical wound (6, or the Anti-X threshold). */
+  critWoundOn: number;
+  indirectFire: boolean;
   /** Heavy weapon fired by a stationary unit: +1 to hit was applied. */
   heavyApplied: boolean;
   /** Big Guns Never Tire: -1 to hit was applied to this ranged weapon. */
@@ -269,12 +328,15 @@ function clampTarget(value: number): number {
   return Math.min(6, Math.max(2, value));
 }
 
-const ANTI_X_PATTERN = /Anti-(\w+) (\d)\+/i;
+// The keyword can be several words ("Anti-Epic Hero 2+").
+const ANTI_X_PATTERN = /^\s*Anti-(.+?)\s+(\d)\+\s*$/i;
 
+/** The best Anti-X the weapon has against this target, if any. */
 function findAntiX(
   weaponKeywords: string[],
   targetKeywords: string[],
 ): { keyword: string; threshold: number } | null {
+  let best: { keyword: string; threshold: number } | null = null;
   for (const kw of weaponKeywords) {
     const match = ANTI_X_PATTERN.exec(kw);
     if (!match) continue;
@@ -283,30 +345,69 @@ function findAntiX(
     // export, "Anti-Infantry 2+" in another) while unit keywords are
     // title-cased ("Infantry"), so compare case-insensitively.
     const wanted = keyword.toLowerCase();
-    if (targetKeywords.some((k) => k.toLowerCase() === wanted)) {
-      return { keyword, threshold: Number(thresholdRaw) };
+    const threshold = Number(thresholdRaw);
+    if (
+      targetKeywords.some((k) => k.toLowerCase() === wanted) &&
+      (best == null || threshold < best.threshold)
+    ) {
+      best = { keyword, threshold };
+    }
+  }
+  return best;
+}
+
+// 11th edition exports spell some keywords in capitals ("RAPID FIRE 2"), and
+// the value can be random ("Rapid Fire D3", "Melta D6+1").
+const DICE_VALUE = "(\\d*D\\d+(?:\\+\\d+)?|\\d+)";
+const MELTA_PATTERN = new RegExp(`^\\s*Melta ${DICE_VALUE}\\s*$`, "i");
+const RAPID_FIRE_PATTERN = new RegExp(`^\\s*Rapid Fire ${DICE_VALUE}\\s*$`, "i");
+
+function findHalfRangeBonus(weaponKeywords: string[]): HalfRangeBonus | null {
+  for (const kw of weaponKeywords) {
+    for (const [kind, pattern] of [
+      ["melta", MELTA_PATTERN],
+      ["rapidFire", RAPID_FIRE_PATTERN],
+    ] as const) {
+      const m = pattern.exec(kw);
+      const value = m ? parseDice(m[1].toUpperCase()) : null;
+      if (value) return { kind, value };
     }
   }
   return null;
 }
 
-// 11th edition exports spell some keywords in capitals ("RAPID FIRE 2").
-const MELTA_PATTERN = /^Melta (\d+)$/i;
-const RAPID_FIRE_PATTERN = /^Rapid Fire (\d+)$/i;
-
-function findHalfRangeBonus(weaponKeywords: string[]): HalfRangeBonus | null {
+/** "Blast" adds 1 per five models, "Blast 2" adds 2; "Cleave X" likewise. */
+function perFiveModels(weaponKeywords: string[], name: string, plainValue: number | null): number {
+  const pattern = new RegExp(`^\\s*${name}(?:\\s+(\\d+))?\\s*$`, "i");
   for (const kw of weaponKeywords) {
-    const melta = MELTA_PATTERN.exec(kw);
-    if (melta) return { kind: "melta", value: Number(melta[1]) };
-    const rapidFire = RAPID_FIRE_PATTERN.exec(kw);
-    if (rapidFire) return { kind: "rapidFire", value: Number(rapidFire[1]) };
+    const m = pattern.exec(kw);
+    if (!m) continue;
+    if (m[1]) return Number(m[1]);
+    if (plainValue != null) return plainValue;
   }
-  return null;
+  return 0;
 }
+
+const SUSTAINED_PATTERN = /^\s*Sustained Hits\s+(\S+)\s*$/i;
 
 function hasKeyword(weaponKeywords: string[], name: string): boolean {
   const wanted = name.toLowerCase();
   return weaponKeywords.some((kw) => kw.trim().toLowerCase() === wanted);
+}
+
+/** The keyword, also in its qualified 11th edition form ("LETHAL HITS:
+ * non-MONSTER/VEHICLE"). */
+function hasKeywordOrQualified(weaponKeywords: string[], name: string): boolean {
+  const wanted = name.toLowerCase();
+  return weaponKeywords.some((kw) => {
+    const k = kw.trim().toLowerCase();
+    return k === wanted || k.startsWith(`${wanted}:`);
+  });
+}
+
+/** [PISTOL] and [CLOSE-QUARTERS] are the same rule (11th §24.27). */
+function isPistol(weaponKeywords: string[]): boolean {
+  return hasKeyword(weaponKeywords, "Pistol") || hasKeyword(weaponKeywords, "Close-quarters");
 }
 
 /** Core rules: the net modifier to a Hit roll never exceeds +1 or -1. */
@@ -319,13 +420,31 @@ function capWoundMod(total: number): number {
   return Math.max(-1, Math.min(1, total));
 }
 
+function renderDice(dice: number, sides: number, flat: number): string {
+  const d = dice > 0 ? `${dice === 1 ? "" : dice}D${sides}` : "";
+  if (!d) return String(flat);
+  return flat > 0 ? `${d}+${flat}` : flat < 0 ? `${d}${flat}` : d;
+}
+
 /** `base` with `bonus` added to its flat part, re-rendered as one
  * expression ("D6+3" + 2 -> "D6+5", not "D6+3+2"). */
-function applyBonus(base: DiceExpr, bonus: number): DiceExpr {
+export function applyBonus(base: DiceExpr, bonus: number): DiceExpr {
   const flat = base.flat + bonus;
-  const dice = base.dice > 0 ? `${base.dice === 1 ? "" : base.dice}D${base.sides}` : "";
-  const raw = dice ? (flat > 0 ? `${dice}+${flat}` : dice) : String(flat);
+  const raw = renderDice(base.dice, base.sides, flat);
   return { ...base, flat, avg: base.avg != null ? base.avg + bonus : base.avg, raw };
+}
+
+/** `base` plus a possibly random `bonus` ("1" + "D3" -> "D3+1"). Dice of
+ * different sizes cannot be one expression, so they are written out. */
+export function addDiceExpr(base: DiceExpr, bonus: DiceExpr): DiceExpr {
+  if (bonus.dice <= 0) return applyBonus(base, bonus.flat);
+  const avg = base.avg != null && bonus.avg != null ? base.avg + bonus.avg : null;
+  const flat = base.flat + bonus.flat;
+  if (base.dice <= 0 || base.sides === bonus.sides) {
+    const dice = Math.max(base.dice, 0) + bonus.dice;
+    return { dice, sides: bonus.sides, flat, avg, raw: renderDice(dice, bonus.sides, flat) };
+  }
+  return { ...base, flat, avg, raw: `${base.raw}+${bonus.raw}` };
 }
 
 export function computeAttackTable(
@@ -352,46 +471,59 @@ export function computeAttackTable(
   const targetModels = getUnitLiveTotal(counts, target.id, target);
   const attackerWaaagh = modifiers.waaagh && hasWaaagh(attacker);
   const targetWaaagh = modifiers.waaagh && hasWaaagh(target);
-  const targetDamageReduction = damageReductionSources(target);
-  const targetStealth = hasStealth(target);
+  const grantedStealth = context.grantedStealth ?? [];
+  const grantedCover = context.grantedCover ?? [];
+  const targetStealth = hasStealth(target) || grantedStealth.length > 0;
   const attackerDamaged = modifiers.damaged.includes(attacker.id) ? damagedProfile(attacker) : null;
   const commandProtocols = context.commandProtocols ?? null;
-  // Several such abilities on one model still take off 1 in total.
-  const damageMod = modifiers.damageMod - (targetDamageReduction.length > 0 ? 1 : 0);
 
   return merged.map((weapon) => {
     const count = getLiveWeaponCount(counts, attacker.id, attacker, weapon.profileId);
+    const targetDamageReduction = damageReductionSources(target, weapon.type);
+    // Several such abilities on one model still take off 1 in total.
+    const damageMod = modifiers.damageMod - (targetDamageReduction.length > 0 ? 1 : 0);
     const heavyApplied = modifiers.stationary && hasKeyword(weapon.keywords, "Heavy");
     const engagedApplied =
       engagedPenalty &&
       weapon.type === "ranged" &&
       weapon.skill !== null &&
-      !hasKeyword(weapon.keywords, "Pistol");
+      !isPistol(weapon.keywords);
+    // 11th [PSYCHIC]: the attacker can ignore any modifier to the hit roll and
+    // to its BS/WS, so it ignores the penalties and keeps the bonuses.
+    const psychic11 = edition === 11 && hasKeyword(weapon.keywords, "Psychic");
     const ranged = weapon.type === "ranged";
     const rolls = weapon.skill !== null; // Torrent weapons make no hit roll
     const ignoresCover = hasKeyword(weapon.keywords, "Ignores Cover");
     // 10th: Stealth is its own -1 to hit. 11th: it gives the Benefit of Cover,
     // which Ignores Cover removes too.
     const stealthApplied = edition === 10 && ranged && rolls && targetStealth;
-    const wantsCover = ranged && (modifiers.cover || (edition === 11 && targetStealth));
+    const wantsCover =
+      ranged && (modifiers.cover || grantedCover.length > 0 || (edition === 11 && targetStealth));
     const damagedApplied = attackerDamaged != null && rolls;
     const commandProtocolsApplied = commandProtocols != null && rolls;
-    const totalHitMod = capHitMod(
-      modifiers.hitMod +
-        autoHitMod +
-        (weapon.crusadeHitMod ?? 0) +
-        (heavyApplied ? 1 : 0) -
-        (engagedApplied ? 1 : 0) -
-        (stealthApplied ? 1 : 0) -
-        (damagedApplied ? 1 : 0) +
-        (commandProtocolsApplied ? 1 : 0),
-    );
-    const blastBonus = hasKeyword(weapon.keywords, "Blast") ? Math.floor(targetModels / 5) : 0;
+    const hitMods = [
+      modifiers.hitMod,
+      autoHitMod,
+      weapon.crusadeHitMod ?? 0,
+      heavyApplied ? 1 : 0,
+      engagedApplied ? -1 : 0,
+      stealthApplied ? -1 : 0,
+      damagedApplied ? -1 : 0,
+      commandProtocolsApplied ? 1 : 0,
+    ];
+    const hitBonus = hitMods.filter((m) => m > 0).reduce((a, b) => a + b, 0);
+    const hitPenalty = hitMods.filter((m) => m < 0).reduce((a, b) => a + b, 0);
+    const totalHitMod = capHitMod(psychic11 ? hitBonus : hitBonus + hitPenalty);
+    const fullFive = Math.floor(targetModels / 5);
+    const blastBonus = perFiveModels(weapon.keywords, "Blast", 1) * fullFive;
+    const cleaveBonus = perFiveModels(weapon.keywords, "Cleave", null) * fullFive;
 
     // AP is negative: improving it subtracts, and worsening never makes it
     // a bonus to the save.
     const effectiveAp = Math.min(weapon.ap - modifiers.apMod, 0);
     const waaaghAttack = attackerWaaagh && edition === 10 && weapon.type === "melee";
+    // Extra Attacks: "the number of attacks ... cannot be modified by other rules".
+    const extraAttacks = hasKeyword(weapon.keywords, "Extra Attacks");
     const strength = weapon.strength + (waaaghAttack ? 1 : 0);
 
     const sv = target.profile.SV;
@@ -399,7 +531,7 @@ export function computeAttackTable(
     let coverBlocked: "ignoresCover" | "saveTooGood" | null = null;
     if (wantsCover) {
       if (ignoresCover) coverBlocked = "ignoresCover";
-      else if (edition === 11) coverApplied = rolls ? "bs" : null;
+      else if (edition === 11) coverApplied = rolls && !psychic11 ? "bs" : null;
       else if (sv == null) coverApplied = null;
       // 10th: a 3+ save or better gets no cover against AP 0.
       else if (sv <= 3 && effectiveAp === 0) coverBlocked = "saveTooGood";
@@ -418,7 +550,12 @@ export function computeAttackTable(
     const waaaghInvuln =
       targetWaaagh && (ownInvulnValue == null || ownInvulnValue > WAAAGH_INVULN);
     const autoInvulnValue = waaaghInvuln ? WAAAGH_INVULN : ownInvulnValue;
-    const invulnValue = modifiers.invulnOverride ?? autoInvulnValue;
+    // A model with several invulnerable saves uses the best, so an override
+    // never makes the target's own invuln worse.
+    const invulnValue =
+      modifiers.invulnOverride != null && autoInvulnValue != null
+        ? Math.min(modifiers.invulnOverride, autoInvulnValue)
+        : (modifiers.invulnOverride ?? autoInvulnValue);
     const conditionalInvulnAvailable =
       modifiers.invulnOverride == null && targetInvuln?.conditional
         ? targetInvuln.value
@@ -445,16 +582,15 @@ export function computeAttackTable(
       target.profile.T != null
         ? findAntiX(weapon.keywords, target.keywords)
         : null;
-    const baseWound =
-      target.profile.T != null
-        ? Math.min(
-            baseWoundTarget(strength, target.profile.T),
-            antiX?.threshold ?? 6,
-          )
-        : 6;
+    const tableWound =
+      target.profile.T != null ? baseWoundTarget(strength, target.profile.T) : 6;
     const lanceApplied = modifiers.charged && hasKeyword(weapon.keywords, "Lance");
     const totalWoundMod = capWoundMod(modifiers.woundMod + (lanceApplied ? 1 : 0));
-    const woundTarget = clampTarget(baseWound - totalWoundMod);
+    // Anti-X makes an *unmodified* roll of X+ a critical wound, which always
+    // wounds: wound modifiers move the table target, never the Anti one.
+    const modifiedWound = clampTarget(tableWound - totalWoundMod);
+    const antiApplied = antiX != null && antiX.threshold < modifiedWound;
+    const woundTarget = antiApplied ? antiX!.threshold : modifiedWound;
 
     // 11th edition cover worsens the BS characteristic itself, so it sits
     // outside the hit-roll modifier cap.
@@ -470,7 +606,7 @@ export function computeAttackTable(
       weapon.damage ?? { dice: 0, sides: 0, flat: 0, raw: "—", avg: 0 };
     const meltaDamage =
       halfRangeApplied && halfRangeBonus!.kind === "melta"
-        ? applyBonus(baseDamage, halfRangeBonus!.value)
+        ? addDiceExpr(baseDamage, halfRangeBonus!.value)
         : baseDamage;
     const hasDamage = weapon.damage != null;
     const damage = hasDamage ? applyDamageMod(meltaDamage, damageMod) : meltaDamage;
@@ -478,9 +614,13 @@ export function computeAttackTable(
     const baseAttacks =
       weapon.attacks ?? { dice: 0, sides: 0, flat: 0, raw: "—", avg: 0 };
     const rapidFireBonus =
-      halfRangeApplied && halfRangeBonus!.kind === "rapidFire" ? halfRangeBonus!.value : 0;
-    const attackBonus = rapidFireBonus + blastBonus + (waaaghAttack ? 1 : 0);
-    const attacksExpr = attackBonus > 0 ? applyBonus(baseAttacks, attackBonus) : baseAttacks;
+      halfRangeApplied && halfRangeBonus!.kind === "rapidFire" ? halfRangeBonus!.value : null;
+    const attackBonus = blastBonus + cleaveBonus + (waaaghAttack && !extraAttacks ? 1 : 0);
+    const withRapidFire = rapidFireBonus ? addDiceExpr(baseAttacks, rapidFireBonus) : baseAttacks;
+    const attacksExpr = attackBonus > 0 ? applyBonus(withRapidFire, attackBonus) : withRapidFire;
+    const sustained = SUSTAINED_PATTERN.exec(
+      weapon.keywords.find((k) => SUSTAINED_PATTERN.test(k)) ?? "",
+    );
 
     return {
       profileId: weapon.profileId,
@@ -511,7 +651,13 @@ export function computeAttackTable(
       appliedHitMod: weapon.skill === null ? 0 : totalHitMod,
       appliedWoundMod: totalWoundMod,
       coverApplied,
-      coverFromStealth: coverApplied != null && !modifiers.cover,
+      coverFromStealth: coverApplied != null && !modifiers.cover && grantedCover.length === 0,
+      defenceSources:
+        coverApplied != null || stealthApplied
+          ? [...grantedCover, ...grantedStealth].filter(
+              (r, i, all) => all.findIndex((x) => x.name === r.name) === i,
+            )
+          : [],
       coverBlocked,
       stealthApplied,
       lanceApplied,
@@ -519,13 +665,22 @@ export function computeAttackTable(
       commandProtocolsSource: commandProtocolsApplied ? commandProtocols : null,
       apWorsened: modifiers.apMod < 0,
       apImproved: modifiers.apMod > 0,
-      waaaghAttack,
+      waaaghAttack: waaaghAttack,
       waaaghAssault: attackerWaaagh && edition === 11 && weapon.type === "ranged",
       waaaghInvuln: waaaghInvuln && modifiers.invulnOverride == null,
       halfRangeBonus,
       halfRangeApplied,
       conditionalInvulnAvailable,
       blastBonus,
+      cleaveBonus,
+      antiApplied,
+      psychicIgnored: psychic11 && rolls && (hitPenalty < 0 || (wantsCover && !ignoresCover)),
+      // Torrent makes no hit roll, so it never scores a critical hit.
+      lethalHits: rolls && hasKeywordOrQualified(weapon.keywords, "Lethal Hits"),
+      sustainedHits: rolls && sustained ? sustained[1].toUpperCase() : null,
+      devastatingWounds: hasKeyword(weapon.keywords, "Devastating Wounds"),
+      critWoundOn: antiX ? Math.min(antiX.threshold, 6) : 6,
+      indirectFire: hasKeyword(weapon.keywords, "Indirect Fire"),
       heavyApplied: weapon.skill === null ? false : heavyApplied,
       engagedApplied,
       twinLinked: hasKeyword(weapon.keywords, "Twin-linked"),

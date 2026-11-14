@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { RuleRef } from "../../parseRoster.mjs";
 import type { AttackRow as AttackRowData } from "../lib/combat";
+import type { Edition } from "../lib/edition";
 import { useTranslate } from "../lib/i18n";
 import { matchRule } from "../lib/rules";
 import { rangeLabel, rowTones, type StatTone } from "../lib/attackDisplay";
@@ -13,6 +14,8 @@ interface AttackRowProps {
   targetToughness: number | null;
   /** The target's live model count, for the Blast note. */
   targetModels: number;
+  /** Rule wording differs between editions (Hazardous, engaged shooting). */
+  edition?: Edition;
 }
 
 const MINUS = "−";
@@ -80,7 +83,7 @@ function ResultCell({ label, value, tone }: { label: string; value: string; tone
   );
 }
 
-export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps) {
+export function AttackRow({ row, targetToughness, targetModels, edition = 10 }: AttackRowProps) {
   const [openLabel, setOpenLabel] = useState<string | null>(null);
   const t = useTranslate();
   const showAttacksDice = /[Dd]/.test(row.attacksRaw);
@@ -101,6 +104,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       row.damageReductionSources.find((m) => m.name === label)?.text ??
       (row.damagedSource?.name === label ? row.damagedSource.text : null) ??
       (row.commandProtocolsSource?.name === label ? row.commandProtocolsSource.text : null) ??
+      row.defenceSources.find((m) => m.name === label)?.text ??
       null
     );
   }
@@ -119,7 +123,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
 
   const halfRangeHint =
     row.halfRangeBonus && !row.halfRangeApplied
-      ? `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value}: turn on Half range if within ${halfOf(row.range) ?? "half range"}`
+      ? `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value.raw}: turn on Half range if within ${halfOf(row.range) ?? "half range"}`
       : null;
 
   const notes: Note[] = [
@@ -127,7 +131,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       text: `Target has a conditional ${row.conditionalInvulnAvailable}+ invuln, not applied — set Invuln override if it applies here`,
       kind: "negative",
     },
-    row.antiX && {
+    row.antiApplied && row.antiX && {
       text: `Anti-${row.antiX.keyword} ${row.antiX.threshold}+ applied`,
       kind: "positive",
     },
@@ -156,14 +160,28 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
     row.waaaghInvuln && { text: "Waaagh!: target has a 5+ invuln", kind: "negative" },
     row.halfRangeApplied &&
       row.halfRangeBonus && {
-        text: `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value} applied (half range)`,
+        text: `${row.halfRangeBonus.kind === "melta" ? "Melta" : "Rapid Fire"} ${row.halfRangeBonus.value.raw} applied (half range)`,
         kind: "positive",
       },
     row.blastBonus > 0 && {
       text: `Blast +${row.blastBonus} attack${row.blastBonus === 1 ? "" : "s"} (${targetModels} model${targetModels === 1 ? "" : "s"})`,
       kind: "positive",
     },
-    row.heavyApplied && { text: "Heavy +1 to hit (stationary)", kind: "positive" },
+    row.cleaveBonus > 0 && {
+      text: `Cleave +${row.cleaveBonus} attack${row.cleaveBonus === 1 ? "" : "s"} (one target only)`,
+      kind: "positive",
+    },
+    row.heavyApplied && {
+      text:
+        edition === 11
+          ? "Heavy +1 to hit (your Shooting phase, unengaged, no model moved over 3\")"
+          : "Heavy +1 to hit (stationary)",
+      kind: "positive",
+    },
+    row.psychicIgnored && {
+      text: "Psychic: penalties to the hit roll and BS ignored",
+      kind: "positive",
+    },
     row.coverApplied === "save" && {
       text: "Benefit of Cover: +1 to the armour save (not the invuln)",
       kind: "negative",
@@ -190,13 +208,41 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       kind: "positive",
     },
     row.engagedApplied && {
-      text: "Big Guns Never Tire: -1 to hit while engaged (Pistols exempt)",
+      text:
+        edition === 11
+          ? "Engaged: −1 to hit (Pistol / Close-quarters exempt)"
+          : "Big Guns Never Tire: −1 to hit while engaged (Pistols exempt)",
       kind: "negative",
     },
     halfRangeHint && { text: halfRangeHint, kind: "neutral" },
+    row.lethalHits && {
+      text: "Lethal Hits: an unmodified 6 to hit wounds automatically",
+      kind: "positive",
+    },
+    row.sustainedHits && {
+      text: `Sustained Hits ${row.sustainedHits}: an unmodified 6 to hit scores ${row.sustainedHits} extra hit${row.sustainedHits === "1" ? "" : "s"}`,
+      kind: "positive",
+    },
+    row.devastatingWounds && {
+      text:
+        edition === 11
+          ? `Devastating Wounds: an unmodified ${row.critWoundOn}+ to wound ends the attack and inflicts mortal wounds equal to D (at most one model per critical wound)`
+          : `Devastating Wounds: an unmodified ${row.critWoundOn}+ to wound allows no save and inflicts mortal wounds equal to D`,
+      kind: "positive",
+    },
+    row.indirectFire && {
+      text:
+        edition === 11
+          ? "Indirect Fire, when shooting indirectly: the target has cover (switch Cover on), no hit re-rolls, and unmodified hit rolls of 1-5 fail (1-3 if stationary and a friendly unit sees the target)"
+          : "Indirect Fire: if the target is not visible, set Hit −1 and Cover",
+      kind: "neutral",
+    },
     row.twinLinked && { text: "Twin-linked: re-roll wound rolls", kind: "positive" },
     row.hazardous && {
-      text: "Hazardous: after attacking, roll a D6 per model that used it; each 1 destroys a model (3 mortal wounds to a Character, Monster or Vehicle)",
+      text:
+        edition === 11
+          ? "Hazardous: after attacking, one hazard roll per Hazardous weapon; on 1-2 the unit suffers 1 mortal wound (3 if all its models are Monsters or Vehicles)"
+          : "Hazardous: after attacking, roll a D6 per Hazardous weapon used; each 1 destroys a model (3 mortal wounds to a Character, Monster or Vehicle)",
       kind: "negative",
     },
     { text: matchup, kind: "neutral" },
@@ -208,6 +254,7 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
     ...row.autoHitPenaltySources.map((ref) => ({ ref, tone: "negative" as const })),
     ...row.damageReductionSources.map((ref) => ({ ref, tone: "negative" as const })),
     ...(row.damagedSource ? [{ ref: row.damagedSource, tone: "negative" as const }] : []),
+    ...row.defenceSources.map((ref) => ({ ref, tone: "negative" as const })),
     ...(row.commandProtocolsSource
       ? [{ ref: row.commandProtocolsSource, tone: "positive" as const }]
       : []),
