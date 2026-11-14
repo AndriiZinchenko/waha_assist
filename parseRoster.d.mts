@@ -147,3 +147,4 @@ export function parseInvuln(
   profileName: string | null | undefined,
   text?: string | null,
 ): Invuln | null;
+export function parseInvulnStat(text: string | null | undefined): Invuln | null;

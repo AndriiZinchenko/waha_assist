@@ -170,3 +170,33 @@ export function leaderHitPenaltySources(
     .filter(({ effect }) => effect.kind === "hitPenaltyWhenTargeted")
     .map(({ source }) => source);
 }
+
+const COMMAND_PROTOCOLS_HIT_BONUS = /Hit rolls?[^\n]*\+1/i;
+
+/**
+ * Necrons Command Protocols, 11th edition (Awakened Dynasty): "unit led by a
+ * NECRONS CHARACTER model — Hit rolls for attacks by this unit's models: +1".
+ * The rule rides on every unit of the roster; it applies when `unit` is part
+ * of an attached unit with a Character leader, which also covers the leader's
+ * own attacks. A Support character does not lead. 10th edition's Command
+ * Protocols reads differently and is not matched.
+ */
+export function commandProtocolsFor(
+  unit: ParsedUnit,
+  units: ParsedUnit[],
+  assignments: Record<string, string>,
+): RuleRef | null {
+  const rule = unit.rules.find((r) => r.name.trim().toLowerCase() === "command protocols");
+  if (!rule || !COMMAND_PROTOCOLS_HIT_BONUS.test(rule.text ?? "")) return null;
+
+  const byId = new Map(units.map((u) => [u.id, u]));
+  const bodyId = assignments[unit.id] && byId.has(assignments[unit.id]) ? assignments[unit.id] : unit.id;
+  const attached = Object.entries(assignments)
+    .filter(([leaderId, targetId]) => targetId === bodyId && byId.has(leaderId))
+    .map(([leaderId]) => byId.get(leaderId)!);
+  const isLeader = (u: ParsedUnit) => {
+    const kw = u.keywords.map((k) => k.toLowerCase());
+    return kw.includes("character") && !kw.includes("support");
+  };
+  return attached.some(isLeader) ? { name: rule.name, text: rule.text } : null;
+}

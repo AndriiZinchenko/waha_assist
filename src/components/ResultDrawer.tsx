@@ -1,7 +1,9 @@
 import { useState, type ReactNode } from "react";
 import type { ParsedUnit } from "../../parseRoster.mjs";
 import {
+  damagedProfile,
   emptyModifiers,
+  hasLanceWeapon,
   hasWaaagh,
   canBeEngaged,
   type DirectionModifiers,
@@ -128,6 +130,11 @@ function CombatResults({
           onClose={onClose}
           showEngaged={weapons === "ranged" && canBeEngaged(unitA, unitB)}
           showWaaagh={hasWaaagh(unitA) || hasWaaagh(unitB)}
+          showCover={weapons === "ranged"}
+          showCharged={hasLanceWeapon(unitA, weapons) || hasLanceWeapon(unitB, weapons)}
+          damagedUnits={[unitA, unitB]
+            .filter((u, i, all) => damagedProfile(u) && all.findIndex((x) => x.id === u.id) === i)
+            .map((u) => ({ id: u.id, name: u.name }))}
           collapsed={collapsed}
           onToggleCollapsed={toggleCollapsed}
         />
@@ -138,6 +145,7 @@ function CombatResults({
           attackerCounts={counts}
           target={unitB}
           targetSideUnits={unitsB}
+          attackerSideUnits={unitsA}
           leaderAssignments={leaderAssignments}
           side="a"
           modifiers={modifiers}
@@ -149,6 +157,7 @@ function CombatResults({
           attackerCounts={counts}
           target={unitA}
           targetSideUnits={unitsA}
+          attackerSideUnits={unitsB}
           leaderAssignments={leaderAssignments}
           side="b"
           modifiers={modifiers}

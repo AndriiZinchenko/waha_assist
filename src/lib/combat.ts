@@ -23,6 +23,15 @@ export interface DirectionModifiers {
   engaged: boolean;
   /** The Waaagh! is active: changes only units with the Waaagh! ability. */
   waaagh: boolean;
+  /** The target of ranged attacks has the Benefit of Cover. 10th: +1 to the
+   * armour save; 11th: the attack's BS is worsened by 1. */
+  cover: boolean;
+  /** The attacking unit made a Charge move this turn: Lance weapons get +1
+   * to wound. */
+  charged: boolean;
+  /** Units (by id) whose model is on its "Damaged: 1-N wounds remaining"
+   * profile: -1 to hit for their attacks. */
+  damaged: string[];
 }
 
 export function emptyModifiers(): DirectionModifiers {
@@ -36,6 +45,9 @@ export function emptyModifiers(): DirectionModifiers {
     stationary: false,
     engaged: false,
     waaagh: false,
+    cover: false,
+    charged: false,
+    damaged: [],
   };
 }
 
@@ -126,6 +138,38 @@ export function applyDamageMod(base: DiceExpr, mod: number): DiceExpr {
   return { ...base, flat, avg, raw };
 }
 
+/** Every model in the unit has Stealth (it is a unit-wide ability). */
+export function hasStealth(unit: ParsedUnit): boolean {
+  return [...unit.abilities, ...unit.rules].some((a) => a.name.trim().toLowerCase() === "stealth");
+}
+
+const DAMAGED_NAME = /^damaged\b/i;
+const DAMAGED_HIT_PENALTY = /subtract 1 from the Hit roll|Hit roll\s*[-−]1/i;
+
+/** The "Damaged: 1-N wounds remaining" ability of a unit, when it gives -1
+ * to hit (every such profile in the rosters does). */
+export function damagedProfile(unit: ParsedUnit): RuleRef | null {
+  const a = unit.abilities.find(
+    (x) => DAMAGED_NAME.test(x.name) && DAMAGED_HIT_PENALTY.test(x.text ?? ""),
+  );
+  return a ? { name: a.name, text: a.text } : null;
+}
+
+/** Whether any of the unit's weapons of this type is a Lance. */
+export function hasLanceWeapon(unit: ParsedUnit, type?: "ranged" | "melee"): boolean {
+  return unit.weapons.some(
+    (w) => (type == null || w.type === type) && hasKeyword(w.keywords, "Lance"),
+  );
+}
+
+/** Rules that change one attack direction and come from the board rather
+ * than from the two units alone. */
+export interface AttackContext {
+  /** Necrons Command Protocols (11th, Awakened Dynasty): the attacker is
+   * led by a Necrons Character, so its attacks get +1 to hit. */
+  commandProtocols?: RuleRef | null;
+}
+
 /** The invulnerable save the Waaagh! grants in both editions. */
 const WAAAGH_INVULN = 5;
 
@@ -166,6 +210,22 @@ export interface AttackRow {
   damageReductionSources: RuleRef[];
   /** Net change to the Damage characteristic (manual + target abilities). */
   appliedDamageMod: number;
+  /** Benefit of Cover changed this ranged attack: "save" in 10th (+1 to
+   * the armour save), "bs" in 11th (BS worsened by 1). */
+  coverApplied: "save" | "bs" | null;
+  /** The cover came from the target's Stealth (11th). */
+  coverFromStealth: boolean;
+  /** Cover was switched on but did not apply: Ignores Cover, or a 3+ save
+   * against AP 0 (10th). */
+  coverBlocked: "ignoresCover" | "saveTooGood" | null;
+  /** 10th edition Stealth: -1 to hit was applied to this ranged attack. */
+  stealthApplied: boolean;
+  /** Lance on the charge: +1 to wound was applied. */
+  lanceApplied: boolean;
+  /** The attacker's Damaged profile (-1 to hit) applied. */
+  damagedSource: RuleRef | null;
+  /** Command Protocols (+1 to hit) applied. */
+  commandProtocolsSource: RuleRef | null;
   /** Abilities behind the target's automatic hit penalty (e.g. Grand
    * Master Voldus's Sanctuary), separate from the plain numeric total in
    * `appliedHitMod` so the UI can name the source. */
@@ -254,6 +314,11 @@ function capHitMod(total: number): number {
   return Math.max(-1, Math.min(1, total));
 }
 
+/** Core rules: the net modifier to a Wound roll never exceeds +1 or -1. */
+function capWoundMod(total: number): number {
+  return Math.max(-1, Math.min(1, total));
+}
+
 /** `base` with `bonus` added to its flat part, re-rendered as one
  * expression ("D6+3" + 2 -> "D6+5", not "D6+3+2"). */
 function applyBonus(base: DiceExpr, bonus: number): DiceExpr {
@@ -279,14 +344,18 @@ export function computeAttackTable(
   autoHitPenaltySources: RuleRef[] = [],
   /** Big Guns Never Tire applies to this attack (see bigGunsApplies). */
   engagedPenalty = false,
-  /** Decides what the Waaagh! does (see hasWaaagh). */
+  /** Decides what the Waaagh!, cover and Stealth do. */
   edition: Edition = 10,
+  context: AttackContext = {},
 ): AttackRow[] {
   const merged = mergeByProfileId(attacker.weapons);
   const targetModels = getUnitLiveTotal(counts, target.id, target);
   const attackerWaaagh = modifiers.waaagh && hasWaaagh(attacker);
   const targetWaaagh = modifiers.waaagh && hasWaaagh(target);
   const targetDamageReduction = damageReductionSources(target);
+  const targetStealth = hasStealth(target);
+  const attackerDamaged = modifiers.damaged.includes(attacker.id) ? damagedProfile(attacker) : null;
+  const commandProtocols = context.commandProtocols ?? null;
   // Several such abilities on one model still take off 1 in total.
   const damageMod = modifiers.damageMod - (targetDamageReduction.length > 0 ? 1 : 0);
 
@@ -298,12 +367,24 @@ export function computeAttackTable(
       weapon.type === "ranged" &&
       weapon.skill !== null &&
       !hasKeyword(weapon.keywords, "Pistol");
+    const ranged = weapon.type === "ranged";
+    const rolls = weapon.skill !== null; // Torrent weapons make no hit roll
+    const ignoresCover = hasKeyword(weapon.keywords, "Ignores Cover");
+    // 10th: Stealth is its own -1 to hit. 11th: it gives the Benefit of Cover,
+    // which Ignores Cover removes too.
+    const stealthApplied = edition === 10 && ranged && rolls && targetStealth;
+    const wantsCover = ranged && (modifiers.cover || (edition === 11 && targetStealth));
+    const damagedApplied = attackerDamaged != null && rolls;
+    const commandProtocolsApplied = commandProtocols != null && rolls;
     const totalHitMod = capHitMod(
       modifiers.hitMod +
         autoHitMod +
         (weapon.crusadeHitMod ?? 0) +
         (heavyApplied ? 1 : 0) -
-        (engagedApplied ? 1 : 0),
+        (engagedApplied ? 1 : 0) -
+        (stealthApplied ? 1 : 0) -
+        (damagedApplied ? 1 : 0) +
+        (commandProtocolsApplied ? 1 : 0),
     );
     const blastBonus = hasKeyword(weapon.keywords, "Blast") ? Math.floor(targetModels / 5) : 0;
 
@@ -314,7 +395,18 @@ export function computeAttackTable(
     const strength = weapon.strength + (waaaghAttack ? 1 : 0);
 
     const sv = target.profile.SV;
-    const armorTarget = sv != null ? sv - effectiveAp : null;
+    let coverApplied: "save" | "bs" | null = null;
+    let coverBlocked: "ignoresCover" | "saveTooGood" | null = null;
+    if (wantsCover) {
+      if (ignoresCover) coverBlocked = "ignoresCover";
+      else if (edition === 11) coverApplied = rolls ? "bs" : null;
+      else if (sv == null) coverApplied = null;
+      // 10th: a 3+ save or better gets no cover against AP 0.
+      else if (sv <= 3 && effectiveAp === 0) coverBlocked = "saveTooGood";
+      else coverApplied = "save";
+    }
+    const armorTarget =
+      sv != null ? sv - effectiveAp - (coverApplied === "save" ? 1 : 0) : null;
 
     // A conditional invuln (e.g. "5+ against ranged attacks only") isn't
     // auto-applied — we don't know which condition it is, just that one
@@ -360,10 +452,16 @@ export function computeAttackTable(
             antiX?.threshold ?? 6,
           )
         : 6;
-    const woundTarget = clampTarget(baseWound - modifiers.woundMod);
+    const lanceApplied = modifiers.charged && hasKeyword(weapon.keywords, "Lance");
+    const totalWoundMod = capWoundMod(modifiers.woundMod + (lanceApplied ? 1 : 0));
+    const woundTarget = clampTarget(baseWound - totalWoundMod);
 
+    // 11th edition cover worsens the BS characteristic itself, so it sits
+    // outside the hit-roll modifier cap.
     const hitTarget =
-      weapon.skill === null ? null : clampTarget(weapon.skill - totalHitMod);
+      weapon.skill === null
+        ? null
+        : clampTarget(weapon.skill + (coverApplied === "bs" ? 1 : 0) - totalHitMod);
 
     const halfRangeBonus = findHalfRangeBonus(weapon.keywords);
     const halfRangeApplied = halfRangeBonus != null && modifiers.halfRange;
@@ -407,10 +505,18 @@ export function computeAttackTable(
       leaderMods: weapon.leaderMods ?? [],
       crusadeMods: weapon.crusadeMods ?? [],
       damageReductionSources: hasDamage ? targetDamageReduction : [],
-      appliedDamageMod: hasDamage ? damageMod : 0,
+      // A flat 1 stays 1: nothing changed, so nothing is flagged.
+      appliedDamageMod: hasDamage && damage.raw !== meltaDamage.raw ? damageMod : 0,
       autoHitPenaltySources: weapon.skill === null ? [] : autoHitPenaltySources,
       appliedHitMod: weapon.skill === null ? 0 : totalHitMod,
-      appliedWoundMod: modifiers.woundMod,
+      appliedWoundMod: totalWoundMod,
+      coverApplied,
+      coverFromStealth: coverApplied != null && !modifiers.cover,
+      coverBlocked,
+      stealthApplied,
+      lanceApplied,
+      damagedSource: damagedApplied ? attackerDamaged : null,
+      commandProtocolsSource: commandProtocolsApplied ? commandProtocols : null,
       apWorsened: modifiers.apMod < 0,
       apImproved: modifiers.apMod > 0,
       waaaghAttack,

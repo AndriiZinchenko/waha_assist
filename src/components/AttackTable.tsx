@@ -2,6 +2,7 @@ import type { ParsedUnit } from "../../parseRoster.mjs";
 import { bigGunsApplies, computeAttackTable, type DirectionModifiers } from "../lib/combat";
 import { getUnitLiveTotal } from "../lib/loadouts";
 import {
+  commandProtocolsFor,
   leaderHitPenaltyAgainst,
   leaderHitPenaltySources,
 } from "../lib/leaderEffects";
@@ -19,6 +20,9 @@ interface AttackTableProps {
   /** Every unit on the target's side, for resolving whether the target has
    * a leader attached (e.g. Grand Master Voldus's Sanctuary: -1 to hit). */
   targetSideUnits: ParsedUnit[];
+  /** Every unit on the attacker's side, for its own leader rules (e.g.
+   * Necrons Command Protocols). */
+  attackerSideUnits: ParsedUnit[];
   leaderAssignments: Record<string, string>;
   /** The attacker's side. */
   side: Side;
@@ -39,6 +43,7 @@ export function AttackTable({
   attackerCounts,
   target,
   targetSideUnits,
+  attackerSideUnits,
   leaderAssignments,
   side,
   modifiers,
@@ -65,6 +70,10 @@ export function AttackTable({
     autoHitPenaltySources,
     bigGunsApplies(modifiers.engaged, attacker, target),
     edition,
+    {
+      commandProtocols:
+        edition === 11 ? commandProtocolsFor(attacker, attackerSideUnits, leaderAssignments) : null,
+    },
   );
   const filtered = rows.filter((row) => row.type === weaponFilter);
   const targetModels = getUnitLiveTotal(attackerCounts, target.id, target);

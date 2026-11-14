@@ -22,6 +22,13 @@ const STRINGS = {
     uk: "Monster або Vehicle тут перебуває в Engagement Range ворожого підрозділу",
   },
   "calc.engagedShort": { en: "Engaged", uk: "У бою" },
+  "calc.cover": { en: "Cover", uk: "Укриття" },
+  "calc.coverTitle": {
+    en: "The target of ranged attacks has the Benefit of Cover",
+    uk: "Ціль атак дальнього бою має Benefit of Cover",
+  },
+  "calc.charged": { en: "Charged (Lance)", uk: "Charge (Lance)" },
+  "calc.damaged": { en: "Damaged", uk: "Пошкоджений" },
   "voice.notUnderstood": {
     en: "Didn't catch that — try “3 against 7”",
     uk: "Не розчув — спробуйте «3 проти 7»",

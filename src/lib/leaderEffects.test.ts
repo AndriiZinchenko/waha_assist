@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ParsedUnit, WeaponEntry } from "../../parseRoster.mjs";
 import {
+  commandProtocolsFor,
   applyLeaderWeaponBonuses,
   leaderHitPenaltyAgainst,
   leaderHitPenaltySources,
@@ -241,5 +242,34 @@ describe("leaderHitPenaltySources", () => {
     const voldus = makeUnit({ id: "voldus", abilities: [SANCTUARY_ABILITY] });
     const squad = makeUnit({ id: "squad" });
     expect(leaderHitPenaltySources(squad, [voldus, squad], {})).toEqual([]);
+  });
+});
+
+describe("commandProtocolsFor", () => {
+  const CP = {
+    name: "Command Protocols",
+    text: "- **Restriction:** unit led by a NECRONS CHARACTER model\n- **Result:** Hit rolls for attacks by this unit's models: +1",
+  };
+  const immortals = makeUnit({ id: "imm", rules: [CP], keywords: ["Infantry", "Battleline"] });
+  const overlord = makeUnit({ id: "ov", rules: [CP], keywords: ["Infantry", "Character", "Leader"] });
+  const technomancer = makeUnit({ id: "tech", rules: [CP], keywords: ["Infantry", "Character", "Support"] });
+  const units = [immortals, overlord, technomancer];
+
+  it("applies to the led unit and to its leader", () => {
+    const assignments = { ov: "imm" };
+    expect(commandProtocolsFor(immortals, units, assignments)?.name).toBe("Command Protocols");
+    expect(commandProtocolsFor(overlord, units, assignments)?.name).toBe("Command Protocols");
+  });
+
+  it("needs a leading Character: alone or with only a Support, no bonus", () => {
+    expect(commandProtocolsFor(immortals, units, {})).toBeNull();
+    expect(commandProtocolsFor(immortals, units, { tech: "imm" })).toBeNull();
+    // A Support in a unit that also has a leader gets it too.
+    expect(commandProtocolsFor(technomancer, units, { tech: "imm", ov: "imm" })).not.toBeNull();
+  });
+
+  it("ignores a Command Protocols rule without the +1 to hit (10th edition)", () => {
+    const old = makeUnit({ id: "imm", rules: [{ name: "Command Protocols", text: "Select one protocol..." }] });
+    expect(commandProtocolsFor(old, [old, overlord], { ov: "imm" })).toBeNull();
   });
 });

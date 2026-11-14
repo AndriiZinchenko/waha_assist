@@ -91,6 +91,12 @@ function parseInvuln(profileName, text) {
   return fromText ? { value: Number(fromText[1]), conditional: false } : null;
 }
 
+/** An 11th edition InSv characteristic: "4+" -> { value: 4 }, "5+*" -> conditional. */
+function parseInvulnStat(text) {
+  const m = /^\s*(\d)\+\s*(\*?)\s*$/.exec(text ?? "");
+  return m ? { value: Number(m[1]), conditional: m[2] === "*" } : null;
+}
+
 /**
  * Core-rulebook keyword glossary entries attached directly to a selection
  * (New Recruit's `rules[]`, distinct from the datasheet `Abilities` profiles
@@ -379,7 +385,11 @@ function parseUnit(sel, referenceInfo) {
   }
   const abilities = [...ownAbilities, ...referencedAbilities];
   const abilitySections = groupInfoSections(abilities);
-  const invuln = abilities.map((a) => parseInvuln(a.name, a.text)).find(Boolean) ?? null;
+  // 10th edition carries the invuln as an ability; 11th as the unit's InSv
+  // characteristic ("4+", or "5+*" when it only applies sometimes).
+  const invuln =
+    abilities.map((a) => parseInvuln(a.name, a.text)).find(Boolean) ??
+    parseInvulnStat(c.InSv);
 
   // Core-rulebook rules on the unit's own datasheet entry (Deep Strike,
   // Leader, Dark Pacts, Scouts...) — not walked into weapon selections,
@@ -416,7 +426,8 @@ function parseUnit(sel, referenceInfo) {
     profile: {
       M: c.M ?? null,
       T: c.T != null ? Number(c.T) : null,
-      SV: parseSkill(c.SV),
+      // 10th edition exports "SV"; 11th edition exports "Sv".
+      SV: parseSkill(c.SV ?? c.Sv),
       W: c.W != null ? Number(c.W) : null,
       LD: c.LD ?? null,
       OC: c.OC != null ? Number(c.OC) : null,
@@ -466,4 +477,4 @@ export function parseRoster(json) {
   };
 }
 
-export { parseDice, parseSkill, parseKeywords, parseInvuln };
+export { parseDice, parseSkill, parseKeywords, parseInvuln, parseInvulnStat };

@@ -11,6 +11,9 @@ const labels = {
   stationary: "Stationary",
   engaged: "Engaged",
   waaagh: "Waaagh!",
+  cover: "Cover",
+  charged: "Charged",
+  damaged: "Damaged",
 };
 
 describe("activeModifierChips", () => {
@@ -29,10 +32,13 @@ describe("activeModifierChips", () => {
         invulnOverride: 4,
         halfRange: true,
         waaagh: true,
+        cover: true,
+        charged: true,
+        damaged: ["u1"],
       },
       labels,
     );
-    expect(chips).toEqual(["Hit +1", "Wound −1", "AP +1", "D −1", "4++", "Half range", "Waaagh!"]);
+    expect(chips).toEqual(["Hit +1", "Wound −1", "AP +1", "D −1", "4++", "Half range", "Waaagh!", "Cover", "Charged", "Damaged"]);
   });
 });
 

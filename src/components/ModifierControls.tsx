@@ -16,6 +16,12 @@ interface ModifierControlsProps {
   /** Offer the Waaagh! toggle: a unit with the Waaagh! ability is in the
    * matchup. */
   showWaaagh?: boolean;
+  /** Offer the Cover toggle: ranged attacks are being compared. */
+  showCover?: boolean;
+  /** Offer the Charged toggle: a unit in the matchup has a Lance weapon. */
+  showCharged?: boolean;
+  /** Units in the matchup that have a Damaged profile, one toggle each. */
+  damagedUnits?: Array<{ id: string; name: string }>;
   /** Fold the panel to one line listing the active modifiers. Without
    * `onToggleCollapsed` the panel cannot be folded. */
   collapsed?: boolean;
@@ -79,6 +85,9 @@ export function ModifierControls({
   onClose,
   showEngaged = false,
   showWaaagh = false,
+  showCover = false,
+  showCharged = false,
+  damagedUnits = [],
   collapsed = false,
   onToggleCollapsed,
 }: ModifierControlsProps) {
@@ -103,6 +112,9 @@ export function ModifierControls({
       stationary: ui("calc.stationary"),
       engaged: ui("calc.engagedShort"),
       waaagh: ui("calc.waaagh"),
+      cover: ui("calc.cover"),
+      charged: ui("calc.charged"),
+      damaged: ui("calc.damaged"),
     });
     return (
       <div className="px-[12px] py-[6px] flex items-center gap-[8px]">
@@ -244,6 +256,40 @@ export function ModifierControls({
           onToggle={() => onChange({ ...modifiers, waaagh: !modifiers.waaagh })}
         />
       )}
+      {showCover && (
+        <CheckToggle
+          title={ui("calc.coverTitle")}
+          label={ui("calc.cover")}
+          checked={modifiers.cover}
+          onToggle={() => onChange({ ...modifiers, cover: !modifiers.cover })}
+        />
+      )}
+      {showCharged && (
+        <CheckToggle
+          label={ui("calc.charged")}
+          checked={modifiers.charged}
+          onToggle={() => onChange({ ...modifiers, charged: !modifiers.charged })}
+        />
+      )}
+      {damagedUnits.map((u) => {
+        const on = modifiers.damaged.includes(u.id);
+        return (
+          <CheckToggle
+            key={u.id}
+            title={`${ui("calc.damaged")}: ${u.name}`}
+            label={<span className="truncate">{`${ui("calc.damaged")}: ${u.name}`}</span>}
+            checked={on}
+            onToggle={() =>
+              onChange({
+                ...modifiers,
+                damaged: on
+                  ? modifiers.damaged.filter((id) => id !== u.id)
+                  : [...modifiers.damaged, u.id],
+              })
+            }
+          />
+        );
+      })}
       {onToggleCollapsed && (
         <button
           type="button"

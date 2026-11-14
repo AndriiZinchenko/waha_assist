@@ -40,13 +40,14 @@ export function rowTones(row: AttackRow): RowTones {
 
   return {
     attacks: attacksBoosted ? "boost" : null,
-    hit: directional(row.appliedHitMod),
+    // 11th edition cover worsens the BS, which reads as a hit penalty.
+    hit: directional(row.appliedHitMod - (row.coverApplied === "bs" ? 1 : 0)),
     wound: row.appliedWoundMod !== 0
       ? directional(row.appliedWoundMod)
       : row.antiX
         ? "boost"
         : null,
-    save: row.isInvulnFallback || row.apWorsened ? "warn" : null,
+    save: row.isInvulnFallback || row.apWorsened || row.coverApplied === "save" ? "warn" : null,
     damage:
       row.appliedDamageMod < 0
         ? "warn"

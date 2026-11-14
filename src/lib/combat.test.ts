@@ -4,6 +4,8 @@ import {
   applyDamageMod,
   bigGunsApplies,
   damageReductionSources,
+  damagedProfile,
+  hasLanceWeapon,
   computeAttackTable,
   emptyModifiers,
   canBeEngaged,
@@ -1041,6 +1043,13 @@ describe("damage modifiers", () => {
     expect(computeAttackTable(attacker, {}, target, modifiers({ damageMod: 1 }))[0].appliedDamageMod).toBe(0);
   });
 
+  it("flags nothing when a flat 1 Damage stays 1, but still names the ability", () => {
+    const [row] = computeAttackTable(makeAttacker(), {}, makeUnit({ abilities: [NECRODERMIS_11E] }));
+    expect(row.damage.raw).toBe("1");
+    expect(row.appliedDamageMod).toBe(0);
+    expect(row.damageReductionSources).toHaveLength(1);
+  });
+
   it("applies after melta", () => {
     const [row] = computeAttackTable(
       makeAttacker({ damage: D6, keywords: ["Melta 2"] }),
@@ -1069,5 +1078,135 @@ describe("keyword spelling", () => {
       modifiers({ halfRange: true }),
     )[0];
     expect(melta.damage.raw).toBe("3");
+  });
+});
+
+describe("cover, Stealth, Lance, Damaged and Command Protocols", () => {
+  const STEALTH = { type: "Abilities", name: "Stealth", text: "Stealth rule" };
+  const sv4 = { M: '6"', T: 4, SV: 4, W: 2, LD: "6+", OC: 1 };
+
+  it("10th: cover adds 1 to the armour save of ranged attacks only", () => {
+    const target = makeUnit({ profile: sv4 });
+    const [ranged] = computeAttackTable(makeAttacker({ ap: -1 }), {}, target, modifiers({ cover: true }));
+    expect(ranged.coverApplied).toBe("save");
+    expect(ranged.saveTarget).toBe(4); // 4+ AP-1 -> 5+, cover -> 4+
+    const [melee] = computeAttackTable(
+      makeAttacker({ ap: -1, type: "melee", range: "Melee" }),
+      {},
+      target,
+      modifiers({ cover: true }),
+    );
+    expect(melee.coverApplied).toBe(null);
+    expect(melee.saveTarget).toBe(5);
+  });
+
+  it("10th: no cover for a 3+ save against AP 0, nor against Ignores Cover", () => {
+    const [ap0] = computeAttackTable(makeAttacker({ ap: 0 }), {}, makeUnit(), modifiers({ cover: true }));
+    expect(ap0.coverApplied).toBe(null);
+    expect(ap0.coverBlocked).toBe("saveTooGood");
+    expect(ap0.saveTarget).toBe(3);
+    const [ic] = computeAttackTable(
+      makeAttacker({ ap: -1, keywords: ["IGNORES COVER"] }),
+      {},
+      makeUnit({ profile: sv4 }),
+      modifiers({ cover: true }),
+    );
+    expect(ic.coverBlocked).toBe("ignoresCover");
+    expect(ic.saveTarget).toBe(5);
+  });
+
+  it("10th: cover does not improve an invulnerable save", () => {
+    const [row] = computeAttackTable(
+      makeAttacker({ ap: -3 }),
+      {},
+      makeUnit({ profile: sv4, invuln: { value: 5, conditional: false } }),
+      modifiers({ cover: true }),
+    );
+    expect(row.saveTarget).toBe(5); // armour 7+ -> 6+ with cover, invuln 5+ is better
+    expect(row.isInvulnFallback).toBe(true);
+  });
+
+  it("11th: cover worsens the BS by 1, outside the hit-roll cap", () => {
+    const [row] = computeAttackTable(
+      makeAttacker(), // BS 3+
+      {},
+      makeUnit(),
+      modifiers({ cover: true, hitMod: -1 }),
+      0,
+      [],
+      false,
+      11,
+    );
+    expect(row.coverApplied).toBe("bs");
+    expect(row.hitTarget).toBe(5); // BS 4+, then -1 to hit
+    expect(row.saveTarget).toBe(3);
+  });
+
+  it("10th Stealth: -1 to hit for ranged attacks", () => {
+    const target = makeUnit({ abilities: [STEALTH] });
+    const [ranged] = computeAttackTable(makeAttacker(), {}, target);
+    expect(ranged.stealthApplied).toBe(true);
+    expect(ranged.hitTarget).toBe(4);
+    const [melee] = computeAttackTable(makeAttacker({ type: "melee", range: "Melee" }), {}, target);
+    expect(melee.hitTarget).toBe(3);
+  });
+
+  it("11th Stealth: Benefit of Cover, which Ignores Cover removes", () => {
+    const target = makeUnit({ abilities: [STEALTH] });
+    const [row] = computeAttackTable(makeAttacker(), {}, target, modifiers(), 0, [], false, 11);
+    expect(row.stealthApplied).toBe(false);
+    expect(row.coverApplied).toBe("bs");
+    expect(row.coverFromStealth).toBe(true);
+    expect(row.hitTarget).toBe(4);
+    const [ic] = computeAttackTable(
+      makeAttacker({ keywords: ["Ignores Cover"] }),
+      {},
+      target,
+      modifiers(),
+      0,
+      [],
+      false,
+      11,
+    );
+    expect(ic.hitTarget).toBe(3);
+  });
+
+  it("Lance: +1 to wound on the charge, capped at +1 in total", () => {
+    const lance = makeAttacker({ keywords: ["Lance"], type: "melee", range: "Melee" });
+    expect(hasLanceWeapon(lance, "melee")).toBe(true);
+    expect(hasLanceWeapon(lance, "ranged")).toBe(false);
+    expect(computeAttackTable(lance, {}, makeUnit())[0].woundTarget).toBe(4);
+    const charged = computeAttackTable(lance, {}, makeUnit(), modifiers({ charged: true }))[0];
+    expect(charged.lanceApplied).toBe(true);
+    expect(charged.woundTarget).toBe(3);
+    expect(
+      computeAttackTable(lance, {}, makeUnit(), modifiers({ charged: true, woundMod: 1 }))[0].woundTarget,
+    ).toBe(3);
+  });
+
+  it("Damaged: -1 to hit only for the unit marked damaged", () => {
+    const DAMAGED = {
+      type: "Abilities",
+      name: "Damaged: 1-4 wounds remaining",
+      text: "- **Condition:** wounds left: 1 to 4\n- **Result:** attacks by this model: Hit roll −1",
+    };
+    const attacker = { ...makeAttacker(), abilities: [DAMAGED] };
+    expect(damagedProfile(attacker)?.name).toBe(DAMAGED.name);
+    expect(computeAttackTable(attacker, {}, makeUnit())[0].hitTarget).toBe(3);
+    const row = computeAttackTable(attacker, {}, makeUnit(), modifiers({ damaged: ["attacker"] }))[0];
+    expect(row.hitTarget).toBe(4);
+    expect(row.damagedSource?.name).toBe(DAMAGED.name);
+    expect(
+      computeAttackTable(attacker, {}, makeUnit(), modifiers({ damaged: ["someone else"] }))[0].hitTarget,
+    ).toBe(3);
+  });
+
+  it("Command Protocols: +1 to hit when given", () => {
+    const cp = { name: "Command Protocols", text: "Hit rolls: +1" };
+    const [row] = computeAttackTable(makeAttacker(), {}, makeUnit(), modifiers(), 0, [], false, 11, {
+      commandProtocols: cp,
+    });
+    expect(row.hitTarget).toBe(2);
+    expect(row.commandProtocolsSource).toEqual(cp);
   });
 });

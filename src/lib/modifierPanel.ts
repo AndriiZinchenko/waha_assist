@@ -45,6 +45,9 @@ export interface ModifierLabels {
   stationary: string;
   engaged: string;
   waaagh: string;
+  cover: string;
+  charged: string;
+  damaged: string;
 }
 
 /** The modifiers that are switched on, as short chips for the collapsed panel. */
@@ -59,5 +62,10 @@ export function activeModifierChips(m: DirectionModifiers, labels: ModifierLabel
   if (m.stationary) chips.push(labels.stationary);
   if (m.engaged) chips.push(labels.engaged);
   if (m.waaagh) chips.push(labels.waaagh);
+  if (m.cover) chips.push(labels.cover);
+  if (m.charged) chips.push(labels.charged);
+  if (m.damaged.length > 0) {
+    chips.push(m.damaged.length > 1 ? `${labels.damaged} ×${m.damaged.length}` : labels.damaged);
+  }
   return chips;
 }

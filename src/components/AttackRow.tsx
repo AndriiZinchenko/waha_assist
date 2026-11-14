@@ -99,11 +99,16 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       row.crusadeMods.find((m) => m.ref.name === label)?.ref.text ??
       row.autoHitPenaltySources.find((m) => m.name === label)?.text ??
       row.damageReductionSources.find((m) => m.name === label)?.text ??
+      (row.damagedSource?.name === label ? row.damagedSource.text : null) ??
+      (row.commandProtocolsSource?.name === label ? row.commandProtocolsSource.text : null) ??
       null
     );
   }
 
-  const baseSave = row.armorTarget !== null ? row.armorTarget + row.ap : null;
+  const baseSave =
+    row.armorTarget !== null
+      ? row.armorTarget + row.ap + (row.coverApplied === "save" ? 1 : 0)
+      : null;
   const matchup = [
     targetToughness != null ? `S${row.strength} vs T${targetToughness}` : `S${row.strength}`,
     baseSave !== null ? `Save ${baseSave}+ / AP${formatAp(row.ap)}` : `AP${formatAp(row.ap)}`,
@@ -159,6 +164,31 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
       kind: "positive",
     },
     row.heavyApplied && { text: "Heavy +1 to hit (stationary)", kind: "positive" },
+    row.coverApplied === "save" && {
+      text: "Benefit of Cover: +1 to the armour save (not the invuln)",
+      kind: "negative",
+    },
+    row.coverApplied === "bs" && {
+      text: row.coverFromStealth
+        ? "Stealth: Benefit of Cover, BS worsened by 1"
+        : "Benefit of Cover: BS worsened by 1",
+      kind: "negative",
+    },
+    row.coverBlocked === "ignoresCover" && {
+      text: "Ignores Cover: the target gets no Benefit of Cover",
+      kind: "positive",
+    },
+    row.coverBlocked === "saveTooGood" && {
+      text: "No Benefit of Cover: a 3+ save or better against AP 0",
+      kind: "neutral",
+    },
+    row.stealthApplied && { text: "Stealth: −1 to hit (ranged)", kind: "negative" },
+    row.lanceApplied && { text: "Lance: +1 to wound (charged)", kind: "positive" },
+    row.damagedSource && { text: "Damaged: −1 to hit", kind: "negative" },
+    row.commandProtocolsSource && {
+      text: "Command Protocols: +1 to hit (led by a Character)",
+      kind: "positive",
+    },
     row.engagedApplied && {
       text: "Big Guns Never Tire: -1 to hit while engaged (Pistols exempt)",
       kind: "negative",
@@ -177,6 +207,10 @@ export function AttackRow({ row, targetToughness, targetModels }: AttackRowProps
     ...row.crusadeMods,
     ...row.autoHitPenaltySources.map((ref) => ({ ref, tone: "negative" as const })),
     ...row.damageReductionSources.map((ref) => ({ ref, tone: "negative" as const })),
+    ...(row.damagedSource ? [{ ref: row.damagedSource, tone: "negative" as const }] : []),
+    ...(row.commandProtocolsSource
+      ? [{ ref: row.commandProtocolsSource, tone: "positive" as const }]
+      : []),
   ];
   const openText = openLabel ? expandedText(openLabel) : null;
 
